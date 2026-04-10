@@ -1,0 +1,70 @@
+---
+title: Atomic Content Protocol
+description: An open standard that makes knowledge portable and readable by both humans and AI.
+template: splash
+hero:
+  title: Atomic Content Protocol
+  tagline: An open standard that makes knowledge portable and readable by both humans and AI.
+  actions:
+    - text: Get Started
+      link: /getting-started/what-is-acp/
+      icon: right-arrow
+      variant: primary
+    - text: View Spec
+      link: /spec/aco/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is an ACO?
+
+An **Atomic Content Object** is a Markdown file with structured YAML frontmatter. Six required fields. Everything else optional. Readable in any text editor. Parseable by any LLM.
+
+```yaml
+---
+id: "550e8400-e29b-41d4-a716-446655440000"
+acp_version: "0.2"
+object_type: "aco"
+source_type: "manual"
+created: "2026-04-10T12:00:00Z"
+author: { id: "user-1", name: "Your Name" }
+title: "My First ACO"
+tags: ["example"]
+---
+
+Your knowledge content here.
+```
+
+<CardGrid>
+  <Card title="Portable" icon="document">
+    Every ACO is a valid Markdown file. Works in Obsidian, any text editor, any static site generator — no proprietary tooling required.
+  </Card>
+  <Card title="AI-Ready" icon="rocket">
+    Token counts, summaries, typed entities, and agent permissions — everything AI needs to make smart decisions without reading the full content.
+  </Card>
+  <Card title="Provenance Built-In" icon="approve-check">
+    Every auto-generated field carries provenance: which model created it, when, at what confidence. You always know what is human and what is machine.
+  </Card>
+  <Card title="Open Standard" icon="open-book">
+    ACP is a protocol, not a product. Apache 2.0 licensed. Anyone can implement it.
+  </Card>
+</CardGrid>
+
+## Three ways to create an ACO
+
+### 1. Write one by hand (zero dependencies)
+
+Create any `.md` file with the 6 required frontmatter fields. That is a valid ACO.
+
+### 2. Use the CLI
+
+```bash
+npx @acp/cli init ./my-vault
+npx @acp/cli create --title "My First ACO"
+npx @acp/cli enrich ./my-vault/my-first-aco.md
+```
+
+### 3. Use the Stacklist MCP (zero-setup enrichment)
+
+Call `enrich_content` or `enrich_url` — pass in content, get back a fully enriched ACO with tags, summary, entities, and provenance.
