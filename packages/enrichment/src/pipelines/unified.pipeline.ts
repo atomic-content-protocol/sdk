@@ -52,13 +52,18 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
       !frontmatter["key_entities"] ||
       !existingProvenance["key_entities"] ||
       options?.force;
+    const needsLanguage =
+      !frontmatter["language"] ||
+      !existingProvenance["language"] ||
+      options?.force;
 
     // Short-circuit if nothing to do
     if (
       !needsTags &&
       !needsSummary &&
       !needsClassification &&
-      !needsEntities
+      !needsEntities &&
+      !needsLanguage
     ) {
       return {
         aco,
@@ -100,6 +105,10 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     if (needsEntities) {
       updatedFields["key_entities"] = output.key_entities;
       newProvenance["key_entities"] = createProvenanceRecord(model, 0.80);
+    }
+    if (needsLanguage && output.language) {
+      updatedFields["language"] = output.language;
+      newProvenance["language"] = createProvenanceRecord(model, 0.95);
     }
 
     updatedFields["provenance"] = newProvenance;

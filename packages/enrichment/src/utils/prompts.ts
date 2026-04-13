@@ -87,7 +87,8 @@ Extract:
 1. Tags: 3-7 relevant keywords (lowercase, single words or hyphenated phrases)
 2. Summary: exactly 2 sentences, max 500 characters, starting with the subject
 3. Classification: one of reference, framework, memo, checklist, notes, transcript, snippet, code, tutorial, analysis, other
-4. Key entities: named entities with type (person, organization, technology, concept, location, event), name, and confidence (0.0-1.0)`;
+4. Key entities: named entities with type (person, organization, technology, concept, location, event), name, and confidence (0.0-1.0)
+5. Language: Detect the primary language of the content. Return as ISO 639-1 two-letter code (en, de, ja, etc.)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -156,8 +157,12 @@ export const UNIFIED_SCHEMA = {
         },
         description: "Named entities found in the content",
       },
+      language: {
+        type: "string",
+        description: "ISO 639-1 two-letter language code",
+      },
     },
-    required: ["tags", "summary", "classification", "key_entities"],
+    required: ["tags", "summary", "classification", "key_entities", "language"],
   },
 } as const;
 
@@ -171,4 +176,5 @@ export interface UnifiedEnrichmentOutput {
     name: string;
     confidence: number;
   }>;
+  language: string;
 }

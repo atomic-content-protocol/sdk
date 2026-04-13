@@ -16,24 +16,40 @@ export function approximateTokenCount(text: string): number {
 /**
  * TokenCounts — shape of the object returned by computeTokenCounts.
  *
- * The `approximate` field is always present. Additional per-tokenizer
- * keys (e.g. `cl100k`, `claude`) can be added by callers or by future
- * versions of this function that integrate tiktoken or equivalent.
+ * The `approximate` field is always present. `cl100k` is populated when
+ * the optional `tiktoken` package is installed; it uses the cl100k_base
+ * encoding (gpt-4o / gpt-4 / gpt-3.5-turbo / text-embedding-ada-002).
  */
 export interface TokenCounts {
   approximate: number;
-  [key: string]: number;
+  cl100k?: number;
+  [key: string]: number | undefined;
 }
 
 /**
  * computeTokenCounts — returns token count estimates for the given text.
  *
- * Currently returns only the heuristic approximation. Extend this function
- * to populate `cl100k` / `claude` keys when tiktoken or Anthropic's tokenizer
- * is available in the runtime environment.
+ * Always returns the heuristic `approximate` count. If the optional
+ * `tiktoken` package is installed, also populates `cl100k` using the
+ * cl100k_base encoding (gpt-4o / gpt-4 family). Gracefully degrades if
+ * tiktoken is absent or fails to load.
  */
-export function computeTokenCounts(text: string): TokenCounts {
-  return {
+export async function computeTokenCounts(text: string): Promise<TokenCounts> {
+  const counts: TokenCounts = {
     approximate: approximateTokenCount(text),
   };
+
+  // Try to load tiktoken (optional dependency — 4 MB WASM, not always present).
+  const tiktoken = await import('tiktoken').catch(() => null);
+  if (tiktoken) {
+    try {
+      const enc = tiktoken.encoding_for_model('gpt-4o');
+      counts.cl100k = enc.encode(text).length;
+      enc.free();
+    } catch {
+      // tiktoken loaded but encoding failed — skip cl100k, keep approximate.
+    }
+  }
+
+  return counts;
 }

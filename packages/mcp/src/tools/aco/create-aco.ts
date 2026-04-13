@@ -70,7 +70,7 @@ export function createCreateACOTool(storage: IStorageAdapter): ToolEntry {
       if (validated.source_url) extraFrontmatter["source_url"] = validated.source_url;
       if (validated.source_context) extraFrontmatter["source_context"] = validated.source_context;
 
-      const aco = createACO({
+      const aco = await createACO({
         title: validated.title,
         body: validated.body,
         source_type: validated.source_type,

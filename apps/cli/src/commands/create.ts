@@ -1,18 +1,8 @@
 import { Command } from 'commander';
 import { createACO, FilesystemAdapter } from '@acp/core';
 import { loadConfig } from '../utils/config.js';
+import { resolveAuthor } from '../utils/author.js';
 import chalk from 'chalk';
-import { execSync } from 'node:child_process';
-
-function getGitUser(): { id: string; name: string } {
-  try {
-    const name = execSync('git config user.name', { encoding: 'utf-8' }).trim();
-    const email = execSync('git config user.email', { encoding: 'utf-8' }).trim();
-    return { id: email || 'anonymous', name: name || 'Anonymous' };
-  } catch {
-    return { id: 'anonymous', name: 'Anonymous' };
-  }
-}
 
 export const createCommand = new Command('create')
   .description('Create a new ACO')
@@ -25,9 +15,14 @@ export const createCommand = new Command('create')
   .action(async (options) => {
     const config = await loadConfig();
     const storage = new FilesystemAdapter(config.vault_path);
-    const gitUser = getGitUser();
 
-    const aco = createACO({
+    const author = await resolveAuthor({
+      authorId: options.authorId as string | undefined,
+      authorName: options.authorName as string | undefined,
+      config,
+    });
+
+    const aco = await createACO({
       title: options.title as string | undefined,
       body: options.body as string,
       source_type: options.sourceType as
@@ -40,10 +35,7 @@ export const createCommand = new Command('create')
         | 'selected_text'
         | 'llm_capture'
         | undefined,
-      author: {
-        id: (options.authorId as string | undefined) || gitUser.id,
-        name: (options.authorName as string | undefined) || gitUser.name,
-      },
+      author,
       frontmatter: options.tags
         ? { tags: (options.tags as string).split(',').map((t: string) => t.trim()) }
         : undefined,

@@ -118,12 +118,12 @@ export interface CreateACOParams {
  *   - `object_type`   — "aco"
  *   - `created`       — current UTC timestamp (ISO 8601)
  *   - `content_hash`  — SHA-256 of the normalised body
- *   - `token_counts`  — approximate token count
+ *   - `token_counts`  — token count estimates (approximate always; cl100k if tiktoken installed)
  *
  * The returned object is a valid `ACO` but is NOT automatically persisted.
  * Pass it to `adapter.putACO()` to write it to storage.
  */
-export function createACO(params: CreateACOParams): ACO {
+export async function createACO(params: CreateACOParams): Promise<ACO> {
   const body = params.body ?? "";
   const now = new Date().toISOString();
 
@@ -135,7 +135,7 @@ export function createACO(params: CreateACOParams): ACO {
     created: now,
     author: params.author,
     content_hash: computeContentHash(normalizeBody(body)),
-    token_counts: computeTokenCounts(body),
+    token_counts: await computeTokenCounts(body),
   };
 
   if (params.title !== undefined) {

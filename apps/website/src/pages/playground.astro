@@ -1,0 +1,1398 @@
+---
+// Standalone playground page — no StarlightPage wrapper needed.
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACP Playground | Atomic Content Protocol</title>
+  <style>
+    /* ---- Reset / base ---- */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      color-scheme: dark;
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+      --bg: #0f0f1a;
+      --bg-nav: #15152a;
+      --bg-sidebar: #1a1a2e;
+      --hairline: #2a2a40;
+      --text: #e2e2f0;
+      --text-muted: #9898bb;
+      --text-dim: #6666aa;
+      --green: #10b981;
+      --red: #ef4444;
+      --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        color-scheme: light;
+        --accent: #6d28d9;
+        --accent-light: #8b5cf6;
+        --bg: #ffffff;
+        --bg-nav: #f8f8fe;
+        --bg-sidebar: #f0f0fa;
+        --hairline: #e0e0f0;
+        --text: #1a1a2e;
+        --text-muted: #4a4a70;
+        --text-dim: #9898bb;
+        --green: #059669;
+        --red: #dc2626;
+      }
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent-light); }
+    a:hover { color: var(--accent); }
+    code { font-family: var(--font-mono); font-size: 0.88em; }
+
+    /* ---- Nav bar ---- */
+    .pg-nav {
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--hairline);
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .pg-nav-brand {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .pg-nav-back {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .pg-nav-back:hover { color: var(--accent-light); }
+
+    /* ---- Page wrapper ---- */
+    .pg-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+    }
+
+    /* ---- Hero ---- */
+    .pg-hero {
+      text-align: center;
+      padding: 2.5rem 0 3rem;
+    }
+
+    .pg-hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      color: var(--accent-light);
+    }
+
+    .pg-hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ---- Section headings ---- */
+    .pg-section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 2.5rem 0 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pg-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--hairline);
+    }
+
+    /* ---- Example tabs ---- */
+    .pg-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .pg-tab {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--hairline);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .pg-tab:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .pg-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ---- ACO card ---- */
+    .aco-card {
+      border: 1px solid var(--hairline);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: var(--bg-nav);
+      display: none;
+    }
+
+    .aco-card.visible { display: block; }
+
+    .aco-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--bg-sidebar);
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .aco-card-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 0.5rem;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--hairline);
+    }
+
+    .aco-card-avatar-placeholder {
+      width: 56px;
+      height: 56px;
+      border-radius: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .aco-card-title-block {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .aco-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .aco-card-url {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .aco-card-url:hover { color: var(--accent-light); }
+
+    .aco-card-body {
+      padding: 1.25rem 1.5rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    /* Summary */
+    .aco-summary {
+      background: rgba(124, 58, 237, 0.08);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 0.4rem 0.4rem 0;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Badges row */
+    .aco-meta-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .aco-badge {
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .aco-badge-classification {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--accent-light);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .aco-badge-lang {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Tags */
+    .aco-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .aco-tag {
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 0.3rem;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Entities */
+    .aco-entities { display: grid; gap: 0.5rem; }
+
+    .aco-entity {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.5rem 0.75rem;
+      align-items: center;
+    }
+
+    .aco-entity-type {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      width: 6rem;
+      font-weight: 600;
+    }
+
+    .aco-entity-name {
+      font-size: 0.88rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .aco-entity-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 100px;
+    }
+
+    .aco-entity-bar {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--hairline);
+      overflow: hidden;
+    }
+
+    .aco-entity-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width 0.6s ease;
+    }
+
+    .aco-entity-conf {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      width: 2.5rem;
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    /* Tokens */
+    .aco-tokens { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .aco-token-item {
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 0.4rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .aco-token-label {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      display: block;
+      margin-bottom: 0.1rem;
+    }
+
+    .aco-token-value {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Provenance collapsible */
+    .aco-prov-toggle {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.15s;
+    }
+
+    .aco-prov-toggle:hover { color: var(--accent-light); }
+
+    .aco-prov-toggle .arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+
+    .aco-prov-toggle.open .arrow { transform: rotate(90deg); }
+
+    .aco-prov-content {
+      display: none;
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 0.4rem;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    .aco-prov-content.open { display: block; }
+
+    /* Raw YAML toggle */
+    .aco-yaml-toggle {
+      background: none;
+      border: 1px solid var(--hairline);
+      padding: 0.3rem 0.8rem;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.15s;
+    }
+
+    .aco-yaml-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .aco-yaml-block { display: none; margin-top: 0.5rem; }
+    .aco-yaml-block.open { display: block; }
+
+    .aco-yaml-block pre {
+      margin: 0;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 0.4rem;
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      white-space: pre;
+    }
+
+    /* Section label */
+    .aco-section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+    }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 1px solid var(--hairline);
+      margin: 2rem 0;
+    }
+
+    /* ---- Interactive form ---- */
+    .pg-form {
+      border: 1px solid var(--hairline);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      background: var(--bg-nav);
+      display: grid;
+      gap: 1rem;
+    }
+
+    .pg-form label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--text);
+    }
+
+    .pg-form textarea,
+    .pg-form input[type="password"],
+    .pg-form input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--hairline);
+      border-radius: 0.4rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+
+    .pg-form textarea:focus,
+    .pg-form input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .pg-form textarea {
+      min-height: 160px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .pg-form-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .pg-key-note {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .pg-btn {
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #fff;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .pg-btn:hover:not(:disabled) { opacity: 0.85; }
+
+    .pg-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status / error */
+    .pg-status {
+      font-size: 0.85rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 0.4rem;
+      display: none;
+    }
+
+    .pg-status.info {
+      display: block;
+      background: rgba(124, 58, 237, 0.1);
+      color: var(--accent-light);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+    }
+
+    .pg-status.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    /* Live result area */
+    #pg-result { display: none; }
+    #pg-result.visible { display: block; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pg-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .pg-wrap { padding: 1rem; }
+      .pg-form-row { grid-template-columns: 1fr; }
+      .aco-entity { grid-template-columns: auto 1fr; }
+      .aco-entity-bar-wrap { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="pg-nav">
+    <a class="pg-nav-brand" href="/">Atomic Content Protocol</a>
+    <a class="pg-nav-back" href="/getting-started/what-is-acp">&larr; Back to docs</a>
+  </nav>
+
+  <div class="pg-wrap">
+
+    <div class="pg-hero">
+      <h1>ACP Playground</h1>
+      <p>Pre-enriched examples show what a fully structured Atomic Content Object looks like. Scroll down to enrich your own text live.</p>
+    </div>
+
+    <div class="pg-section-title">Pre-enriched examples</div>
+
+    <div class="pg-tabs" role="tablist">
+      <button class="pg-tab active" role="tab" onclick="showExample('profile')" id="tab-profile">Stacklist profile</button>
+      <button class="pg-tab" role="tab" onclick="showExample('article')" id="tab-article">Tech article</button>
+      <button class="pg-tab" role="tab" onclick="showExample('analysis')" id="tab-analysis">Research paper</button>
+    </div>
+
+    <!-- Example 1: Stacklist profile -->
+    <div class="aco-card visible" id="ex-profile">
+      <div class="aco-card-header">
+        <img
+          class="aco-card-avatar"
+          src="https://ucarecdn.com/1ed35c46-aab6-4f6c-8667-1f3de48eedb5/-/crop/1024x1365/0,159/-/scale_crop/112x112/smart/"
+          alt="Martina Zrnec"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+        />
+        <div class="aco-card-avatar-placeholder" style="display:none">&#128100;</div>
+        <div class="aco-card-title-block">
+          <div class="aco-card-title">Martina Zrnec | Stacklist</div>
+          <a class="aco-card-url" href="https://stacklist.app/martina" target="_blank" rel="noopener">stacklist.app/martina</a>
+        </div>
+      </div>
+      <div class="aco-card-body">
+
+        <div>
+          <div class="aco-section-label">Summary</div>
+          <div class="aco-summary">Martina Zrnec is the Co-founder &amp; CTO of Stacklist, a curation platform specializing in tech stack innovations, startup resources, and global travel guides. Her curated collections span Croatian heritage, food culture, entrepreneurship, and tools for modern builders.</div>
+        </div>
+
+        <div class="aco-meta-row">
+          <span class="aco-badge aco-badge-classification">reference</span>
+          <span class="aco-badge aco-badge-lang">en</span>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Tags</div>
+          <div class="aco-tags">
+            <span class="aco-tag">curation</span>
+            <span class="aco-tag">startup-tools</span>
+            <span class="aco-tag">tech-stack</span>
+            <span class="aco-tag">travel-guides</span>
+            <span class="aco-tag">croatian-heritage</span>
+            <span class="aco-tag">food-culture</span>
+            <span class="aco-tag">entrepreneurship</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Key entities</div>
+          <div class="aco-entities">
+            <div class="aco-entity">
+              <span class="aco-entity-type">person</span>
+              <span class="aco-entity-name">Martina Zrnec</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">organization</span>
+              <span class="aco-entity-name">Stacklist</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">location</span>
+              <span class="aco-entity-name">Zagreb</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:95%"></div></div><span class="aco-entity-conf">0.95</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">location</span>
+              <span class="aco-entity-name">Croatia</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:95%"></div></div><span class="aco-entity-conf">0.95</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">location</span>
+              <span class="aco-entity-name">Barcelona</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:90%"></div></div><span class="aco-entity-conf">0.90</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Token counts</div>
+          <div class="aco-tokens">
+            <div class="aco-token-item"><span class="aco-token-label">approximate</span><span class="aco-token-value">1,230</span></div>
+            <div class="aco-token-item"><span class="aco-token-label">cl100k</span><span class="aco-token-value">998</span></div>
+          </div>
+        </div>
+
+        <div>
+          <button class="aco-prov-toggle" onclick="toggleProv(this)">
+            <span class="arrow">&#9658;</span> Provenance
+          </button>
+          <div class="aco-prov-content">tags:      &#123; model: "claude-haiku-4-5", confidence: 0.85 &#125;
+summary:   &#123; model: "claude-haiku-4-5", confidence: 0.91 &#125;
+entities:  &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="aco-yaml-toggle" onclick="toggleYaml(this)">
+            &lt;/&gt; Raw YAML
+          </button>
+        </div>
+        <div class="aco-yaml-block">
+          <pre>title: "Martina Zrnec | Stacklist"
+source_url: "https://stacklist.app/martina"
+language: en
+tags:
+  - curation
+  - startup-tools
+  - tech-stack
+  - travel-guides
+  - croatian-heritage
+  - food-culture
+  - entrepreneurship
+summary: &gt;
+  Martina Zrnec is the Co-founder &amp; CTO of Stacklist, a curation platform
+  specializing in tech stack innovations, startup resources, and global
+  travel guides. Her curated collections span Croatian heritage, food
+  culture, entrepreneurship, and tools for modern builders.
+classification: reference
+key_entities:
+  - &#123; type: person,       name: "Martina Zrnec", confidence: 0.99 &#125;
+  - &#123; type: organization, name: "Stacklist",      confidence: 0.99 &#125;
+  - &#123; type: location,     name: "Zagreb",         confidence: 0.95 &#125;
+  - &#123; type: location,     name: "Croatia",        confidence: 0.95 &#125;
+  - &#123; type: location,     name: "Barcelona",      confidence: 0.90 &#125;
+token_counts:
+  approximate: 1230
+  cl100k: 998
+provenance:
+  tags:     &#123; model: "claude-haiku-4-5", confidence: 0.85 &#125;
+  summary:  &#123; model: "claude-haiku-4-5", confidence: 0.91 &#125;
+  entities: &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</pre>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Example 2: Tech article -->
+    <div class="aco-card" id="ex-article">
+      <div class="aco-card-header">
+        <div class="aco-card-avatar-placeholder">&#128225;</div>
+        <div class="aco-card-title-block">
+          <div class="aco-card-title">How MCP Standardizes Agent-to-Tool Communication</div>
+          <a class="aco-card-url" href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener">modelcontextprotocol.io/introduction</a>
+        </div>
+      </div>
+      <div class="aco-card-body">
+
+        <div>
+          <div class="aco-section-label">Summary</div>
+          <div class="aco-summary">The Model Context Protocol is an open standard by Anthropic that defines how AI agents connect to external data sources and tools using a JSON-RPC transport layer. MCP separates the concern of agent-to-tool communication from the knowledge schema those tools serve, enabling any MCP server to expose structured, predictable payloads to any compatible agent.</div>
+        </div>
+
+        <div class="aco-meta-row">
+          <span class="aco-badge aco-badge-classification">reference</span>
+          <span class="aco-badge aco-badge-lang">en</span>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Tags</div>
+          <div class="aco-tags">
+            <span class="aco-tag">mcp</span>
+            <span class="aco-tag">model-context-protocol</span>
+            <span class="aco-tag">ai-agents</span>
+            <span class="aco-tag">json-rpc</span>
+            <span class="aco-tag">anthropic</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Key entities</div>
+          <div class="aco-entities">
+            <div class="aco-entity">
+              <span class="aco-entity-type">technology</span>
+              <span class="aco-entity-name">Model Context Protocol</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">organization</span>
+              <span class="aco-entity-name">Anthropic</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">technology</span>
+              <span class="aco-entity-name">JSON-RPC</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:98%"></div></div><span class="aco-entity-conf">0.98</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">concept</span>
+              <span class="aco-entity-name">context window</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:90%"></div></div><span class="aco-entity-conf">0.90</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Token counts</div>
+          <div class="aco-tokens">
+            <div class="aco-token-item"><span class="aco-token-label">approximate</span><span class="aco-token-value">2,830</span></div>
+            <div class="aco-token-item"><span class="aco-token-label">cl100k</span><span class="aco-token-value">2,847</span></div>
+          </div>
+        </div>
+
+        <div>
+          <button class="aco-prov-toggle" onclick="toggleProv(this)">
+            <span class="arrow">&#9658;</span> Provenance
+          </button>
+          <div class="aco-prov-content">tags:     &#123; model: "claude-haiku-4-5", confidence: 0.85 &#125;
+summary:  &#123; model: "claude-haiku-4-5", confidence: 0.91 &#125;
+entities: &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="aco-yaml-toggle" onclick="toggleYaml(this)">
+            &lt;/&gt; Raw YAML
+          </button>
+        </div>
+        <div class="aco-yaml-block">
+          <pre>title: "How MCP Standardizes Agent-to-Tool Communication"
+source_url: "https://modelcontextprotocol.io/introduction"
+language: en
+tags:
+  - mcp
+  - model-context-protocol
+  - ai-agents
+  - json-rpc
+  - anthropic
+summary: &gt;
+  The Model Context Protocol is an open standard by Anthropic that defines
+  how AI agents connect to external data sources and tools using a JSON-RPC
+  transport layer. MCP separates the concern of agent-to-tool communication
+  from the knowledge schema those tools serve.
+classification: reference
+key_entities:
+  - &#123; type: technology,   name: "Model Context Protocol", confidence: 0.99 &#125;
+  - &#123; type: organization, name: "Anthropic",               confidence: 0.99 &#125;
+  - &#123; type: technology,   name: "JSON-RPC",                confidence: 0.98 &#125;
+  - &#123; type: concept,      name: "context window",          confidence: 0.90 &#125;
+token_counts:
+  approximate: 2830
+  cl100k: 2847
+provenance:
+  tags:     &#123; model: "claude-haiku-4-5", confidence: 0.85 &#125;
+  summary:  &#123; model: "claude-haiku-4-5", confidence: 0.91 &#125;
+  entities: &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</pre>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Example 3: Research paper -->
+    <div class="aco-card" id="ex-analysis">
+      <div class="aco-card-header">
+        <div class="aco-card-avatar-placeholder">&#128196;</div>
+        <div class="aco-card-title-block">
+          <div class="aco-card-title">Pocket Is Dead. Your Bookmarks Died With It.</div>
+          <a class="aco-card-url" href="https://example.com/pocket-is-dead" target="_blank" rel="noopener">example.com/pocket-is-dead</a>
+        </div>
+      </div>
+      <div class="aco-card-body">
+
+        <div>
+          <div class="aco-section-label">Summary</div>
+          <div class="aco-summary">Analysis of Pocket&#39;s shutdown in July 2025 and how it erased millions of users&#39; saved content overnight. Makes the case that platform-locked content is inherently fragile and that portable, self-describing knowledge objects are the only durable alternative.</div>
+        </div>
+
+        <div class="aco-meta-row">
+          <span class="aco-badge aco-badge-classification">analysis</span>
+          <span class="aco-badge aco-badge-lang">en</span>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Tags</div>
+          <div class="aco-tags">
+            <span class="aco-tag">content-portability</span>
+            <span class="aco-tag">platform-risk</span>
+            <span class="aco-tag">bookmarks</span>
+            <span class="aco-tag">pocket</span>
+            <span class="aco-tag">knowledge-management</span>
+            <span class="aco-tag">open-standards</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Key entities</div>
+          <div class="aco-entities">
+            <div class="aco-entity">
+              <span class="aco-entity-type">organization</span>
+              <span class="aco-entity-name">Mozilla</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">product</span>
+              <span class="aco-entity-name">Pocket</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:99%"></div></div><span class="aco-entity-conf">0.99</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">concept</span>
+              <span class="aco-entity-name">platform lock-in</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:92%"></div></div><span class="aco-entity-conf">0.92</span></div>
+            </div>
+            <div class="aco-entity">
+              <span class="aco-entity-type">concept</span>
+              <span class="aco-entity-name">content portability</span>
+              <div class="aco-entity-bar-wrap"><div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:88%"></div></div><span class="aco-entity-conf">0.88</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="aco-section-label">Token counts</div>
+          <div class="aco-tokens">
+            <div class="aco-token-item"><span class="aco-token-label">approximate</span><span class="aco-token-value">1,847</span></div>
+            <div class="aco-token-item"><span class="aco-token-label">cl100k</span><span class="aco-token-value">1,802</span></div>
+          </div>
+        </div>
+
+        <div>
+          <button class="aco-prov-toggle" onclick="toggleProv(this)">
+            <span class="arrow">&#9658;</span> Provenance
+          </button>
+          <div class="aco-prov-content">tags:     &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.89 &#125;
+summary:  &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.93 &#125;
+entities: &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.95 &#125;</div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="aco-yaml-toggle" onclick="toggleYaml(this)">
+            &lt;/&gt; Raw YAML
+          </button>
+        </div>
+        <div class="aco-yaml-block">
+          <pre>title: "Pocket Is Dead. Your Bookmarks Died With It."
+source_url: "https://example.com/pocket-is-dead"
+language: en
+tags:
+  - content-portability
+  - platform-risk
+  - bookmarks
+  - pocket
+  - knowledge-management
+  - open-standards
+summary: &gt;
+  Analysis of Pocket's shutdown in July 2025 and how it erased millions of
+  users' saved content overnight. Makes the case that platform-locked content
+  is inherently fragile and that portable, self-describing knowledge objects
+  are the only durable alternative.
+classification: analysis
+key_entities:
+  - &#123; type: organization, name: "Mozilla",            confidence: 0.99 &#125;
+  - &#123; type: product,      name: "Pocket",             confidence: 0.99 &#125;
+  - &#123; type: concept,      name: "platform lock-in",   confidence: 0.92 &#125;
+  - &#123; type: concept,      name: "content portability",confidence: 0.88 &#125;
+token_counts:
+  approximate: 1847
+  cl100k: 1802
+confidence: 0.88
+provenance:
+  summary:  &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.93 &#125;
+  tags:     &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.89 &#125;
+  entities: &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.95 &#125;</pre>
+        </div>
+
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="pg-section-title">Try it yourself</div>
+
+    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem">
+      Paste a URL or text content below. Provide your Anthropic API key and click <strong>Enrich</strong> to get a live ACO back. Everything runs directly in your browser &#8212; your key is never sent to our servers.
+    </p>
+
+    <div class="pg-form">
+      <div class="pg-input-toggle" style="display:flex;gap:0.5rem;margin-bottom:1rem">
+        <button class="pg-tab active" id="mode-url" onclick="setInputMode('url')" style="font-size:0.85rem;padding:0.4rem 1rem">URL</button>
+        <button class="pg-tab" id="mode-text" onclick="setInputMode('text')" style="font-size:0.85rem;padding:0.4rem 1rem">Paste text</button>
+      </div>
+
+      <div id="pg-url-input">
+        <label for="pg-url">URL to enrich</label>
+        <input
+          type="url"
+          id="pg-url"
+          placeholder="https://stacklist.app/martina"
+          spellcheck="false"
+          style="width:100%;padding:0.7rem 1rem;background:var(--bg);border:1px solid var(--hairline);border-radius:8px;color:var(--text);font-size:0.95rem"
+        />
+        <p style="color:var(--text-dim);font-size:0.8rem;margin-top:0.4rem">
+          We&#8217;ll fetch the page via a public proxy, extract the content, and enrich it.
+        </p>
+      </div>
+
+      <div id="pg-text-input" style="display:none">
+        <label for="pg-content">Content to enrich</label>
+        <textarea
+          id="pg-content"
+          placeholder="Paste your content here &#8212; a few paragraphs is plenty. Include a title on the first line for best results."
+        ></textarea>
+      </div>
+
+      <div>
+        <div class="pg-form-row">
+          <div>
+            <label for="pg-apikey">Anthropic API key</label>
+            <input
+              type="password"
+              id="pg-apikey"
+              placeholder="sk-ant-..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <button class="pg-btn" id="pg-enrich-btn" onclick="runEnrichment()">Enrich</button>
+        </div>
+        <p class="pg-key-note">
+          &#128274; Your key is stored only in your browser (localStorage) and never transmitted to our servers. It is sent directly to <code>api.anthropic.com</code>.
+        </p>
+      </div>
+
+      <div id="pg-status" class="pg-status"></div>
+    </div>
+
+    <div id="pg-result" class="aco-card" style="margin-top:1.5rem">
+      <div class="aco-card-header">
+        <div class="aco-card-avatar-placeholder" id="pg-result-icon">&#10024;</div>
+        <div class="aco-card-title-block">
+          <div class="aco-card-title" id="pg-result-title">Enriched ACO</div>
+          <span class="aco-card-url" id="pg-result-ts"></span>
+        </div>
+      </div>
+      <div class="aco-card-body" id="pg-result-body"></div>
+    </div>
+
+  </div><!-- /.pg-wrap -->
+
+  <script is:inline>
+    // ===================================================================
+    // Input mode toggle (URL vs Text)
+    // ===================================================================
+    var currentInputMode = 'url';
+
+    function setInputMode(mode) {
+      currentInputMode = mode;
+      document.getElementById('pg-url-input').style.display = mode === 'url' ? 'block' : 'none';
+      document.getElementById('pg-text-input').style.display = mode === 'text' ? 'block' : 'none';
+      document.getElementById('mode-url').classList.toggle('active', mode === 'url');
+      document.getElementById('mode-text').classList.toggle('active', mode === 'text');
+    }
+
+    // ===================================================================
+    // Fetch URL content via public CORS proxy
+    // ===================================================================
+    async function fetchUrlContent(url) {
+      // Try multiple CORS proxies
+      var proxies = [
+        'https://api.allorigins.win/raw?url=',
+        'https://corsproxy.io/?',
+      ];
+
+      var html = null;
+      for (var i = 0; i < proxies.length; i++) {
+        try {
+          var resp = await fetch(proxies[i] + encodeURIComponent(url), { signal: AbortSignal.timeout(10000) });
+          if (resp.ok) {
+            html = await resp.text();
+            break;
+          }
+        } catch(e) { /* try next proxy */ }
+      }
+
+      if (!html) throw new Error('Could not fetch URL. Try pasting the content directly instead.');
+
+      // Extract metadata
+      var titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      var ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i)
+        || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:title"/i);
+      var ogDescMatch = html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]+)"/i)
+        || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:description"/i);
+      var metaDescMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
+      var ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i)
+        || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"/i);
+
+      var title = (ogTitleMatch && ogTitleMatch[1]) || (titleMatch && titleMatch[1]) || url;
+      var desc = (ogDescMatch && ogDescMatch[1]) || (metaDescMatch && metaDescMatch[1]) || '';
+      var ogImage = ogImageMatch ? ogImageMatch[1] : null;
+
+      // Strip HTML for body
+      var bodyText = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+        .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
+        .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 5000);
+
+      var body = desc ? desc + '\n\n' + bodyText : bodyText;
+
+      return { title: title.trim(), body: body, ogImage: ogImage, url: url };
+    }
+
+    // ===================================================================
+    // Tab switching
+    // ===================================================================
+    function showExample(id) {
+      ['profile','article','analysis'].forEach(function(ex) {
+        document.getElementById('ex-' + ex).classList.remove('visible');
+        document.getElementById('tab-' + ex).classList.remove('active');
+      });
+      document.getElementById('ex-' + id).classList.add('visible');
+      document.getElementById('tab-' + id).classList.add('active');
+    }
+
+    // ===================================================================
+    // Collapsible: provenance
+    // ===================================================================
+    function toggleProv(btn) {
+      btn.classList.toggle('open');
+      btn.nextElementSibling.classList.toggle('open');
+    }
+
+    // ===================================================================
+    // Collapsible: raw YAML
+    // ===================================================================
+    function toggleYaml(btn) {
+      var block = btn.closest('.aco-card-body').querySelector('.aco-yaml-block');
+      block.classList.toggle('open');
+      btn.textContent = block.classList.contains('open') ? '\u2715 Hide YAML' : '</> Raw YAML';
+    }
+
+    // ===================================================================
+    // Persist API key
+    // ===================================================================
+    (function() {
+      try {
+        var stored = localStorage.getItem('acp_pg_apikey');
+        if (stored) document.getElementById('pg-apikey').value = stored;
+      } catch(e) {}
+    })();
+
+    document.getElementById('pg-apikey').addEventListener('change', function() {
+      try { localStorage.setItem('acp_pg_apikey', this.value); } catch(e) {}
+    });
+
+    // ===================================================================
+    // Enrich via Anthropic API (direct browser call)
+    // ===================================================================
+    async function runEnrichment() {
+      var apiKey  = document.getElementById('pg-apikey').value.trim();
+      var btn     = document.getElementById('pg-enrich-btn');
+      var result  = document.getElementById('pg-result');
+      var sourceUrl = null;
+      var ogImage = null;
+
+      if (apiKey) {
+        try { localStorage.setItem('acp_pg_apikey', apiKey); } catch(e) {}
+      }
+
+      if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+        showStatus('error', 'Please enter a valid Anthropic API key (starts with sk-ant-).'); return;
+      }
+
+      var title = '';
+      var body = '';
+
+      if (currentInputMode === 'url') {
+        var urlValue = document.getElementById('pg-url').value.trim();
+        if (!urlValue) { showStatus('error', 'Please enter a URL to enrich.'); return; }
+        if (!urlValue.startsWith('http')) urlValue = 'https://' + urlValue;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="pg-spinner"></span> Fetching\u2026';
+        showStatus('info', 'Fetching page content\u2026');
+
+        try {
+          var fetched = await fetchUrlContent(urlValue);
+          title = fetched.title;
+          body = fetched.body;
+          sourceUrl = fetched.url;
+          ogImage = fetched.ogImage;
+          showStatus('info', 'Page fetched (' + body.length + ' chars). Enriching\u2026');
+        } catch(e) {
+          btn.disabled = false;
+          btn.innerHTML = 'Enrich';
+          showStatus('error', e.message || 'Failed to fetch URL.');
+          return;
+        }
+      } else {
+        var content = document.getElementById('pg-content').value.trim();
+        if (!content) { showStatus('error', 'Please paste some content to enrich.'); return; }
+
+        // Extract title from first non-empty line
+        var lines = content.split('\n');
+        body = content;
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim().replace(/^#+\s*/, '');
+          if (line) {
+            title = line.length > 120 ? line.slice(0, 120) + '\u2026' : line;
+            body = lines.slice(i + 1).join('\n').trim();
+            break;
+          }
+        }
+        if (!body) body = content;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="pg-spinner"></span> Enriching\u2026';
+      result.classList.remove('visible');
+      showStatus('info', 'Calling Anthropic API\u2026');
+
+      var prompt = 'Analyze the following content and extract structured enrichment data.\n\nTitle: ' +
+        truncate(title, 200) + '\nContent:\n' + truncate(body, 4000) +
+        '\n\nExtract:\n1. Tags: 3-7 relevant keywords (lowercase, single words or hyphenated phrases)\n' +
+        '2. Summary: exactly 2 sentences, max 500 characters, starting with the subject\n' +
+        '3. Classification: one of reference, framework, memo, checklist, notes, transcript, snippet, code, tutorial, analysis, other\n' +
+        '4. Key entities: named entities with type (person, organization, technology, concept, location, event), name, and confidence (0.0-1.0)\n' +
+        '5. Language: ISO 639-1 two-letter code (en, de, ja, etc.)';
+
+      var requestBody = {
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+        tools: [{
+          name: 'enrich_aco',
+          description: 'Extract enrichment data from content',
+          input_schema: {
+            type: 'object',
+            properties: {
+              tags: { type: 'array', items: { type: 'string' } },
+              summary: { type: 'string' },
+              classification: {
+                type: 'string',
+                enum: ['reference','framework','memo','checklist','notes','transcript','snippet','code','tutorial','analysis','other']
+              },
+              key_entities: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string' },
+                    name: { type: 'string' },
+                    confidence: { type: 'number' }
+                  },
+                  required: ['type','name','confidence']
+                }
+              },
+              language: { type: 'string' }
+            },
+            required: ['tags','summary','classification','key_entities','language']
+          }
+        }],
+        tool_choice: { type: 'tool', name: 'enrich_aco' }
+      };
+
+      try {
+        var response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          var err = await response.json().catch(function() { return {}; });
+          var msg = (err && err.error && err.error.message) ? err.error.message : 'HTTP ' + response.status;
+          throw new Error(msg);
+        }
+
+        var data = await response.json();
+        var toolUse = null;
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'tool_use') { toolUse = data.content[i].input; break; }
+        }
+
+        if (!toolUse) throw new Error('No structured output returned from model.');
+
+        var approxTokens = Math.round(body.length / 4);
+        renderResult(title, toolUse, approxTokens, sourceUrl, ogImage);
+        showStatus('info', 'Enrichment complete \u2014 ' + (data.usage ? data.usage.input_tokens + ' input tokens' : '') + ' via claude-haiku-4-5');
+        result.classList.add('visible');
+
+      } catch(err) {
+        showStatus('error', 'Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enrich';
+      }
+    }
+
+    function truncate(s, max) {
+      return s.length > max ? s.slice(0, max) + '\u2026' : s;
+    }
+
+    function showStatus(type, msg) {
+      var el = document.getElementById('pg-status');
+      el.className = 'pg-status ' + type;
+      el.textContent = msg;
+    }
+
+    function renderResult(title, data, approxTokens, sourceUrl, ogImage) {
+      document.getElementById('pg-result-title').textContent = title || 'Enriched ACO';
+      var urlLine = document.getElementById('pg-result-ts');
+      if (sourceUrl) {
+        urlLine.innerHTML = '<a href="' + esc(sourceUrl) + '" target="_blank" style="color:var(--accent-light);text-decoration:none">' + esc(sourceUrl) + '</a>';
+      } else {
+        urlLine.textContent = new Date().toISOString();
+      }
+
+      var body = document.getElementById('pg-result-body');
+
+      var entitiesHtml = '';
+      if (data.key_entities && data.key_entities.length) {
+        var entityRows = data.key_entities.map(function(e) {
+          var pct = Math.round((e.confidence || 0) * 100);
+          return '<div class="aco-entity">' +
+            '<span class="aco-entity-type">' + esc(e.type) + '</span>' +
+            '<span class="aco-entity-name">' + esc(e.name) + '</span>' +
+            '<div class="aco-entity-bar-wrap">' +
+              '<div class="aco-entity-bar"><div class="aco-entity-bar-fill" style="width:' + pct + '%"></div></div>' +
+              '<span class="aco-entity-conf">' + (e.confidence || 0).toFixed(2) + '</span>' +
+            '</div></div>';
+        }).join('');
+        entitiesHtml = '<div><div class="aco-section-label">Key entities</div><div class="aco-entities">' + entityRows + '</div></div>';
+      }
+
+      var tagsHtml = '';
+      if (data.tags && data.tags.length) {
+        var tagPills = data.tags.map(function(t) { return '<span class="aco-tag">' + esc(t) + '</span>'; }).join('');
+        tagsHtml = '<div><div class="aco-section-label">Tags</div><div class="aco-tags">' + tagPills + '</div></div>';
+      }
+
+      var ts = new Date().toISOString();
+      var entitiesYaml = (data.key_entities || []).map(function(e) {
+        return '  - { type: ' + e.type + ', name: "' + e.name.replace(/"/g, '\\"') + '", confidence: ' + (e.confidence || 0).toFixed(2) + ' }';
+      }).join('\n');
+
+      var rawYaml = 'title: "' + (title || '').replace(/"/g, '\\"') + '"\n' +
+        (sourceUrl ? 'source_url: "' + sourceUrl + '"\nsource_type: link\n' : 'source_type: manual\n') +
+        (ogImage ? 'media:\n  url: "' + ogImage + '"\n  mime_type: image/jpeg\n' : '') +
+        'language: ' + (data.language || 'en') + '\n' +
+        'tags:\n' + (data.tags || []).map(function(t){ return '  - ' + t; }).join('\n') + '\n' +
+        'summary: >\n  ' + (data.summary || '').replace(/(.{60})/g, '$1\n  ').trim() + '\n' +
+        'classification: ' + (data.classification || 'other') + '\n' +
+        'key_entities:\n' + (entitiesYaml || '  []') + '\n' +
+        'token_counts:\n  approximate: ' + approxTokens + '\n' +
+        'provenance:\n' +
+        '  tags:     { model: "claude-haiku-4-5", timestamp: "' + ts + '", confidence: 0.85 }\n' +
+        '  summary:  { model: "claude-haiku-4-5", timestamp: "' + ts + '", confidence: 0.85 }\n' +
+        '  entities: { model: "claude-haiku-4-5", timestamp: "' + ts + '", confidence: 0.80 }';
+
+      var imageHtml = '';
+      if (ogImage) {
+        imageHtml = '<div style="margin-bottom:1rem"><img src="' + esc(ogImage) + '" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--hairline)" onerror="this.style.display=\'none\'" /></div>';
+      }
+
+      body.innerHTML = imageHtml +
+        '<div><div class="aco-section-label">Summary</div>' +
+        '<div class="aco-summary">' + esc(data.summary || '') + '</div></div>' +
+        '<div class="aco-meta-row">' +
+        '<span class="aco-badge aco-badge-classification">' + esc(data.classification || '') + '</span>' +
+        '<span class="aco-badge aco-badge-lang">' + esc(data.language || 'en') + '</span>' +
+        '</div>' +
+        tagsHtml + entitiesHtml +
+        '<div><div class="aco-section-label">Token counts (estimated)</div>' +
+        '<div class="aco-tokens"><div class="aco-token-item"><span class="aco-token-label">approximate</span><span class="aco-token-value">' + approxTokens.toLocaleString() + '</span></div></div></div>' +
+        '<div><button class="aco-prov-toggle" onclick="toggleProv(this)"><span class="arrow">&#9658;</span> Provenance</button>' +
+        '<div class="aco-prov-content">tags:     { model: "claude-haiku-4-5", confidence: 0.85 }\nsummary:  { model: "claude-haiku-4-5", confidence: 0.85 }\nentities: { model: "claude-haiku-4-5", confidence: 0.80 }</div></div>' +
+        '<div style="display:flex;justify-content:flex-end">' +
+        '<button class="aco-yaml-toggle" onclick="toggleYaml(this)">&lt;/&gt; Raw YAML</button></div>' +
+        '<div class="aco-yaml-block"><pre>' + esc(rawYaml) + '</pre></div>';
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+  </script>
+
+</body>
+</html>

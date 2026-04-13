@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 export interface ACPConfig {
   vault_path: string;
+  author?: { id: string; name: string };
   enrichment?: {
     anthropic?: { api_key?: string; model?: string };
     openai?: { api_key?: string; model?: string };

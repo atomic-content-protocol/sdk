@@ -35,6 +35,12 @@ export default defineConfig({
             { label: 'ACO Examples', slug: 'examples/aco-examples' },
           ],
         },
+        {
+          label: 'Playground',
+          items: [
+            { label: 'Try ACP', link: '/playground' },
+          ],
+        },
       ],
       customCss: [],
     }),
