@@ -10,3 +10,4 @@ export { EntityPipeline } from "./entity.pipeline.js";
 export type { KeyEntity } from "./entity.pipeline.js";
 export { ClassificationPipeline } from "./classification.pipeline.js";
 export { UnifiedPipeline } from "./unified.pipeline.js";
+export { EmbedPipeline } from "./embed.pipeline.js";

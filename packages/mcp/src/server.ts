@@ -138,11 +138,14 @@ All IDs are UUID v7 strings. Tags and entities are the primary signals for relat
       registerTool("enrich_batch", this.makeUnconfiguredTool("enrich_batch", "enrich_batch requires enrichment providers to be configured in ACPMCPServerConfig."));
     }
 
-    registerTool("detect_relationships", createDetectRelationshipsTool(storage));
+    registerTool(
+      "detect_relationships",
+      createDetectRelationshipsTool(storage, enrichment)
+    );
 
     // Search tools
     registerTool("search_acos", createSearchACOsTool(storage));
-    registerTool("find_similar", createFindSimilarTool(storage));
+    registerTool("find_similar", createFindSimilarTool(storage, enrichment));
 
     // Vault tools
     registerTool("validate_vault", createValidateVaultTool(storage));

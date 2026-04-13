@@ -17,6 +17,12 @@ export interface EnrichmentResult {
   model: string;
   /** Approximate tokens consumed, if the provider reported it. */
   tokensUsed?: number;
+  /**
+   * Vector embedding produced by EmbedPipeline.
+   * Not written to frontmatter (too large for YAML); returned here for
+   * callers that need to store it in a vector database or cache it separately.
+   */
+  embedding?: number[];
 }
 
 /**

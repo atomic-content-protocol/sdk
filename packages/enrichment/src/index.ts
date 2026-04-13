@@ -49,6 +49,7 @@ export {
   EntityPipeline,
   ClassificationPipeline,
   UnifiedPipeline,
+  EmbedPipeline,
 } from "./pipelines/index.js";
 export type { KeyEntity } from "./pipelines/index.js";
 

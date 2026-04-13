@@ -61,6 +61,18 @@ interface VaultIndex {
 }
 
 // ---------------------------------------------------------------------------
+// Embeddings store types
+// ---------------------------------------------------------------------------
+
+interface EmbeddingsStore {
+  version: 1;
+  model: string;
+  dimensions: number;
+  entries: Record<string, number[]>;
+  updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -109,6 +121,7 @@ export class FilesystemAdapter implements IStorageAdapter {
   private readonly collectionsPath: string;
   private readonly acpDir: string;
   private readonly indexPath: string;
+  private readonly embeddingsPath: string;
 
   /** Set to true after `ensureDirectories()` has run successfully. */
   private initialised = false;
@@ -119,6 +132,7 @@ export class FilesystemAdapter implements IStorageAdapter {
     this.collectionsPath = path.join(this.vaultPath, ".collections");
     this.acpDir = path.join(this.vaultPath, ".acp");
     this.indexPath = path.join(this.acpDir, "index.json");
+    this.embeddingsPath = path.join(this.acpDir, "embeddings.json");
   }
 
   // -------------------------------------------------------------------------
@@ -459,21 +473,100 @@ export class FilesystemAdapter implements IStorageAdapter {
   }
 
   // -------------------------------------------------------------------------
-  // Optional: embeddings
-  // These methods are omitted from FilesystemAdapter intentionally.
-  // Implement putEmbedding / findSimilar in a vector-store adapter instead.
+  // Optional: vector embeddings
+  // Brute-force cosine similarity over a flat JSON store in .acp/embeddings.json.
+  // Suitable for vaults up to ~5,000 ACOs. Larger deployments should use a
+  // database-backed adapter with pgvector or sqlite-vec.
   // -------------------------------------------------------------------------
 
-  // putEmbedding and findSimilar are NOT implemented here.
-  // Declared as optional on IStorageAdapter; callers must guard with typeof check.
-  putEmbedding?: (
-    id: string,
-    vector: number[],
-    model: string
-  ) => Promise<void>;
+  private async readEmbeddings(): Promise<EmbeddingsStore> {
+    await this.ensureDirectories();
+    const raw = await readFileSafe(this.embeddingsPath);
+    if (raw === null) {
+      return {
+        version: 1,
+        model: "",
+        dimensions: 0,
+        entries: {},
+        updated_at: new Date().toISOString(),
+      };
+    }
+    return JSON.parse(raw) as EmbeddingsStore;
+  }
 
-  findSimilar?: (
-    vector: number[],
+  private async writeEmbeddings(data: EmbeddingsStore): Promise<void> {
+    data.updated_at = new Date().toISOString();
+    await fs.writeFile(
+      this.embeddingsPath,
+      JSON.stringify(data, null, 2),
+      "utf-8"
+    );
+  }
+
+  private cosineSimilarity(a: number[], b: number[]): number {
+    let dot = 0,
+      normA = 0,
+      normB = 0;
+    for (let i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    const denom = Math.sqrt(normA) * Math.sqrt(normB);
+    return denom === 0 ? 0 : dot / denom;
+  }
+
+  async putEmbedding(id: string, vector: number[], model: string): Promise<void> {
+    const store = await this.readEmbeddings();
+
+    if (store.model && store.model !== model) {
+      console.warn(
+        `[FilesystemAdapter] putEmbedding: model mismatch. ` +
+          `Store contains "${store.model}" embeddings but received "${model}". ` +
+          `Mixing embedding models will produce unreliable similarity results.`
+      );
+    }
+
+    store.entries[id] = vector;
+    store.model = model;
+    store.dimensions = vector.length;
+
+    await this.writeEmbeddings(store);
+  }
+
+  async findSimilar(
+    queryVector: number[],
     options?: SimilarityOptions
-  ) => Promise<SearchResult[]>;
+  ): Promise<SearchResult[]> {
+    const { limit = 10, threshold = 0.7 } = options ?? {};
+
+    const store = await this.readEmbeddings();
+    const index = await this.readIndex();
+
+    const scored: SearchResult[] = [];
+
+    for (const [id, vector] of Object.entries(store.entries)) {
+      const score = this.cosineSimilarity(queryVector, vector);
+      if (score < threshold) continue;
+
+      const entry = index.entries[id];
+      const frontmatter: Record<string, unknown> = entry
+        ? {
+            id,
+            title: entry.title,
+            source_type: entry.source_type,
+            created: entry.created,
+            tags: entry.tags,
+            status: entry.status,
+            ...(entry.modified !== undefined ? { modified: entry.modified } : {}),
+          }
+        : { id };
+
+      scored.push({ id, score, frontmatter });
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+
+    return scored.slice(0, limit);
+  }
 }
