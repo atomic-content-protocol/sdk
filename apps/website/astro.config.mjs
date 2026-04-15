@@ -36,6 +36,12 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Benchmark',
+          items: [
+            { label: 'Token Savings', slug: 'benchmark' },
+          ],
+        },
+        {
           label: 'Playground',
           items: [
             { label: 'Try ACP', link: '/playground' },
