@@ -1109,24 +1109,34 @@ provenance:
     // Fetch URL content via public CORS proxy
     // ===================================================================
     async function fetchUrlContent(url) {
-      // Try multiple CORS proxies
+      // Try our own proxy first (Vercel Edge Function), then public fallbacks
       var proxies = [
-        'https://api.allorigins.win/raw?url=',
-        'https://corsproxy.io/?',
+        { prefix: '/api/fetch-url?url=', encode: true },
+        { prefix: 'https://api.allorigins.win/raw?url=', encode: true },
+        { prefix: 'https://corsproxy.io/?url=', encode: true },
       ];
 
       var html = null;
+      var lastError = '';
       for (var i = 0; i < proxies.length; i++) {
         try {
-          var resp = await fetch(proxies[i] + encodeURIComponent(url), { signal: AbortSignal.timeout(10000) });
+          var proxyUrl = proxies[i].prefix + (proxies[i].encode ? encodeURIComponent(url) : url);
+          var resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
           if (resp.ok) {
-            html = await resp.text();
-            break;
+            var text = await resp.text();
+            // Check if we got actual HTML content (not a JSON error or empty response)
+            if (text && text.length > 100 && !text.startsWith('{"error"')) {
+              html = text;
+              break;
+            }
           }
-        } catch(e) { /* try next proxy */ }
+          lastError = 'HTTP ' + resp.status;
+        } catch(e) {
+          lastError = e.message || 'timeout';
+        }
       }
 
-      if (!html) throw new Error('Could not fetch URL. Try pasting the content directly instead.');
+      if (!html) throw new Error('Could not fetch URL (' + lastError + '). Switch to "Paste text" and paste the content directly.');
 
       // Extract metadata
       var titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
