@@ -8,3 +8,8 @@ export {
   UNIFIED_SCHEMA,
   type UnifiedEnrichmentOutput,
 } from "./prompts.js";
+export {
+  estimateEnrichmentCost,
+  formatCostEstimate,
+} from "./cost.js";
+export type { CostEstimate } from "./cost.js";

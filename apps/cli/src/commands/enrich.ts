@@ -6,12 +6,26 @@ import {
   SummaryPipeline,
   EntityPipeline,
   ClassificationPipeline,
+  estimateEnrichmentCost,
+  formatCostEstimate,
 } from '@acp/enrichment';
 import type { IEnrichmentPipeline } from '@acp/enrichment';
 import { loadConfig } from '../utils/config.js';
 import { createRouter } from '../utils/enrichment.js';
 import chalk from 'chalk';
 import ora from 'ora';
+import { createInterface } from 'node:readline';
+
+async function confirm(message: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return true;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise(resolve => {
+    rl.question(message + ' [Y/n] ', answer => {
+      rl.close();
+      resolve(!answer || answer.toLowerCase() === 'y');
+    });
+  });
+}
 
 const PIPELINE_MAP: Record<string, new () => IEnrichmentPipeline> = {
   tag: TagPipeline,
@@ -27,6 +41,7 @@ export const enrichCommand = new Command('enrich')
   .option('-p, --pipelines <names>', 'Comma-separated pipeline names', 'unified')
   .option('-f, --force', 'Overwrite existing enrichment', false)
   .option('--dry-run', 'Preview without writing', false)
+  .option('-y, --yes', 'Skip confirmation prompt', false)
   .action(async (target: string, options) => {
     const config = await loadConfig();
     const storage = new FilesystemAdapter(config.vault_path);
@@ -45,6 +60,25 @@ export const enrichCommand = new Command('enrich')
       spinner.fail(`ACO not found: ${target}`);
       process.exit(1);
     }
+
+    spinner.stop();
+
+    // Cost preview
+    const estimate = estimateEnrichmentCost(aco.body);
+    console.log();
+    console.log(chalk.bold('Cost estimate:'));
+    console.log(formatCostEstimate(estimate));
+    console.log();
+
+    if (!(options.yes as boolean)) {
+      const ok = await confirm('Continue?');
+      if (!ok) {
+        console.log(chalk.dim('Aborted.'));
+        process.exit(0);
+      }
+    }
+
+    spinner.start('Running pipelines...');
 
     const pipelineNames = (options.pipelines as string).split(',').map((s: string) => s.trim());
 

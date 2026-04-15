@@ -581,6 +581,29 @@
       vertical-align: middle;
     }
 
+    /* Token economics box */
+    .aco-economics {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .aco-economics-title {
+      font-weight: 600;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+    .aco-economics-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .aco-economics-label { color: var(--text-muted); }
+    .aco-economics-value { color: var(--text); font-weight: 500; }
+
     /* Responsive */
     @media (max-width: 600px) {
       .pg-wrap { padding: 1rem; }
@@ -738,6 +761,15 @@ provenance:
   entities: &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</pre>
         </div>
 
+        <div class="aco-economics">
+          <div class="aco-economics-title">Token Economics</div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Enrichment cost:</span><span class="aco-economics-value">~$0.0004</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Original content:</span><span class="aco-economics-value">1,230 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Frontmatter only:</span><span class="aco-economics-value">~200 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Savings per read:</span><span class="aco-economics-value">1,030 tokens (84%)</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Break-even:</span><span class="aco-economics-value">2 reads</span></div>
+        </div>
+
       </div>
     </div>
 
@@ -849,6 +881,15 @@ provenance:
   tags:     &#123; model: "claude-haiku-4-5", confidence: 0.85 &#125;
   summary:  &#123; model: "claude-haiku-4-5", confidence: 0.91 &#125;
   entities: &#123; model: "claude-haiku-4-5", confidence: 0.80 &#125;</pre>
+        </div>
+
+        <div class="aco-economics">
+          <div class="aco-economics-title">Token Economics</div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Enrichment cost:</span><span class="aco-economics-value">~$0.0011</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Original content:</span><span class="aco-economics-value">2,830 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Frontmatter only:</span><span class="aco-economics-value">~200 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Savings per read:</span><span class="aco-economics-value">2,630 tokens (93%)</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Break-even:</span><span class="aco-economics-value">1 read</span></div>
         </div>
 
       </div>
@@ -965,6 +1006,15 @@ provenance:
   summary:  &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.93 &#125;
   tags:     &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.89 &#125;
   entities: &#123; model: "gpt-4o-mini", version: "2024-07-18", confidence: 0.95 &#125;</pre>
+        </div>
+
+        <div class="aco-economics">
+          <div class="aco-economics-title">Token Economics</div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Enrichment cost:</span><span class="aco-economics-value">~$0.0009</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Original content:</span><span class="aco-economics-value">1,847 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Frontmatter only:</span><span class="aco-economics-value">~200 tokens</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Savings per read:</span><span class="aco-economics-value">1,647 tokens (89%)</span></div>
+          <div class="aco-economics-row"><span class="aco-economics-label">Break-even:</span><span class="aco-economics-value">1 read</span></div>
         </div>
 
       </div>
@@ -1311,6 +1361,26 @@ provenance:
       el.textContent = msg;
     }
 
+    function buildEconomicsHtml(contentTokens, frontmatterTokens) {
+      frontmatterTokens = frontmatterTokens || 200;
+      var inputTokens = contentTokens + 200;
+      var outputTokens = 300;
+      var haikuCost = (inputTokens * 0.25 + outputTokens * 1.25) / 1000000;
+      var savingsPerRead = contentTokens - frontmatterTokens;
+      var savingsPercent = savingsPerRead > 0 ? (savingsPerRead / contentTokens * 100).toFixed(0) : 0;
+      var readCostPerToken = 2.50 / 1000000;
+      var breakEven = savingsPerRead > 0 ? Math.ceil(haikuCost / (savingsPerRead * readCostPerToken)) : 'N/A';
+      var costStr = '$' + haikuCost.toFixed(4);
+      return '<div class="aco-economics">' +
+        '<div class="aco-economics-title">Token Economics</div>' +
+        '<div class="aco-economics-row"><span class="aco-economics-label">Enrichment cost:</span><span class="aco-economics-value">~' + costStr + '</span></div>' +
+        '<div class="aco-economics-row"><span class="aco-economics-label">Original content:</span><span class="aco-economics-value">' + contentTokens.toLocaleString() + ' tokens</span></div>' +
+        '<div class="aco-economics-row"><span class="aco-economics-label">Frontmatter only:</span><span class="aco-economics-value">~' + frontmatterTokens + ' tokens</span></div>' +
+        '<div class="aco-economics-row"><span class="aco-economics-label">Savings per read:</span><span class="aco-economics-value">' + savingsPerRead.toLocaleString() + ' tokens (' + savingsPercent + '%)</span></div>' +
+        '<div class="aco-economics-row"><span class="aco-economics-label">Break-even:</span><span class="aco-economics-value">' + breakEven + ' reads</span></div>' +
+        '</div>';
+    }
+
     function renderResult(title, data, approxTokens, sourceUrl, ogImage) {
       document.getElementById('pg-result-title').textContent = title || 'Enriched ACO';
       var urlLine = document.getElementById('pg-result-ts');
@@ -1381,7 +1451,8 @@ provenance:
         '<div class="aco-prov-content">tags:     { model: "claude-haiku-4-5", confidence: 0.85 }\nsummary:  { model: "claude-haiku-4-5", confidence: 0.85 }\nentities: { model: "claude-haiku-4-5", confidence: 0.80 }</div></div>' +
         '<div style="display:flex;justify-content:flex-end">' +
         '<button class="aco-yaml-toggle" onclick="toggleYaml(this)">&lt;/&gt; Raw YAML</button></div>' +
-        '<div class="aco-yaml-block"><pre>' + esc(rawYaml) + '</pre></div>';
+        '<div class="aco-yaml-block"><pre>' + esc(rawYaml) + '</pre></div>' +
+        buildEconomicsHtml(approxTokens, 200);
     }
 
     function esc(s) {

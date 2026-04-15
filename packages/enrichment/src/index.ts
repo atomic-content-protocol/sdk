@@ -65,5 +65,7 @@ export {
   buildClassificationPrompt,
   buildUnifiedPrompt,
   UNIFIED_SCHEMA,
+  estimateEnrichmentCost,
+  formatCostEstimate,
 } from "./utils/index.js";
-export type { UnifiedEnrichmentOutput } from "./utils/index.js";
+export type { UnifiedEnrichmentOutput, CostEstimate } from "./utils/index.js";

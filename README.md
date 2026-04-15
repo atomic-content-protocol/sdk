@@ -326,6 +326,60 @@ This separation means you can use just `@acp/core` to build a compliant tool, ad
 
 ---
 
+## Provider Fallback & Resilience
+
+The `ProviderRouter` automatically handles provider failures with circuit breakers:
+
+```
+Claude Haiku ($0.25/1M input)     ← primary
+    ↓ circuit trips after 3 failures
+GPT-4o-mini ($0.15/1M input)      ← automatic fallback  
+    ↓ circuit trips after 5 failures
+Ollama (local, free)               ← self-hosted fallback
+```
+
+Each provider is wrapped in a `CircuitBreaker` that:
+- Tracks consecutive failures
+- Trips OPEN after threshold (skips the provider entirely)
+- Resets after 30 seconds (probes with one request)
+- Falls back to the next provider in the chain
+
+Configure multiple providers for resilience:
+
+```typescript
+const router = ProviderRouter.fromConfig({
+  anthropic: { apiKey: process.env.ANTHROPIC_API_KEY },
+  openai: { apiKey: process.env.OPENAI_API_KEY },      // fallback
+  ollama: { baseUrl: 'http://localhost:11434' },         // local fallback
+});
+```
+
+If Anthropic is down, enrichment automatically falls through to OpenAI with no code changes.
+
+---
+
+## Token Economics
+
+ACP enrichment creates a ~200 token frontmatter layer that agents use for triage instead of reading full documents:
+
+| Operation | Without ACP | With ACP |
+|---|---|---|
+| Triage 50 documents | 250,000 tokens | 10,000 tokens (frontmatter) |
+| Deep read 5 selected | — | 25,000 tokens |
+| **Total** | **250,000 tokens** | **35,000 tokens (86% less)** |
+
+Enrichment cost: ~$0.002/document. Savings compound on every subsequent read.
+
+```typescript
+import { estimateEnrichmentCost } from '@acp/enrichment';
+
+const estimate = estimateEnrichmentCost(content, 'standard');
+console.log(estimate.savingsPercent);  // 84
+console.log(estimate.breakEvenReads);  // 2
+```
+
+---
+
 ## Development
 
 **Requirements:** Node.js >= 20, npm >= 10
