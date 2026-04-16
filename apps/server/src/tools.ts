@@ -9,6 +9,16 @@ import {
 } from '@acp/enrichment';
 import type { ProviderConfig } from '@acp/enrichment';
 import type { ACO } from '@acp/core';
+import { trackEnrichment, trackEnrichmentFailed } from './analytics.js';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const MAX_CONTENT_LENGTH = 50_000;
+const MAX_BATCH_SIZE = 10;
+const FETCH_TIMEOUT_MS = 15_000;
+const ENRICHMENT_TIMEOUT_MS = 25_000;
 
 // ---------------------------------------------------------------------------
 // Provider setup (lazy singleton)
@@ -108,13 +118,35 @@ export function getTools() {
 }
 
 // ---------------------------------------------------------------------------
+// Error response helpers
+// ---------------------------------------------------------------------------
+
+function errorResponse(error: string, code: string, retryable: boolean) {
+  return { success: false, error, code, retryable };
+}
+
+function validateContent(content: string): Record<string, unknown> | null {
+  if (!content || content.trim().length === 0) {
+    return errorResponse('Content cannot be empty', 'EMPTY_CONTENT', false);
+  }
+  if (content.length > MAX_CONTENT_LENGTH) {
+    return errorResponse(
+      `Content exceeds maximum length (${MAX_CONTENT_LENGTH.toLocaleString()} characters)`,
+      'CONTENT_TOO_LARGE',
+      false
+    );
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // URL fetching
 // ---------------------------------------------------------------------------
 
 async function fetchUrlContent(url: string) {
   const response = await fetch(url, {
     headers: { 'User-Agent': 'ACP-MCP-Server/1.0' },
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   const html = await response.text();
 
@@ -175,7 +207,13 @@ async function enrichACO(
   const providerRouter = getRouter();
   const pipeline = new UnifiedPipeline();
   const enricher = new BatchEnricher(providerRouter, [pipeline]);
-  const enriched = await enricher.enrichOne(aco);
+
+  // Wrap enrichment with a timeout
+  const enrichmentPromise = enricher.enrichOne(aco);
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    setTimeout(() => reject(new Error('ENRICHMENT_TIMEOUT')), ENRICHMENT_TIMEOUT_MS);
+  });
+  const enriched = await Promise.race([enrichmentPromise, timeoutPromise]);
 
   const depth = options.depth ?? 'standard';
   const costEstimate = estimateEnrichmentCost(content, depth);
@@ -199,43 +237,171 @@ async function enrichACO(
 
 export async function handleToolCall(
   name: string,
-  args: Record<string, unknown> | undefined
+  args: Record<string, unknown> | undefined,
+  ip: string,
+  rateLimitRemaining: number
 ): Promise<Record<string, unknown>> {
+  const limit = parseInt(process.env.RATE_LIMIT_PER_HOUR || '50', 10);
+  const rateLimitPercentUsed = ((limit - rateLimitRemaining) / limit) * 100;
+
   try {
     switch (name) {
       case 'enrich_content': {
         const input = enrichContentSchema.parse(args);
-        const result = await enrichACO(input.content, {
-          title: input.title,
-          source_type: input.source_type,
-          depth: input.depth,
-        });
-        return { success: true, data: result };
+
+        // Validate content
+        const contentError = validateContent(input.content);
+        if (contentError) return contentError;
+
+        const start = Date.now();
+        try {
+          const result = await enrichACO(input.content, {
+            title: input.title,
+            source_type: input.source_type,
+            depth: input.depth,
+          });
+          const latencyMs = Date.now() - start;
+
+          const cost = result.cost as { estimated?: number; model?: string; inputTokens?: number };
+          trackEnrichment({
+            ip,
+            tool: 'enrich_content',
+            depth: input.depth,
+            contentTokens: cost.inputTokens ?? 0,
+            enrichmentCost: (cost.estimated as number) ?? 0,
+            modelUsed: (cost.model as string) ?? 'unknown',
+            rateLimitRemaining,
+            rateLimitPercentUsed,
+            latencyMs,
+            batchSize: 1,
+          });
+
+          return { success: true, data: result };
+        } catch (err) {
+          const latencyMs = Date.now() - start;
+          const message = err instanceof Error ? err.message : String(err);
+
+          if (message === 'ENRICHMENT_TIMEOUT') {
+            trackEnrichmentFailed({ ip, tool: 'enrich_content', errorType: 'ENRICHMENT_TIMEOUT', errorMessage: `Enrichment timed out after ${ENRICHMENT_TIMEOUT_MS / 1000}s (${latencyMs}ms)` });
+            return errorResponse('Enrichment timed out', 'ENRICHMENT_TIMEOUT', true);
+          }
+
+          trackEnrichmentFailed({ ip, tool: 'enrich_content', errorType: 'PROVIDER_ERROR', errorMessage: message });
+          return errorResponse(`AI provider error: ${message}`, 'PROVIDER_ERROR', true);
+        }
       }
 
       case 'enrich_url': {
         const input = enrichUrlSchema.parse(args);
-        const fetched = await fetchUrlContent(input.url);
-        const result = await enrichACO(fetched.body, {
-          title: fetched.title,
-          source_type: 'link',
-          depth: input.depth,
-          source_url: fetched.url,
-          ogImage: fetched.ogImage,
-        });
-        return { success: true, data: result };
+
+        // Fetch URL with error handling
+        let fetched: Awaited<ReturnType<typeof fetchUrlContent>>;
+        const start = Date.now();
+        try {
+          fetched = await fetchUrlContent(input.url);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (err instanceof Error && err.name === 'TimeoutError') {
+            trackEnrichmentFailed({ ip, tool: 'enrich_url', errorType: 'FETCH_TIMEOUT', errorMessage: `URL fetch timed out after ${FETCH_TIMEOUT_MS / 1000} seconds` });
+            return errorResponse(`URL fetch timed out after ${FETCH_TIMEOUT_MS / 1000} seconds`, 'FETCH_TIMEOUT', true);
+          }
+          trackEnrichmentFailed({ ip, tool: 'enrich_url', errorType: 'FETCH_ERROR', errorMessage: message });
+          return errorResponse(`Failed to fetch URL: ${message}`, 'FETCH_ERROR', true);
+        }
+
+        // Validate fetched content
+        const contentError = validateContent(fetched.body);
+        if (contentError) return contentError;
+
+        try {
+          const result = await enrichACO(fetched.body, {
+            title: fetched.title,
+            source_type: 'link',
+            depth: input.depth,
+            source_url: fetched.url,
+            ogImage: fetched.ogImage,
+          });
+          const latencyMs = Date.now() - start;
+
+          const cost = result.cost as { estimated?: number; model?: string; inputTokens?: number };
+          trackEnrichment({
+            ip,
+            tool: 'enrich_url',
+            depth: input.depth,
+            contentTokens: cost.inputTokens ?? 0,
+            enrichmentCost: (cost.estimated as number) ?? 0,
+            modelUsed: (cost.model as string) ?? 'unknown',
+            rateLimitRemaining,
+            rateLimitPercentUsed,
+            latencyMs,
+            batchSize: 1,
+            sourceUrl: fetched.url,
+          });
+
+          return { success: true, data: result };
+        } catch (err) {
+          const latencyMs = Date.now() - start;
+          const message = err instanceof Error ? err.message : String(err);
+
+          if (message === 'ENRICHMENT_TIMEOUT') {
+            trackEnrichmentFailed({ ip, tool: 'enrich_url', errorType: 'ENRICHMENT_TIMEOUT', errorMessage: `Enrichment timed out after ${ENRICHMENT_TIMEOUT_MS / 1000}s (${latencyMs}ms)` });
+            return errorResponse('Enrichment timed out', 'ENRICHMENT_TIMEOUT', true);
+          }
+
+          trackEnrichmentFailed({ ip, tool: 'enrich_url', errorType: 'PROVIDER_ERROR', errorMessage: message });
+          return errorResponse(`AI provider error: ${message}`, 'PROVIDER_ERROR', true);
+        }
       }
 
       case 'enrich_batch': {
         const input = enrichBatchSchema.parse(args);
+
+        // Validate batch size
+        if (input.items.length > MAX_BATCH_SIZE) {
+          return errorResponse(
+            `Batch size exceeds maximum (${MAX_BATCH_SIZE} items)`,
+            'BATCH_TOO_LARGE',
+            false
+          );
+        }
+
+        // Validate each item has content or url
+        for (let i = 0; i < input.items.length; i++) {
+          const item = input.items[i]!;
+          if (!item.content && !item.url) {
+            return errorResponse('Each item must have content or url', 'INVALID_INPUT', false);
+          }
+        }
+
         const results: Array<Record<string, unknown>> = [];
         const errors: Array<{ index: number; error: string }> = [];
+        const batchStart = Date.now();
 
         for (let i = 0; i < input.items.length; i++) {
           const item = input.items[i]!;
           try {
             if (item.url) {
-              const fetched = await fetchUrlContent(item.url);
+              // Fetch with error handling
+              let fetched: Awaited<ReturnType<typeof fetchUrlContent>>;
+              try {
+                fetched = await fetchUrlContent(item.url);
+              } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                if (err instanceof Error && err.name === 'TimeoutError') {
+                  errors.push({ index: i, error: `URL fetch timed out after ${FETCH_TIMEOUT_MS / 1000} seconds` });
+                } else {
+                  errors.push({ index: i, error: `Failed to fetch URL: ${message}` });
+                }
+                continue;
+              }
+
+              // Validate content
+              const contentErr = validateContent(fetched.body);
+              if (contentErr) {
+                errors.push({ index: i, error: contentErr.error as string });
+                continue;
+              }
+
               const result = await enrichACO(fetched.body, {
                 title: item.title || fetched.title,
                 source_type: 'link',
@@ -245,6 +411,13 @@ export async function handleToolCall(
               });
               results.push(result);
             } else if (item.content) {
+              // Validate content
+              const contentErr = validateContent(item.content);
+              if (contentErr) {
+                errors.push({ index: i, error: contentErr.error as string });
+                continue;
+              }
+
               const result = await enrichACO(item.content, {
                 title: item.title,
                 source_type: 'manual',
@@ -255,11 +428,41 @@ export async function handleToolCall(
               errors.push({ index: i, error: 'Item must have either content or url' });
             }
           } catch (err) {
-            errors.push({
-              index: i,
-              error: err instanceof Error ? err.message : String(err),
-            });
+            const message = err instanceof Error ? err.message : String(err);
+            if (message === 'ENRICHMENT_TIMEOUT') {
+              errors.push({ index: i, error: 'Enrichment timed out' });
+            } else {
+              errors.push({ index: i, error: `AI provider error: ${message}` });
+            }
           }
+        }
+
+        const batchLatencyMs = Date.now() - batchStart;
+
+        // Track analytics for batch
+        if (results.length > 0) {
+          const firstCost = results[0]?.cost as { estimated?: number; model?: string; inputTokens?: number } | undefined;
+          trackEnrichment({
+            ip,
+            tool: 'enrich_batch',
+            depth: input.depth,
+            contentTokens: firstCost?.inputTokens ?? 0,
+            enrichmentCost: (firstCost?.estimated as number) ?? 0,
+            modelUsed: (firstCost?.model as string) ?? 'unknown',
+            rateLimitRemaining,
+            rateLimitPercentUsed,
+            latencyMs: batchLatencyMs,
+            batchSize: input.items.length,
+          });
+        }
+
+        if (errors.length > 0 && results.length === 0) {
+          trackEnrichmentFailed({
+            ip,
+            tool: 'enrich_batch',
+            errorType: 'BATCH_ALL_FAILED',
+            errorMessage: `All ${input.items.length} items failed`,
+          });
         }
 
         return {
@@ -272,9 +475,11 @@ export async function handleToolCall(
         return { success: false, error: `Unknown tool: ${name}` };
     }
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    trackEnrichmentFailed({ ip, tool: name, errorType: 'UNEXPECTED_ERROR', errorMessage: message });
     return {
       success: false,
-      error: err instanceof Error ? err.message : String(err),
+      error: message,
     };
   }
 }

@@ -4,6 +4,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { mcpHandler } from './mcp-handler.js';
 import { healthHandler } from './health.js';
+import { initPostHog, shutdownPostHog } from './analytics.js';
+
+// Initialize PostHog analytics
+initPostHog();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -19,6 +23,16 @@ app.get('/health', healthHandler);
 app.post('/mcp', express.json(), mcpHandler);
 app.get('/mcp', (_req, res) => res.status(405).json({ error: 'SSE not supported in stateless mode' }));
 app.delete('/mcp', (_req, res) => res.status(200).json({ ok: true }));
+
+// Graceful shutdown
+function shutdown(signal: string) {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  shutdownPostHog();
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 // Start
 app.listen(PORT, () => {
