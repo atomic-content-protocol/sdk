@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "build": "turbo build",
+    "start": "node apps/server/dist/index.js",
     "test": "turbo test",
     "lint": "turbo lint",
     "clean": "turbo clean"
