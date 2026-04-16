@@ -187,7 +187,7 @@ async function enrichACO(
     source_url?: string;
     ogImage?: string;
   }
-): Promise<{ aco: Record<string, unknown>; body: string; cost: Record<string, unknown> }> {
+): Promise<{ aco: Record<string, unknown>; body: string; cost: Record<string, unknown>; token_savings: Record<string, unknown> }> {
   const aco: ACO = await createACO({
     title: options.title,
     body: content,
@@ -227,6 +227,14 @@ async function enrichACO(
       depth,
       inputTokens: costEstimate.inputTokens,
       outputTokens: costEstimate.outputTokens,
+    },
+    token_savings: {
+      content_tokens: costEstimate.contentTokens,
+      frontmatter_tokens: costEstimate.frontmatterTokens,
+      savings_per_read: costEstimate.savingsPerRead,
+      savings_percent: Math.round(costEstimate.savingsPercent),
+      break_even_reads: costEstimate.breakEvenReads,
+      message: `Future reads use ~${costEstimate.frontmatterTokens} tokens instead of ~${costEstimate.contentTokens} — saving ${costEstimate.savingsPerRead.toLocaleString()} tokens (${Math.round(costEstimate.savingsPercent)}%) per read. Break-even after ${costEstimate.breakEvenReads} reads.`,
     },
   };
 }
