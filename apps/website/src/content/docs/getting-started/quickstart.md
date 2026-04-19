@@ -80,7 +80,7 @@ The ACP CLI scaffolds and enriches ACOs from the command line.
 ### Initialize a vault
 
 ```bash
-npx @acp/cli init ./my-vault
+npx @atomic-content-protocol/cli init ./my-vault
 ```
 
 This creates a directory with a `.acp/` config folder. ACOs you create in this directory will automatically get the right structure.
@@ -88,7 +88,7 @@ This creates a directory with a `.acp/` config folder. ACOs you create in this d
 ### Create an ACO
 
 ```bash
-npx @acp/cli create --title "My First ACO" --source-type manual
+npx @atomic-content-protocol/cli create --title "My First ACO" --source-type manual
 ```
 
 This creates a new `.md` file pre-populated with a generated UUID, the current timestamp, and all required fields. Open the file to add your content.
@@ -96,7 +96,7 @@ This creates a new `.md` file pre-populated with a generated UUID, the current t
 For a link-based ACO, pass a URL and the CLI will fetch and extract the content:
 
 ```bash
-npx @acp/cli create --url "https://example.com/article"
+npx @atomic-content-protocol/cli create --url "https://example.com/article"
 ```
 
 ### Enrich an ACO
@@ -104,7 +104,7 @@ npx @acp/cli create --url "https://example.com/article"
 Once a file has content, enrich it with AI-generated metadata:
 
 ```bash
-npx @acp/cli enrich ./my-vault/my-first-aco.md
+npx @atomic-content-protocol/cli enrich ./my-vault/my-first-aco.md
 ```
 
 This adds `summary`, `tags`, `key_entities`, and `token_counts` — all with per-field provenance records showing which model generated each field.
@@ -112,7 +112,7 @@ This adds `summary`, `tags`, `key_entities`, and `token_counts` — all with per
 To enrich all ACOs in a vault:
 
 ```bash
-npx @acp/cli enrich ./my-vault/
+npx @atomic-content-protocol/cli enrich ./my-vault/
 ```
 
 ### Validate
@@ -120,7 +120,7 @@ npx @acp/cli enrich ./my-vault/
 Check that your ACOs are spec-compliant:
 
 ```bash
-npx @acp/cli validate ./my-vault/my-first-aco.md
+npx @atomic-content-protocol/cli validate ./my-vault/my-first-aco.md
 ```
 
 ---

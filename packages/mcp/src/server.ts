@@ -7,8 +7,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import type { IStorageAdapter } from "@acp/core";
-import type { ProviderConfig } from "@acp/enrichment";
+import type { IStorageAdapter } from "@atomic-content-protocol/core";
+import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 
 import {
   registerTool,

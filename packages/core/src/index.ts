@@ -1,5 +1,5 @@
 /**
- * @acp/core — public package entry point.
+ * @atomic-content-protocol/core — public package entry point.
  *
  * Re-exports the full public API of the ACP Core SDK:
  *

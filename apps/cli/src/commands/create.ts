@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { createACO, FilesystemAdapter } from '@acp/core';
+import { createACO, FilesystemAdapter } from '@atomic-content-protocol/core';
 import { loadConfig } from '../utils/config.js';
 import { resolveAuthor } from '../utils/author.js';
 import chalk from 'chalk';

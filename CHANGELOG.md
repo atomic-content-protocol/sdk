@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### @acp/core
+#### @atomic-content-protocol/core
 - Zod schemas for ACO, Container, and Collection (ported from ACP spec v0.4)
 - Parse/serialize with gray-matter + js-yaml JSON_SCHEMA for lossless round-trips
 - FilesystemAdapter with `.acp/index.json` cache and vector embedding storage
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Approximate and cl100k (tiktoken) token counting
 - 130 unit tests
 
-#### @acp/enrichment
+#### @atomic-content-protocol/enrichment
 - Three LLM providers: Anthropic, OpenAI, Ollama (local)
 - ProviderRouter with CircuitBreaker fallback chain
 - Six enrichment pipelines: Tag, Summary, Entity, Classification, Unified (single-call), Embed
@@ -28,12 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Idempotency: skip fields with existing provenance unless force=true
 - 52 unit tests
 
-#### @acp/mcp
+#### @atomic-content-protocol/mcp
 - 15 MCP tools: CRUD (5), Containers (3), Enrichment (3), Search (2), Vault (2)
 - ACPMCPServer class with StdIO transport
 - Tool handler pattern with Zod validation
 
-#### @acp/cli
+#### @atomic-content-protocol/cli
 - 8 commands: init, create, validate, enrich, enrich-batch, search, serve, stats
 - Smart author resolution (CLI flags → config → git → prompt → unknown)
 - Cost preview with confirmation prompts and --max-cost flag

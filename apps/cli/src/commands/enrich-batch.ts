@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { FilesystemAdapter } from '@acp/core';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
 import {
   UnifiedPipeline,
   TagPipeline,
@@ -9,8 +9,8 @@ import {
   BatchEnricher,
   estimateEnrichmentCost,
   formatCostEstimate,
-} from '@acp/enrichment';
-import type { IEnrichmentPipeline } from '@acp/enrichment';
+} from '@atomic-content-protocol/enrichment';
+import type { IEnrichmentPipeline } from '@atomic-content-protocol/enrichment';
 import { loadConfig } from '../utils/config.js';
 import { createRouter } from '../utils/enrichment.js';
 import chalk from 'chalk';

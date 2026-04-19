@@ -32,22 +32,22 @@ jobs:
       - name: Test
         run: npx turbo test
 
-      - name: Publish @acp/core
+      - name: Publish @atomic-content-protocol/core
         run: cd packages/core && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @acp/enrichment
+      - name: Publish @atomic-content-protocol/enrichment
         run: cd packages/enrichment && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @acp/mcp
+      - name: Publish @atomic-content-protocol/mcp
         run: cd packages/mcp && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @acp/cli
-        run: cd packages/cli && npm publish --access public
+      - name: Publish @atomic-content-protocol/cli
+        run: cd apps/cli && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

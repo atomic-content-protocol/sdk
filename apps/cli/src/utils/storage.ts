@@ -1,4 +1,4 @@
-import { FilesystemAdapter } from '@acp/core';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
 import type { ACPConfig } from './config.js';
 
 export function createStorage(config: ACPConfig): FilesystemAdapter {

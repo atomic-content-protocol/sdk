@@ -1,5 +1,5 @@
 /**
- * @acp/mcp — MCP server for the Atomic Content Protocol.
+ * @atomic-content-protocol/mcp — MCP server for the Atomic Content Protocol.
  *
  * Exposes ACO operations as tools that AI agents can call via the
  * Model Context Protocol (MCP).
@@ -7,8 +7,8 @@
  * Quick start:
  *
  * ```typescript
- * import { ACPMCPServer } from '@acp/mcp';
- * import { FilesystemAdapter } from '@acp/core';
+ * import { ACPMCPServer } from '@atomic-content-protocol/mcp';
+ * import { FilesystemAdapter } from '@atomic-content-protocol/core';
  *
  * const storage = new FilesystemAdapter({ vaultPath: './my-vault' });
  * const server = new ACPMCPServer({

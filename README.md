@@ -2,7 +2,7 @@
 
 **An open standard that makes knowledge portable and readable by both humans and AI.**
 
-[![npm version](https://img.shields.io/npm/v/@acp/core)](https://www.npmjs.com/package/@acp/core)
+[![npm version](https://img.shields.io/npm/v/@atomic-content-protocol/core)](https://www.npmjs.com/package/@atomic-content-protocol/core)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Build](https://img.shields.io/github/actions/workflow/status/atomic-content-protocol/sdk/ci.yml)](https://github.com/atomic-content-protocol/sdk/actions)
 
@@ -64,17 +64,17 @@ Your content here.
 ### Path 2 — Use the CLI
 
 ```bash
-npx @acp/cli init ./my-vault
-npx @acp/cli create --title "My First ACO" --body "Content here"
-npx @acp/cli enrich <id>
-npx @acp/cli serve
+npx @atomic-content-protocol/cli init ./my-vault
+npx @atomic-content-protocol/cli create --title "My First ACO" --body "Content here"
+npx @atomic-content-protocol/cli enrich <id>
+npx @atomic-content-protocol/cli serve
 ```
 
 ### Path 3 — Use as a library
 
 ```typescript
-import { createACO, FilesystemAdapter } from '@acp/core';
-import { ProviderRouter, UnifiedPipeline } from '@acp/enrichment';
+import { createACO, FilesystemAdapter } from '@atomic-content-protocol/core';
+import { ProviderRouter, UnifiedPipeline } from '@atomic-content-protocol/enrichment';
 
 // Create and persist an ACO
 const storage = new FilesystemAdapter('./vault');
@@ -101,12 +101,12 @@ await storage.putACO(enriched);
 
 | Package | Version | Description |
 |---|---|---|
-| [`@acp/core`](packages/core) | 0.1.0 | Schema validation, parse/serialize, storage adapters |
-| [`@acp/enrichment`](packages/enrichment) | 0.1.0 | LLM-powered enrichment pipelines |
-| [`@acp/mcp`](packages/mcp) | 0.1.0 | MCP server for AI agent access |
-| [`@acp/cli`](apps/cli) | 0.1.0 | Command-line tool |
+| [`@atomic-content-protocol/core`](packages/core) | 0.1.0 | Schema validation, parse/serialize, storage adapters |
+| [`@atomic-content-protocol/enrichment`](packages/enrichment) | 0.1.0 | LLM-powered enrichment pipelines |
+| [`@atomic-content-protocol/mcp`](packages/mcp) | 0.1.0 | MCP server for AI agent access |
+| [`@atomic-content-protocol/cli`](apps/cli) | 0.1.0 | Command-line tool |
 
-### `@acp/core`
+### `@atomic-content-protocol/core`
 
 Zero AI dependencies. Implements the protocol itself.
 
@@ -123,10 +123,10 @@ import {
   computeContentHash, // SHA-256 of the content body
   computeTokenCounts, // Per-tokenizer token count estimates
   migrate,            // Migrate an ACO from an older acp_version
-} from '@acp/core';
+} from '@atomic-content-protocol/core';
 ```
 
-### `@acp/enrichment`
+### `@atomic-content-protocol/enrichment`
 
 LLM enrichment pipelines. Supports Anthropic, OpenAI, and Ollama.
 
@@ -140,16 +140,16 @@ import {
   ClassificationPipeline, // Content type classification
   EmbedPipeline,          // Embedding generation
   BatchEnricher,          // Enrich many ACOs with concurrency control
-} from '@acp/enrichment';
+} from '@atomic-content-protocol/enrichment';
 ```
 
-### `@acp/mcp`
+### `@atomic-content-protocol/mcp`
 
 Exposes your ACO vault as an MCP server. AI agents can list, read, create, search, and enrich ACOs using standard MCP tool calls.
 
 ```typescript
-import { ACPMCPServer } from '@acp/mcp';
-import { FilesystemAdapter } from '@acp/core';
+import { ACPMCPServer } from '@atomic-content-protocol/mcp';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
 
 const server = new ACPMCPServer({
   storage: new FilesystemAdapter('./vault'),
@@ -160,10 +160,10 @@ const server = new ACPMCPServer({
 await server.start();
 ```
 
-### `@acp/cli`
+### `@atomic-content-protocol/cli`
 
 ```bash
-npm install -g @acp/cli
+npm install -g @atomic-content-protocol/cli
 acp --help
 ```
 
@@ -227,8 +227,8 @@ Connect your ACO vault to Claude, Cursor, or any MCP-compatible AI client.
 **Start programmatically:**
 
 ```typescript
-import { ACPMCPServer } from '@acp/mcp';
-import { FilesystemAdapter } from '@acp/core';
+import { ACPMCPServer } from '@atomic-content-protocol/mcp';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
 
 const server = new ACPMCPServer({
   storage: new FilesystemAdapter('./vault'),
@@ -253,7 +253,7 @@ acp serve
   "mcpServers": {
     "acp": {
       "command": "npx",
-      "args": ["@acp/cli", "serve"],
+      "args": ["@atomic-content-protocol/cli", "serve"],
       "env": {
         "ANTHROPIC_API_KEY": "sk-ant-..."
       }
@@ -308,21 +308,21 @@ Three layers. Each works independently.
 
 ```
 ┌─────────────────────────────────────────┐
-│  @acp/mcp       MCP server              │  AI agents connect here
+│  @atomic-content-protocol/mcp       MCP server              │  AI agents connect here
 ├─────────────────────────────────────────┤
-│  @acp/enrichment  LLM pipelines         │  Add AI metadata
+│  @atomic-content-protocol/enrichment  LLM pipelines         │  Add AI metadata
 ├─────────────────────────────────────────┤
-│  @acp/core      Protocol + storage      │  Zero AI dependencies
+│  @atomic-content-protocol/core      Protocol + storage      │  Zero AI dependencies
 └─────────────────────────────────────────┘
 ```
 
-**`@acp/core`** is the protocol layer. It defines the schema (via Zod), handles parse/serialize, and provides a storage adapter interface. No AI dependencies. Use it anywhere — browsers, edge functions, CI pipelines.
+**`@atomic-content-protocol/core`** is the protocol layer. It defines the schema (via Zod), handles parse/serialize, and provides a storage adapter interface. No AI dependencies. Use it anywhere — browsers, edge functions, CI pipelines.
 
-**`@acp/enrichment`** adds LLM-powered pipelines. It depends on `@acp/core` but not on `@acp/mcp`. The `ProviderRouter` handles provider selection, fallback ordering, and circuit-breaking across Anthropic, OpenAI, and Ollama.
+**`@atomic-content-protocol/enrichment`** adds LLM-powered pipelines. It depends on `@atomic-content-protocol/core` but not on `@atomic-content-protocol/mcp`. The `ProviderRouter` handles provider selection, fallback ordering, and circuit-breaking across Anthropic, OpenAI, and Ollama.
 
-**`@acp/mcp`** wraps `@acp/core` and `@acp/enrichment` into an MCP server. It registers ACO operations as typed MCP tools and starts a stdio transport for JSON-RPC communication with AI clients.
+**`@atomic-content-protocol/mcp`** wraps `@atomic-content-protocol/core` and `@atomic-content-protocol/enrichment` into an MCP server. It registers ACO operations as typed MCP tools and starts a stdio transport for JSON-RPC communication with AI clients.
 
-This separation means you can use just `@acp/core` to build a compliant tool, add `@acp/enrichment` when you need AI metadata, and add `@acp/mcp` only when you want to expose the vault to agents.
+This separation means you can use just `@atomic-content-protocol/core` to build a compliant tool, add `@atomic-content-protocol/enrichment` when you need AI metadata, and add `@atomic-content-protocol/mcp` only when you want to expose the vault to agents.
 
 ---
 
@@ -371,7 +371,7 @@ ACP enrichment creates a ~200 token frontmatter layer that agents use for triage
 Enrichment cost: ~$0.002/document. Savings compound on every subsequent read.
 
 ```typescript
-import { estimateEnrichmentCost } from '@acp/enrichment';
+import { estimateEnrichmentCost } from '@atomic-content-protocol/enrichment';
 
 const estimate = estimateEnrichmentCost(content, 'standard');
 console.log(estimate.savingsPercent);  // 84
@@ -405,11 +405,11 @@ This fetches the URL, creates an ACO, enriches it in a single LLM call, and writ
 
 ```
 packages/
-  core/        # @acp/core
-  enrichment/  # @acp/enrichment
-  mcp/         # @acp/mcp
+  core/        # @atomic-content-protocol/core
+  enrichment/  # @atomic-content-protocol/enrichment
+  mcp/         # @atomic-content-protocol/mcp
 apps/
-  cli/         # @acp/cli
+  cli/         # @atomic-content-protocol/cli
   website/     # atomiccontentprotocol.org
 examples/
   demo-enrich-url.ts

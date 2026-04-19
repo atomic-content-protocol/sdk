@@ -1,4 +1,4 @@
-import { approximateTokenCount } from '@acp/core';
+import { approximateTokenCount } from '@atomic-content-protocol/core';
 
 // Model pricing per 1M tokens (as of 2026)
 const PRICING = {

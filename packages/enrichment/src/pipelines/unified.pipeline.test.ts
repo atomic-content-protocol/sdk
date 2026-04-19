@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { UnifiedPipeline } from './unified.pipeline.js';
 import type { IEnrichmentProvider } from '../providers/provider.interface.js';
-import type { ACO } from '@acp/core';
+import type { ACO } from '@atomic-content-protocol/core';
 import type { UnifiedEnrichmentOutput } from '../utils/prompts.js';
 
 // ---------------------------------------------------------------------------

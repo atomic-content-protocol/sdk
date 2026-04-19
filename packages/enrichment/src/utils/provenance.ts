@@ -1,4 +1,4 @@
-import type { ProvenanceRecord } from "@acp/core";
+import type { ProvenanceRecord } from "@atomic-content-protocol/core";
 
 /**
  * createProvenanceRecord — build a provenance record for an enriched field.

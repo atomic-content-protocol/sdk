@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { createACO } from '@acp/core';
+import { createACO } from '@atomic-content-protocol/core';
 import {
   ProviderRouter,
   UnifiedPipeline,
   BatchEnricher,
   estimateEnrichmentCost,
-} from '@acp/enrichment';
-import type { ProviderConfig } from '@acp/enrichment';
-import type { ACO } from '@acp/core';
+} from '@atomic-content-protocol/enrichment';
+import type { ProviderConfig } from '@atomic-content-protocol/enrichment';
+import type { ACO } from '@atomic-content-protocol/core';
 import { trackEnrichment, trackEnrichmentFailed } from './analytics.js';
 
 // ---------------------------------------------------------------------------

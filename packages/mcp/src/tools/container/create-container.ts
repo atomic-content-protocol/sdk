@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { generateId } from "@acp/core";
-import type { IStorageAdapter } from "@acp/core";
+import { generateId } from "@atomic-content-protocol/core";
+import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({

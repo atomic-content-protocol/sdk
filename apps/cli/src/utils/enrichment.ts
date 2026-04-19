@@ -1,5 +1,5 @@
-import { ProviderRouter } from '@acp/enrichment';
-import type { ProviderConfig } from '@acp/enrichment';
+import { ProviderRouter } from '@atomic-content-protocol/enrichment';
+import type { ProviderConfig } from '@atomic-content-protocol/enrichment';
 import type { ACPConfig } from './config.js';
 
 export function createRouter(config: ACPConfig): ProviderRouter | null {

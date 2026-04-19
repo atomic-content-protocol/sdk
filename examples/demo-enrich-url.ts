@@ -9,8 +9,8 @@
  *   export $(cat .env | xargs) && npx tsx examples/demo-enrich-url.ts https://example.com/article
  */
 
-import { createACO, FilesystemAdapter, serializeACO } from '@acp/core';
-import { ProviderRouter, UnifiedPipeline, EmbedPipeline } from '@acp/enrichment';
+import { createACO, FilesystemAdapter, serializeACO } from '@atomic-content-protocol/core';
+import { ProviderRouter, UnifiedPipeline, EmbedPipeline } from '@atomic-content-protocol/enrichment';
 import { execSync } from 'node:child_process';
 
 function getGitUser(): { id: string; name: string } {

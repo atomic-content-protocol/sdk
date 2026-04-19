@@ -1,5 +1,5 @@
 {
-  "name": "@acp/mcp",
+  "name": "@atomic-content-protocol/mcp",
   "version": "0.1.0",
   "description": "MCP server for the Atomic Content Protocol — exposes ACO tools to AI agents",
   "type": "module",
@@ -11,6 +11,11 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "echo 'No tests yet'",
@@ -18,8 +23,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@acp/core": "*",
-    "@acp/enrichment": "*",
+    "@atomic-content-protocol/core": "^0.1.0",
+    "@atomic-content-protocol/enrichment": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.24.0",
     "zod-to-json-schema": "^3.24.0"
@@ -30,5 +35,25 @@
     "vitest": "^3.1.0"
   },
   "license": "Apache-2.0",
-  "engines": { "node": ">=20.0.0" }
+  "engines": { "node": ">=20.0.0" },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomic-content-protocol/sdk.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://atomiccontentprotocol.org",
+  "bugs": {
+    "url": "https://github.com/atomic-content-protocol/sdk/issues"
+  },
+  "keywords": [
+    "acp",
+    "atomic-content-protocol",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "llm"
+  ]
 }

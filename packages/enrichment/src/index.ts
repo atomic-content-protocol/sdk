@@ -1,10 +1,10 @@
 /**
- * @acp/enrichment — LLM enrichment pipelines for the Atomic Content Protocol.
+ * @atomic-content-protocol/enrichment — LLM enrichment pipelines for the Atomic Content Protocol.
  *
  * Quick-start:
  *
  * ```typescript
- * import { ProviderRouter, UnifiedPipeline, BatchEnricher } from '@acp/enrichment';
+ * import { ProviderRouter, UnifiedPipeline, BatchEnricher } from '@atomic-content-protocol/enrichment';
  *
  * const router = ProviderRouter.fromConfig({
  *   anthropic: { apiKey: process.env.ANTHROPIC_API_KEY! },

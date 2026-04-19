@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { FilesystemAdapter } from '@acp/core';
-import { ACPMCPServer } from '@acp/mcp';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
+import { ACPMCPServer } from '@atomic-content-protocol/mcp';
 import { loadConfig } from '../utils/config.js';
 
 export const serveCommand = new Command('serve')
@@ -20,7 +20,7 @@ export const serveCommand = new Command('serve')
       storage,
       enrichment:
         Object.keys(providerConfig).length > 0
-          ? { providers: providerConfig as import('@acp/enrichment').ProviderConfig }
+          ? { providers: providerConfig as import('@atomic-content-protocol/enrichment').ProviderConfig }
           : undefined,
       server: { name: 'acp-server', version: '0.1.0' },
     });

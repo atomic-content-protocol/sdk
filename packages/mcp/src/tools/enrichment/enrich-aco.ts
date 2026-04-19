@@ -7,9 +7,9 @@ import {
   ClassificationPipeline,
   UnifiedPipeline,
   ProviderRouter,
-} from "@acp/enrichment";
-import type { IStorageAdapter } from "@acp/core";
-import type { ProviderConfig } from "@acp/enrichment";
+} from "@atomic-content-protocol/enrichment";
+import type { IStorageAdapter } from "@atomic-content-protocol/core";
+import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified"] as const;

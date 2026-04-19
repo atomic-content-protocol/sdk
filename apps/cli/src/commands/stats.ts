@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { FilesystemAdapter } from '@acp/core';
+import { FilesystemAdapter } from '@atomic-content-protocol/core';
 import { loadConfig } from '../utils/config.js';
 import chalk from 'chalk';
 import ora from 'ora';

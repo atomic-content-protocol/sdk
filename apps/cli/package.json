@@ -1,11 +1,16 @@
 {
-  "name": "@acp/cli",
+  "name": "@atomic-content-protocol/cli",
   "version": "0.1.0",
   "description": "CLI tool for the Atomic Content Protocol",
   "type": "module",
   "bin": {
     "acp": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
@@ -13,9 +18,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@acp/core": "*",
-    "@acp/enrichment": "*",
-    "@acp/mcp": "*",
+    "@atomic-content-protocol/core": "^0.1.0",
+    "@atomic-content-protocol/enrichment": "^0.1.0",
+    "@atomic-content-protocol/mcp": "^0.1.0",
     "commander": "^13.1.0",
     "chalk": "^5.4.0",
     "ora": "^8.2.0"
@@ -26,5 +31,24 @@
     "tsx": "^4.19.0"
   },
   "license": "Apache-2.0",
-  "engines": { "node": ">=20.0.0" }
+  "engines": { "node": ">=20.0.0" },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomic-content-protocol/sdk.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://atomiccontentprotocol.org",
+  "bugs": {
+    "url": "https://github.com/atomic-content-protocol/sdk/issues"
+  },
+  "keywords": [
+    "acp",
+    "atomic-content-protocol",
+    "cli",
+    "ai",
+    "llm"
+  ]
 }

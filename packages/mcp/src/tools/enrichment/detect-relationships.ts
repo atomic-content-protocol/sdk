@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { ProviderRouter } from "@acp/enrichment";
-import type { IStorageAdapter, ACO } from "@acp/core";
-import type { ProviderConfig } from "@acp/enrichment";
+import { ProviderRouter } from "@atomic-content-protocol/enrichment";
+import type { IStorageAdapter, ACO } from "@atomic-content-protocol/core";
+import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import { cosineSimilarity } from "../../utils/similarity.js";
 

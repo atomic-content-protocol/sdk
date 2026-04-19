@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { BatchEnricher } from './batch-enricher.js';
 import type { IEnrichmentProvider } from '../providers/provider.interface.js';
 import type { IEnrichmentPipeline, EnrichmentResult, EnrichmentOptions } from '../pipelines/pipeline.interface.js';
-import type { ACO } from '@acp/core';
+import type { ACO } from '@atomic-content-protocol/core';
 
 // ---------------------------------------------------------------------------
 // Helpers

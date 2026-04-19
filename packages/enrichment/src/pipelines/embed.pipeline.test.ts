@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { EmbedPipeline } from './embed.pipeline.js';
 import type { IEnrichmentProvider } from '../providers/provider.interface.js';
-import type { ACO } from '@acp/core';
+import type { ACO } from '@atomic-content-protocol/core';
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,5 +1,5 @@
 {
-  "name": "@acp/core",
+  "name": "@atomic-content-protocol/core",
   "version": "0.1.0",
   "description": "Core schema, validation, and file I/O for the Atomic Content Protocol",
   "type": "module",
@@ -12,6 +12,11 @@
       "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -38,5 +43,25 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomic-content-protocol/sdk.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://atomiccontentprotocol.org",
+  "bugs": {
+    "url": "https://github.com/atomic-content-protocol/sdk/issues"
+  },
+  "keywords": [
+    "acp",
+    "atomic-content-protocol",
+    "knowledge-graph",
+    "ai",
+    "llm",
+    "schema"
+  ]
 }

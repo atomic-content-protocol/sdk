@@ -1,4 +1,4 @@
-import type { ACO } from "@acp/core";
+import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentPipeline, EnrichmentOptions } from "../pipelines/pipeline.interface.js";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 
