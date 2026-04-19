@@ -26,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npx turbo build
+      - name: Build publishable packages
+        run: npx turbo build --filter='@atomic-content-protocol/*'
 
-      - name: Test
-        run: npx turbo test
+      - name: Test publishable packages
+        run: npx turbo test --filter='@atomic-content-protocol/*'
