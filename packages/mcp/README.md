@@ -2,13 +2,26 @@
 
 MCP server for the [Atomic Content Protocol](https://atomiccontentprotocol.org) — exposes ACO operations as tools that AI agents can call via the [Model Context Protocol](https://modelcontextprotocol.io).
 
-## Install
+## Try it free — hosted server
+
+A hosted MCP server is live at [`mcp.atomiccontentprotocol.org`](https://mcp.atomiccontentprotocol.org/mcp). Use it as a **custom connector** in Claude Desktop, Cursor, or any MCP-compatible client — **on us**. No install, no API keys, no setup. We cover the LLM costs.
+
+### Add to Claude Desktop
+
+Settings → Connectors → *Add custom connector*
+
+- **Name:** `ACP`
+- **URL:** `https://mcp.atomiccontentprotocol.org/mcp`
+
+The `enrich_url`, `enrich_content`, and `enrich_batch` tools are immediately available in any chat.
+
+Rate-limited to 50 enrichments/hour per IP. For higher limits, private data, or self-hosting, use the package below and bring your own key.
+
+## Self-host
 
 ```bash
 npm install @atomic-content-protocol/mcp @atomic-content-protocol/core
 ```
-
-## Quick start
 
 ```typescript
 import { ACPMCPServer } from "@atomic-content-protocol/mcp";
@@ -27,10 +40,6 @@ const server = new ACPMCPServer({
 
 await server.start();
 ```
-
-## Hosted server
-
-A hosted MCP server is available at [`mcp.atomiccontentprotocol.org`](https://mcp.atomiccontentprotocol.org/mcp) — no install needed. Point any MCP-compatible client (Claude Desktop, Cursor, etc.) at it.
 
 ## Exports
 
