@@ -19,6 +19,12 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Connect',
+          items: [
+            { label: 'Connect to Claude', slug: 'connect' },
+          ],
+        },
+        {
           label: 'Specification',
           items: [
             { label: 'ACO (Atomic Content Object)', slug: 'spec/aco' },
