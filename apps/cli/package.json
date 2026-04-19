@@ -2,6 +2,7 @@
   "name": "@atomic-content-protocol/cli",
   "version": "0.1.0",
   "description": "CLI tool for the Atomic Content Protocol",
+  "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
   "bin": {
     "acp": "./dist/index.js"

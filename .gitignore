@@ -7,3 +7,4 @@ dist/
 .acp/
 .DS_Store
 coverage/
+demo-vault/

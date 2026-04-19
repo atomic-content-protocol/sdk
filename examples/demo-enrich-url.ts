@@ -3,7 +3,7 @@
  * ACP Demo: Enrich a URL
  *
  * Usage:
- *   ANTHROPIC_API_KEY=sk-... npx tsx examples/demo-enrich-url.ts https://stacklist.app/some-stack
+ *   ANTHROPIC_API_KEY=sk-... npx tsx examples/demo-enrich-url.ts https://stacklist.com/some-stack
  *
  * Or source your .env:
  *   export $(cat .env | xargs) && npx tsx examples/demo-enrich-url.ts https://example.com/article

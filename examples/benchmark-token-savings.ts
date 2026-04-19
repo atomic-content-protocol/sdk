@@ -985,8 +985,7 @@ async function main() {
   const report = buildReport(resultA, resultB, resultC, enrichedDocs, DOCUMENTS);
   console.log("\n" + report);
 
-  const outputPath =
-    "/Users/martinabicanic/Documents/workspace/stack-lab/acp-sdk/examples/benchmark-results.md";
+  const outputPath = new URL("./benchmark-results.md", import.meta.url).pathname;
   writeFileSync(outputPath, report, "utf-8");
   console.log(`\nResults written to: ${outputPath}`);
 }

@@ -2,6 +2,7 @@
   "name": "@atomic-content-protocol/mcp",
   "version": "0.1.0",
   "description": "MCP server for the Atomic Content Protocol — exposes ACO tools to AI agents",
+  "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

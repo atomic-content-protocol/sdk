@@ -43,6 +43,10 @@ export OPENAI_API_KEY=sk-...
 - Protocol spec: [atomiccontentprotocol.org](https://atomiccontentprotocol.org)
 - Repository: [github.com/atomic-content-protocol/sdk](https://github.com/atomic-content-protocol/sdk)
 
+## Stewardship
+
+The Atomic Content Protocol is an open standard stewarded by [Stacks, Inc](https://www.stacks.inc/) — the company behind [Stacklist](https://stacklist.com).
+
 ## License
 
 Apache-2.0

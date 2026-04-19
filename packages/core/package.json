@@ -2,6 +2,7 @@
   "name": "@atomic-content-protocol/core",
   "version": "0.1.0",
   "description": "Core schema, validation, and file I/O for the Atomic Content Protocol",
+  "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

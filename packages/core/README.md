@@ -41,6 +41,10 @@ const parsed = parseACO(markdown);
 - Repository: [github.com/atomic-content-protocol/sdk](https://github.com/atomic-content-protocol/sdk)
 - Issues: [github.com/atomic-content-protocol/sdk/issues](https://github.com/atomic-content-protocol/sdk/issues)
 
+## Stewardship
+
+The Atomic Content Protocol is an open standard stewarded by [Stacks, Inc](https://www.stacks.inc/) — the company behind [Stacklist](https://stacklist.com).
+
 ## License
 
 Apache-2.0
