@@ -208,8 +208,11 @@ async function enrichACO(
   const pipeline = new UnifiedPipeline();
   const enricher = new BatchEnricher(providerRouter, [pipeline]);
 
-  // Wrap enrichment with a timeout
-  const enrichmentPromise = enricher.enrichOne(aco);
+  // Wrap enrichment with a timeout. Pass tool identifier so every provenance
+  // record on the resulting ACO carries the ACP §3.13 `tool` field.
+  const enrichmentPromise = enricher.enrichOne(aco, {
+    tool: "acp-hosted-mcp@0.1.0",
+  });
   const timeoutPromise = new Promise<never>((_resolve, reject) => {
     setTimeout(() => reject(new Error('ENRICHMENT_TIMEOUT')), ENRICHMENT_TIMEOUT_MS);
   });

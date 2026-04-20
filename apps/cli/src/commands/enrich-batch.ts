@@ -141,6 +141,9 @@ export const enrichBatchCommand = new Command('enrich-batch')
 
     const { results, errors } = await enricher.enrichMany(acos, {
       force: options.force as boolean,
+      // ACP §3.13 — identifies the software running enrichment.
+      // Keep in sync with package.json version.
+      tool: "@atomic-content-protocol/cli@0.1.0",
       onProgress: (done, total) => {
         // Add the cost of the ACO that just completed (done is 1-indexed)
         cumulativeCost += perACOCosts[done - 1] ?? 0;

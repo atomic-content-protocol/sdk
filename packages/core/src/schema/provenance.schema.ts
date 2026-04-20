@@ -4,7 +4,7 @@ import { z } from "zod";
  * ProvenanceRecordSchema — tracks which model generated a specific field.
  *
  * Spec reference: §3.13
- * Required: model, timestamp. Optional: version, confidence.
+ * Required: model, timestamp. Optional: version, confidence, pipeline, tool.
  */
 export const ProvenanceRecordSchema = z
   .object({
@@ -20,6 +20,22 @@ export const ProvenanceRecordSchema = z
      * See §3.12 and §3.13 for the distinction.
      */
     confidence: z.number().min(0).max(1).optional(),
+    /**
+     * Identifier of the enrichment pipeline that produced this field.
+     * Examples: "unified", "tag-only", "summary-only", "entity".
+     * Lets consumers distinguish fields produced by different pipelines
+     * in the same ACO.
+     */
+    pipeline: z.string().optional(),
+    /**
+     * Identifier of the software that ran the enrichment.
+     * Recommended format: "<package-name>@<version>".
+     * Examples: "@atomic-content-protocol/cli@0.1.1",
+     * "@stacklist/mcp-server@2.0.0", "acp-hosted-mcp@0.1.0".
+     * Distinguishes fields produced by different implementations when
+     * ACOs from multiple sources land in the same registry.
+     */
+    tool: z.string().optional(),
   })
   .passthrough();
 

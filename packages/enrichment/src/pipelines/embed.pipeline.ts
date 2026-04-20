@@ -71,7 +71,10 @@ export class EmbedPipeline implements IEnrichmentPipeline {
     const vector = await provider.embed(textToEmbed);
 
     // Write a provenance record to frontmatter so subsequent runs can skip
-    const provRecord = createProvenanceRecord(provider.model, 1.0);
+    const provRecord = createProvenanceRecord(provider.model, 1.0, {
+      pipeline: this.name,
+      tool: options?.tool,
+    });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,

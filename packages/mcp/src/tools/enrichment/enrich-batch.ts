@@ -123,7 +123,11 @@ export function createEnrichBatchTool(
       const router = ProviderRouter.fromConfig(enrichmentConfig.providers);
       const enricher = new BatchEnricher(router, buildPipelines(pipelines as PipelineName[]));
 
-      const { results: enrichedACOs, errors } = await enricher.enrichMany(acos);
+      // ACP §3.13 — identifies the software running enrichment.
+      // Keep in sync with package.json version.
+      const { results: enrichedACOs, errors } = await enricher.enrichMany(acos, {
+        tool: "@atomic-content-protocol/mcp@0.1.0",
+      });
 
       // Write enriched ACOs back to storage
       await Promise.all(enrichedACOs.map((aco) => storage.putACO(aco)));
