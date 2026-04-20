@@ -11,6 +11,7 @@ import {
 import type { IStorageAdapter, ACO } from "@atomic-content-protocol/core";
 import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { TOOL } from "../../tool-id.js";
 
 const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified"] as const;
 type PipelineName = (typeof PIPELINE_NAMES)[number];
@@ -123,10 +124,8 @@ export function createEnrichBatchTool(
       const router = ProviderRouter.fromConfig(enrichmentConfig.providers);
       const enricher = new BatchEnricher(router, buildPipelines(pipelines as PipelineName[]));
 
-      // ACP §3.13 — identifies the software running enrichment.
-      // Keep in sync with package.json version.
       const { results: enrichedACOs, errors } = await enricher.enrichMany(acos, {
-        tool: "@atomic-content-protocol/mcp@0.1.0",
+        tool: TOOL,
       });
 
       // Write enriched ACOs back to storage

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { createACO } from '@atomic-content-protocol/core';
@@ -19,6 +21,14 @@ const MAX_CONTENT_LENGTH = 50_000;
 const MAX_BATCH_SIZE = 10;
 const FETCH_TIMEOUT_MS = 15_000;
 const ENRICHMENT_TIMEOUT_MS = 25_000;
+
+// ACP §3.13 `tool` identifier for this hosted server. Brand name stays
+// stable ("acp-hosted-mcp"); version is read from package.json so bumps
+// reflect automatically.
+const serverPkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'),
+) as { version: string };
+const TOOL = `acp-hosted-mcp@${serverPkg.version}`;
 
 // ---------------------------------------------------------------------------
 // Provider setup (lazy singleton)
@@ -210,9 +220,7 @@ async function enrichACO(
 
   // Wrap enrichment with a timeout. Pass tool identifier so every provenance
   // record on the resulting ACO carries the ACP §3.13 `tool` field.
-  const enrichmentPromise = enricher.enrichOne(aco, {
-    tool: "acp-hosted-mcp@0.1.0",
-  });
+  const enrichmentPromise = enricher.enrichOne(aco, { tool: TOOL });
   const timeoutPromise = new Promise<never>((_resolve, reject) => {
     setTimeout(() => reject(new Error('ENRICHMENT_TIMEOUT')), ENRICHMENT_TIMEOUT_MS);
   });
