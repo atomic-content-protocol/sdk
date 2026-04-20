@@ -1,6 +1,6 @@
 {
   "name": "@atomic-content-protocol/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI tool for the Atomic Content Protocol",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
@@ -19,9 +19,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@atomic-content-protocol/core": "^0.1.0",
-    "@atomic-content-protocol/enrichment": "^0.1.0",
-    "@atomic-content-protocol/mcp": "^0.1.0",
+    "@atomic-content-protocol/core": "^0.1.1",
+    "@atomic-content-protocol/enrichment": "^0.1.1",
+    "@atomic-content-protocol/mcp": "^0.1.1",
     "commander": "^13.1.0",
     "chalk": "^5.4.0",
     "ora": "^8.2.0"
