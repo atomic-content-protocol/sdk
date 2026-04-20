@@ -64,7 +64,10 @@ export class TagPipeline implements IEnrichmentPipeline {
     }
 
     const confidence = tags.length > 0 ? 0.85 : 0.0;
-    const provRecord = createProvenanceRecord(provider.model, confidence);
+    const provRecord = createProvenanceRecord(provider.model, confidence, {
+      pipeline: this.name,
+      tool: options?.tool,
+    });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,

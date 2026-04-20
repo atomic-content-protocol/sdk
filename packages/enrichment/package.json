@@ -1,6 +1,6 @@
 {
   "name": "@atomic-content-protocol/enrichment",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "LLM enrichment pipelines for the Atomic Content Protocol",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
@@ -25,7 +25,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@atomic-content-protocol/core": "^0.1.0",
+    "@atomic-content-protocol/core": "^0.1.1",
     "@anthropic-ai/sdk": "^0.80.0",
     "openai": "^4.80.0"
   },

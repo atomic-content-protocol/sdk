@@ -11,6 +11,7 @@ import {
 import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { TOOL } from "../../tool-id.js";
 
 const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified"] as const;
 type PipelineName = (typeof PIPELINE_NAMES)[number];
@@ -97,7 +98,7 @@ export function createEnrichACOTool(
 
       const router = ProviderRouter.fromConfig(enrichmentConfig.providers);
       const enricher = new BatchEnricher(router, buildPipelines(pipelinesToRun));
-      const enriched = await enricher.enrichOne(aco);
+      const enriched = await enricher.enrichOne(aco, { tool: TOOL });
       await storage.putACO(enriched);
 
       return {

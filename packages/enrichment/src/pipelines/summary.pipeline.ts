@@ -49,7 +49,10 @@ export class SummaryPipeline implements IEnrichmentPipeline {
 
     const trimmed = summary.trim();
     const confidence = trimmed.length > 0 ? 0.85 : 0.0;
-    const provRecord = createProvenanceRecord(provider.model, confidence);
+    const provRecord = createProvenanceRecord(provider.model, confidence, {
+      pipeline: this.name,
+      tool: options?.tool,
+    });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,

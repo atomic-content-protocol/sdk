@@ -81,7 +81,10 @@ export class EntityPipeline implements IEnrichmentPipeline {
     }
 
     const confidence = entities.length > 0 ? 0.8 : 0.0;
-    const provRecord = createProvenanceRecord(provider.model, confidence);
+    const provRecord = createProvenanceRecord(provider.model, confidence, {
+      pipeline: this.name,
+      tool: options?.tool,
+    });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,

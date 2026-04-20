@@ -26,7 +26,8 @@ export interface EnrichmentResult {
 }
 
 /**
- * EnrichmentOptions — controls idempotency and force-overwrite behaviour.
+ * EnrichmentOptions — controls idempotency, force-overwrite, and provenance
+ * metadata attribution.
  */
 export interface EnrichmentOptions {
   /**
@@ -34,6 +35,14 @@ export interface EnrichmentOptions {
    * Default: false (skip fields that have been previously enriched).
    */
   force?: boolean;
+  /**
+   * Identifier of the software calling the pipeline, stamped into each
+   * provenance record's `tool` field. ACP §3.13.
+   *
+   * Recommended format: "<package-name>@<version>".
+   * Examples: "acp-hosted-mcp@0.1.1", "@stacklist/mcp-server@2.0.0".
+   */
+  tool?: string;
 }
 
 /**

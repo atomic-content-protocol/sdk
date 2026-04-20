@@ -16,6 +16,15 @@ import { createRouter } from '../utils/enrichment.js';
 import chalk from 'chalk';
 import ora from 'ora';
 import { createInterface } from 'node:readline';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// ACP §3.13 `tool` identifier — read from our own package.json so this
+// string is always in lockstep with the published version. No manual upkeep.
+const pkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'),
+) as { name: string; version: string };
+const TOOL = `${pkg.name}@${pkg.version}`;
 
 async function confirm(message: string): Promise<boolean> {
   if (!process.stdin.isTTY) return true;
@@ -141,6 +150,7 @@ export const enrichBatchCommand = new Command('enrich-batch')
 
     const { results, errors } = await enricher.enrichMany(acos, {
       force: options.force as boolean,
+      tool: TOOL,
       onProgress: (done, total) => {
         // Add the cost of the ACO that just completed (done is 1-indexed)
         cumulativeCost += perACOCosts[done - 1] ?? 0;

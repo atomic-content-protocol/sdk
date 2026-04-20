@@ -77,7 +77,10 @@ export class ClassificationPipeline implements IEnrichmentPipeline {
         : "other";
 
     const confidence = classification !== "other" ? 0.85 : 0.5;
-    const provRecord = createProvenanceRecord(provider.model, confidence);
+    const provRecord = createProvenanceRecord(provider.model, confidence, {
+      pipeline: this.name,
+      tool: options?.tool,
+    });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,

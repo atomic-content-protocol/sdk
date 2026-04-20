@@ -92,23 +92,23 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
 
     if (needsTags) {
       updatedFields["tags"] = output.tags;
-      newProvenance["tags"] = createProvenanceRecord(model, 0.85);
+      newProvenance["tags"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
     if (needsSummary) {
       updatedFields["summary"] = output.summary;
-      newProvenance["summary"] = createProvenanceRecord(model, 0.85);
+      newProvenance["summary"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
     if (needsClassification) {
       updatedFields["classification"] = output.classification;
-      newProvenance["classification"] = createProvenanceRecord(model, 0.85);
+      newProvenance["classification"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
     if (needsEntities) {
       updatedFields["key_entities"] = output.key_entities;
-      newProvenance["key_entities"] = createProvenanceRecord(model, 0.80);
+      newProvenance["key_entities"] = createProvenanceRecord(model, 0.80, { pipeline: this.name, tool: options?.tool });
     }
     if (needsLanguage && output.language) {
       updatedFields["language"] = output.language;
-      newProvenance["language"] = createProvenanceRecord(model, 0.95);
+      newProvenance["language"] = createProvenanceRecord(model, 0.95, { pipeline: this.name, tool: options?.tool });
     }
 
     updatedFields["provenance"] = newProvenance;
