@@ -64,3 +64,44 @@ export class MigrationError extends ACPError {
     this.name = "MigrationError";
   }
 }
+
+/**
+ * FetchError — thrown when fetching a URL fails at the network or HTTP layer.
+ *
+ * `permanent: true`  — do not retry (e.g. host not found, HTTP 4xx).
+ * `permanent: false` — transient failure, caller may retry (e.g. HTTP 5xx, timeout, ECONNRESET).
+ * `networkCode`      — machine-readable error origin: Node errno ("ENOTFOUND", "ETIMEDOUT")
+ *                      or HTTP status string ("HTTP_404", "HTTP_503").
+ */
+export class FetchError extends ACPError {
+  readonly permanent: boolean;
+  readonly networkCode?: string;
+
+  constructor(
+    message: string,
+    permanent: boolean,
+    networkCode?: string,
+    options?: ErrorOptions
+  ) {
+    super("FETCH_ERROR", message, options);
+    this.name = "FetchError";
+    this.permanent = permanent;
+    this.networkCode = networkCode;
+  }
+}
+
+/**
+ * FetchStatus — recorded in an ACO's frontmatter under `fetch_status` when
+ * `createACO` is called with a `url` parameter.
+ *
+ * `ok: true`  — fetch succeeded (field present for observability).
+ * `ok: false` — fetch failed; body was synthesised from available metadata.
+ *               `permanent` indicates whether retrying is worthwhile.
+ *               `networkCode` carries the machine-readable failure reason.
+ */
+export interface FetchStatus {
+  ok: boolean;
+  networkCode?: string;
+  permanent?: boolean;
+  message?: string;
+}
