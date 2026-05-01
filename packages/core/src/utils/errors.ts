@@ -64,3 +64,34 @@ export class MigrationError extends ACPError {
     this.name = "MigrationError";
   }
 }
+
+/**
+ * FetchError — thrown when fetching a URL fails at the network or HTTP layer.
+ *
+ * `permanent: true`  — do not retry (e.g. host not found, HTTP 4xx).
+ * `permanent: false` — transient failure, caller may retry (e.g. HTTP 5xx, timeout, ECONNRESET).
+ */
+export class FetchError extends ACPError {
+  readonly permanent: boolean;
+
+  constructor(message: string, permanent: boolean, options?: ErrorOptions) {
+    super("FETCH_ERROR", message, options);
+    this.name = "FetchError";
+    this.permanent = permanent;
+  }
+}
+
+/**
+ * FetchStatus — recorded in an ACO's frontmatter under `fetch_status` when
+ * `createACO` is called with a `url` parameter.
+ *
+ * `ok: true`  — fetch succeeded (field present for observability).
+ * `ok: false` — fetch failed; body was synthesised from available metadata.
+ *               `permanent` indicates whether retrying is worthwhile.
+ */
+export interface FetchStatus {
+  ok: boolean;
+  code?: string;
+  permanent?: boolean;
+  message?: string;
+}

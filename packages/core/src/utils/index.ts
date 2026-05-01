@@ -8,4 +8,7 @@ export {
   StorageError,
   ParseError,
   MigrationError,
+  FetchError,
+  type FetchStatus,
 } from "./errors.js";
+export { fetchBodyForUrl, type FetchBodyOptions } from "./fetch-url.js";

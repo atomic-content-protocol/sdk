@@ -50,7 +50,10 @@ export {
   ValidationError,
   StorageError,
   ParseError,
+  FetchError,
+  type FetchStatus,
 } from "./utils/errors.js";
+export { fetchBodyForUrl, type FetchBodyOptions } from "./utils/fetch-url.js";
 
 // Migration
 export { migrate, MigrationError } from "./migrate.js";
@@ -64,6 +67,9 @@ import { computeContentHash, normalizeBody } from "./utils/hash.js";
 import { computeTokenCounts } from "./utils/token-count.js";
 import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
+import { fetchBodyForUrl } from "./utils/fetch-url.js";
+import { ValidationError, FetchError } from "./utils/errors.js";
+import type { FetchStatus } from "./utils/errors.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -80,11 +86,22 @@ import type { ACO } from "./types/aco.js";
 export interface CreateACOParams {
   /** Human-readable title. */
   title?: string;
-  /** Markdown body content. */
+  /**
+   * Markdown body content. Mutually exclusive with `url`.
+   * If neither `body` nor `url` is provided, body defaults to an empty string.
+   */
   body?: string;
   /**
+   * URL to fetch body content from. Mutually exclusive with `body`.
+   * The SDK handles SSRF guard, fetch, HTML extraction, and SPA fallback.
+   * If the fetch fails, the ACO is still returned with a synthesised body and
+   * `fetch_status: { ok: false, ... }` in the frontmatter so the caller knows.
+   * When provided and `source_type` is omitted, defaults to `"link"`.
+   */
+  url?: string;
+  /**
    * How the ACO was created.
-   * Defaults to `"manual"`.
+   * Defaults to `"manual"` (or `"link"` when `url` is provided).
    */
   source_type?:
     | "link"
@@ -124,14 +141,45 @@ export interface CreateACOParams {
  * Pass it to `adapter.putACO()` to write it to storage.
  */
 export async function createACO(params: CreateACOParams): Promise<ACO> {
-  const body = params.body ?? "";
+  // Programmer error — mutually exclusive fields
+  if (params.url !== undefined && params.body !== undefined) {
+    throw new ValidationError(
+      "`url` and `body` are mutually exclusive in CreateACOParams"
+    );
+  }
+
+  let body = params.body ?? "";
+  let fetchStatus: FetchStatus | undefined;
+
+  if (params.url !== undefined) {
+    try {
+      body = await fetchBodyForUrl(params.url);
+      fetchStatus = { ok: true };
+    } catch (err: unknown) {
+      if (err instanceof FetchError) {
+        // Degrade gracefully: synthesise body from available metadata so
+        // downstream enrichment still has signal to work with.
+        body = [params.title, params.url].filter(Boolean).join(" — ");
+        fetchStatus = {
+          ok: false,
+          code: err.code,
+          permanent: err.permanent,
+          message: err.message,
+        };
+      } else {
+        // ValidationError (SSRF) and unexpected errors propagate as-is
+        throw err;
+      }
+    }
+  }
+
   const now = new Date().toISOString();
 
   const generatedFields: Record<string, unknown> = {
     id: generateId(),
     acp_version: "0.2",
     object_type: "aco",
-    source_type: params.source_type ?? "manual",
+    source_type: params.source_type ?? (params.url !== undefined ? "link" : "manual"),
     created: now,
     author: params.author,
     content_hash: computeContentHash(normalizeBody(body)),
@@ -142,9 +190,23 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     generatedFields["title"] = params.title;
   }
 
+  const callerFrontmatter: Record<string, unknown> = {
+    ...(params.frontmatter ?? {}),
+  };
+
+  // Record origin URL when url was provided and caller hasn't already set source_url
+  if (params.url !== undefined && callerFrontmatter["source_url"] === undefined) {
+    callerFrontmatter["source_url"] = params.url;
+  }
+
+  // fetch_status is only present when url was used (omitted for body-only ACOs)
+  if (fetchStatus !== undefined) {
+    callerFrontmatter["fetch_status"] = fetchStatus;
+  }
+
   const frontmatter: Record<string, unknown> = {
     // Caller-supplied extra fields go in first (lowest precedence)
-    ...(params.frontmatter ?? {}),
+    ...callerFrontmatter,
     // Generated / required fields always win
     ...generatedFields,
   };
