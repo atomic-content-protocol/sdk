@@ -9,12 +9,17 @@ const AUTHOR = { id: "test", name: "Test" };
 // Mock helpers
 // ---------------------------------------------------------------------------
 
-function mockFetch(html: string, status = 200) {
+function mockFetch(
+  html: string,
+  status = 200,
+  headers: Record<string, string> = { "content-type": "text/html; charset=utf-8" }
+) {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
       ok: status >= 200 && status < 300,
       status,
+      headers: { get: (h: string) => headers[h.toLowerCase()] ?? null },
       text: async () => html,
     })
   );
@@ -78,6 +83,37 @@ describe("fetchBodyForUrl — SSRF validation", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
+  it("throws ValidationError for 10.x.x.x (RFC 1918 class A)", async () => {
+    await expect(
+      fetchBodyForUrl("https://10.0.0.1/admin")
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("throws ValidationError for 192.168.x.x (RFC 1918 class C)", async () => {
+    await expect(
+      fetchBodyForUrl("https://192.168.1.50/")
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("throws ValidationError for 172.16.x.x (RFC 1918 class B)", async () => {
+    await expect(
+      fetchBodyForUrl("https://172.16.0.1/")
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("throws ValidationError for 172.31.x.x (RFC 1918 class B upper)", async () => {
+    await expect(
+      fetchBodyForUrl("https://172.31.255.255/")
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("does NOT block 172.15.x.x (just outside RFC 1918 range)", async () => {
+    mockFetch("<html><body>ok</body></html>");
+    // Should not throw ValidationError (may throw FetchError from mock, but not SSRF)
+    const err = await fetchBodyForUrl("https://172.15.0.1/").catch((e) => e);
+    expect(err).not.toBeInstanceOf(ValidationError);
+  });
+
   it("throws ValidationError for *.local domain", async () => {
     await expect(
       fetchBodyForUrl("https://my-service.local/")
@@ -107,32 +143,36 @@ describe("fetchBodyForUrl — SSRF validation", () => {
 // ---------------------------------------------------------------------------
 
 describe("fetchBodyForUrl — HTTP error mapping", () => {
-  it("404 → FetchError with permanent: true", async () => {
+  it("404 → FetchError with permanent: true, networkCode: HTTP_404", async () => {
     mockFetch("Not Found", 404);
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).permanent).toBe(true);
+    expect((err as FetchError).networkCode).toBe("HTTP_404");
   });
 
-  it("403 → FetchError with permanent: true", async () => {
+  it("403 → FetchError with permanent: true, networkCode: HTTP_403", async () => {
     mockFetch("Forbidden", 403);
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).permanent).toBe(true);
+    expect((err as FetchError).networkCode).toBe("HTTP_403");
   });
 
-  it("500 → FetchError with permanent: false", async () => {
+  it("500 → FetchError with permanent: false, networkCode: HTTP_500", async () => {
     mockFetch("Server Error", 500);
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).permanent).toBe(false);
+    expect((err as FetchError).networkCode).toBe("HTTP_500");
   });
 
-  it("503 → FetchError with permanent: false", async () => {
+  it("503 → FetchError with permanent: false, networkCode: HTTP_503", async () => {
     mockFetch("Unavailable", 503);
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).permanent).toBe(false);
+    expect((err as FetchError).networkCode).toBe("HTTP_503");
   });
 });
 
@@ -142,24 +182,37 @@ describe("fetchBodyForUrl — HTTP error mapping", () => {
 
 describe("fetchBodyForUrl — network error mapping", () => {
   it.each([["ENOTFOUND"], ["ECONNREFUSED"], ["EAI_AGAIN"]])(
-    "%s → FetchError with permanent: true",
+    "%s → FetchError with permanent: true and networkCode set",
     async (code) => {
       mockNetworkError(code);
       const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
       expect(err).toBeInstanceOf(FetchError);
       expect((err as FetchError).permanent).toBe(true);
+      expect((err as FetchError).networkCode).toBe(code);
     }
   );
 
   it.each([["ETIMEDOUT"], ["ECONNRESET"], ["EPIPE"]])(
-    "%s → FetchError with permanent: false",
+    "%s → FetchError with permanent: false and networkCode set",
     async (code) => {
       mockNetworkError(code);
       const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
       expect(err).toBeInstanceOf(FetchError);
       expect((err as FetchError).permanent).toBe(false);
+      expect((err as FetchError).networkCode).toBe(code);
     }
   );
+
+  it("redirect refusal → FetchError with permanent: false (no networkCode)", async () => {
+    // Simulate what happens when redirect: "error" causes fetch to throw
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(
+      new TypeError("fetch failed")
+    ));
+    const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).permanent).toBe(false);
+    expect((err as FetchError).networkCode).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -271,6 +324,83 @@ describe("fetchBodyForUrl — SPA fallback", () => {
     const result = await fetchBodyForUrl("https://example.com/spa");
     expect(result).toBe("https://example.com/spa");
   });
+
+  it("handles single-quoted og:title attribute", async () => {
+    mockFetch(`<html>
+      <head>
+        <meta property='og:title' content='Single Quote Title'/>
+      </head>
+      <body><div id="app"></div></body>
+    </html>`);
+    const result = await fetchBodyForUrl("https://example.com/sq");
+    expect(result).toContain("Single Quote Title");
+  });
+
+  it("handles reversed attribute order (content before property)", async () => {
+    mockFetch(`<html>
+      <head>
+        <meta content="Reversed Order" property="og:title"/>
+        <meta content="Reversed desc" name="description"/>
+      </head>
+      <body><div id="app"></div></body>
+    </html>`);
+    const result = await fetchBodyForUrl("https://example.com/rev");
+    expect(result).toBe("Reversed Order — Reversed desc — https://example.com/rev");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5b. Content-Type and Content-Length guards
+// ---------------------------------------------------------------------------
+
+describe("fetchBodyForUrl — response guards", () => {
+  it("throws FetchError (permanent) for non-HTML content-type", async () => {
+    mockFetch("binary data", 200, { "content-type": "application/pdf" });
+    const err = await fetchBodyForUrl("https://example.com/file.pdf").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).permanent).toBe(true);
+    expect((err as FetchError).networkCode).toBe("NON_HTML_CONTENT");
+  });
+
+  it("allows text/plain content-type", async () => {
+    mockFetch("plain text content", 200, { "content-type": "text/plain" });
+    const result = await fetchBodyForUrl("https://example.com/text");
+    expect(result).toContain("plain text content");
+  });
+
+  it("allows application/xhtml+xml content-type", async () => {
+    mockFetch("<html><body>XHTML content</body></html>", 200, {
+      "content-type": "application/xhtml+xml",
+    });
+    const result = await fetchBodyForUrl("https://example.com/xhtml");
+    expect(result).toContain("XHTML content");
+  });
+
+  it("allows missing content-type (some servers omit it)", async () => {
+    mockFetch("<html><body>No CT header</body></html>", 200, {});
+    const result = await fetchBodyForUrl("https://example.com/noct");
+    expect(result).toContain("No CT header");
+  });
+
+  it("throws FetchError (transient) when Content-Length exceeds 10 MB", async () => {
+    mockFetch("body", 200, {
+      "content-type": "text/html",
+      "content-length": "10000001",
+    });
+    const err = await fetchBodyForUrl("https://example.com/huge").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).permanent).toBe(false);
+    expect((err as FetchError).networkCode).toBe("RESPONSE_TOO_LARGE");
+  });
+
+  it("does not throw when Content-Length is exactly at the limit (10 MB)", async () => {
+    mockFetch("<html><body>ok</body></html>", 200, {
+      "content-type": "text/html",
+      "content-length": "10000000",
+    });
+    const result = await fetchBodyForUrl("https://example.com/ok");
+    expect(result).toContain("ok");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -345,9 +475,10 @@ describe("createACO — url integration", () => {
       title: "Gone Page",
       author: AUTHOR,
     });
-    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean };
+    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean; networkCode: string };
     expect(status.ok).toBe(false);
     expect(status.permanent).toBe(true);
+    expect(status.networkCode).toBe("HTTP_404");
     expect(aco.body).toContain("https://example.com/gone");
     expect(aco.body).toContain("Gone Page");
   });
@@ -358,20 +489,35 @@ describe("createACO — url integration", () => {
       url: "https://example.com",
       author: AUTHOR,
     });
-    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean };
+    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean; networkCode: string };
     expect(status.ok).toBe(false);
     expect(status.permanent).toBe(false);
+    expect(status.networkCode).toBe("HTTP_503");
   });
 
-  it("degrades gracefully on ENOTFOUND: fetch_status.permanent is true", async () => {
+  it("degrades gracefully on ENOTFOUND: fetch_status.permanent is true, networkCode set", async () => {
     mockNetworkError("ENOTFOUND");
     const aco = await createACO({
       url: "https://example.com",
       author: AUTHOR,
     });
-    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean };
+    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean; networkCode: string };
     expect(status.ok).toBe(false);
     expect(status.permanent).toBe(true);
+    expect(status.networkCode).toBe("ENOTFOUND");
+  });
+
+  it("fetch_status always wins over caller-supplied frontmatter value", async () => {
+    mockFetch("<html><body><article>Content</article></body></html>");
+    const aco = await createACO({
+      url: "https://example.com",
+      author: AUTHOR,
+      frontmatter: { fetch_status: "caller-override-attempt" },
+    });
+    // SDK-generated fetch_status should win
+    const status = aco.frontmatter["fetch_status"] as { ok: boolean };
+    expect(typeof status).toBe("object");
+    expect(status.ok).toBe(true);
   });
 
   it("does not set fetch_status for body-only ACOs", async () => {

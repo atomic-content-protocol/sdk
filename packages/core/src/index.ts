@@ -68,8 +68,7 @@ import { computeTokenCounts } from "./utils/token-count.js";
 import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
-import { ValidationError, FetchError } from "./utils/errors.js";
-import type { FetchStatus } from "./utils/errors.js";
+import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -148,12 +147,16 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     );
   }
 
+  // Capture before the async fetch so we can reference it in generatedFields
+  // without re-reading params.url after the body may have been replaced.
+  const hasUrl = params.url !== undefined;
+
   let body = params.body ?? "";
   let fetchStatus: FetchStatus | undefined;
 
-  if (params.url !== undefined) {
+  if (hasUrl) {
     try {
-      body = await fetchBodyForUrl(params.url);
+      body = await fetchBodyForUrl(params.url as string);
       fetchStatus = { ok: true };
     } catch (err: unknown) {
       if (err instanceof FetchError) {
@@ -162,7 +165,7 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
         body = [params.title, params.url].filter(Boolean).join(" — ");
         fetchStatus = {
           ok: false,
-          code: err.code,
+          networkCode: err.networkCode,
           permanent: err.permanent,
           message: err.message,
         };
@@ -179,11 +182,14 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     id: generateId(),
     acp_version: "0.2",
     object_type: "aco",
-    source_type: params.source_type ?? (params.url !== undefined ? "link" : "manual"),
+    source_type: params.source_type ?? (hasUrl ? "link" : "manual"),
     created: now,
     author: params.author,
     content_hash: computeContentHash(normalizeBody(body)),
     token_counts: await computeTokenCounts(body),
+    // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.
+    // Omitted entirely for body-only ACOs (no url provided).
+    ...(fetchStatus !== undefined ? { fetch_status: fetchStatus } : {}),
   };
 
   if (params.title !== undefined) {
@@ -194,14 +200,11 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     ...(params.frontmatter ?? {}),
   };
 
-  // Record origin URL when url was provided and caller hasn't already set source_url
-  if (params.url !== undefined && callerFrontmatter["source_url"] === undefined) {
+  // Set source_url when url was provided and caller hasn't already set it.
+  // Intentionally in callerFrontmatter (lower precedence) so callers can
+  // override it via params.frontmatter if needed.
+  if (hasUrl && callerFrontmatter["source_url"] === undefined) {
     callerFrontmatter["source_url"] = params.url;
-  }
-
-  // fetch_status is only present when url was used (omitted for body-only ACOs)
-  if (fetchStatus !== undefined) {
-    callerFrontmatter["fetch_status"] = fetchStatus;
   }
 
   const frontmatter: Record<string, unknown> = {
