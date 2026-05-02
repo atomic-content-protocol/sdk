@@ -78,7 +78,7 @@ import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
 import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
-import { SOURCE_TYPE_MODALITY } from "./utils/source-type.js";
+import { SOURCE_TYPE_MODALITY, MIN_BODY_LENGTH_FOR_ENRICHMENT } from "./utils/source-type.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -190,7 +190,18 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
   const now = new Date().toISOString();
   const resolvedSourceType = params.source_type ?? (hasUrl ? "link" : "manual");
   const modality = SOURCE_TYPE_MODALITY[resolvedSourceType] ?? "text";
-  const isMediaOnly = modality === "image" || (modality === "video" && body.trim().length === 0);
+
+  // content_hash is omitted for ALL media modalities (image + video) regardless
+  // of whether a transcript body exists. The hash should reflect the binary file,
+  // not the transcript — two videos with identical transcripts but different files
+  // would otherwise deduplicate incorrectly. Callers must set content_hash via
+  // params.frontmatter using the file's actual binary hash.
+  const omitContentHash = modality === "image" || modality === "video";
+
+  // token_counts are useful for transcript bodies but noise for empty/filename-only
+  // bodies. Use MIN_BODY_LENGTH_FOR_ENRICHMENT as the consistent threshold.
+  const omitTokenCounts = modality === "image" ||
+    (modality === "video" && body.trim().length < MIN_BODY_LENGTH_FOR_ENRICHMENT);
 
   const generatedFields: Record<string, unknown> = {
     id: generateId(),
@@ -199,15 +210,10 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     source_type: resolvedSourceType,
     created: now,
     author: params.author,
-    // For media-only ACOs (images, videos without transcript) the body is empty
-    // or a filename. Hashing the empty string produces a well-known constant
-    // (sha256:e3b0c44...) that would incorrectly deduplicate all such ACOs.
-    // Omit content_hash; it should be set by the caller with the file hash.
-    ...(!isMediaOnly
+    ...(!omitContentHash
       ? { content_hash: computeContentHash(normalizeBody(body)) }
       : {}),
-    // token_counts on an empty body is noise — omit for media-only ACOs.
-    ...(!isMediaOnly
+    ...(!omitTokenCounts
       ? { token_counts: await computeTokenCounts(body) }
       : {}),
     // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.

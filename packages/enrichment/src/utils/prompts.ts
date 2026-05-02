@@ -5,6 +5,8 @@
  * without touching pipeline logic.
  */
 
+import { MIN_BODY_LENGTH_FOR_ENRICHMENT } from "@atomic-content-protocol/core";
+
 const truncate = (s: string, max: number): string =>
   s.length > max ? s.slice(0, max) + "…" : s;
 
@@ -107,7 +109,7 @@ Rules:
   }
 
   if (modality === "video") {
-    const hasTranscript = body.trim().length >= 50;
+    const hasTranscript = body.trim().length >= MIN_BODY_LENGTH_FOR_ENRICHMENT;
     if (hasTranscript) {
       return `Extract structured enrichment data for a video with transcript.
 

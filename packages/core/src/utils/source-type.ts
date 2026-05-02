@@ -134,7 +134,9 @@ export function getEnrichmentStrategy(
   | "summaryConditional"
   | "textEnrichmentConditional"
 > {
-  const modality = SOURCE_TYPE_MODALITY[sourceType];
+  // Defensive fallback: unknown source_type values (e.g. from future spec versions
+  // or malformed frontmatter) default to "text" enrichment rather than crashing.
+  const modality = SOURCE_TYPE_MODALITY[sourceType] ?? "text";
   const base = MODALITY_ENRICHMENT[modality];
   const hasBody = body.trim().length >= MIN_BODY_LENGTH_FOR_ENRICHMENT;
 
