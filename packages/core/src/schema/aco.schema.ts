@@ -106,6 +106,7 @@ const MediaSchema = z
 export const SOURCE_TYPES = [
   "link",
   "uploaded_md",
+  "uploaded_image",
   "manual",
   "converted_pdf",
   "converted_doc",
@@ -188,6 +189,11 @@ export const ACOFrontmatterSchema = z
     /**
      * Primary language of the content body. ISO 639-1 two-letter code.
      * Examples: "en", "de", "ja".
+     *
+     * Pipeline note: MUST NOT be inferred for non-text source types
+     * ("uploaded_image", "converted_video"). Inferring from a filename risks
+     * misidentifying the filename as a language code (e.g. "ja.jpeg" → "ja").
+     * Omit this field when there is no readable text body.
      */
     language: z.string().optional(),
 
@@ -217,9 +223,14 @@ export const ACOFrontmatterSchema = z
     tags: z.array(z.string().min(1)).max(20).optional(),
 
     /**
-     * Content type. Suggested values: "reference", "framework", "memo",
-     * "checklist", "notes", "transcript", "snippet", "code", "tutorial",
-     * "analysis", "other". NOT a closed enum — custom values are valid.
+     * Content type. Suggested values for text: "reference", "framework",
+     * "memo", "checklist", "notes", "transcript", "snippet", "code",
+     * "tutorial", "analysis", "other".
+     * Suggested values for media: "image", "video", "audio".
+     * NOT a closed enum — custom values are valid.
+     *
+     * Pipeline note: for source_type "uploaded_image" default to "image"
+     * rather than running text-oriented classification inference.
      */
     classification: z.string().optional(),
 
@@ -329,6 +340,28 @@ export const ACOFrontmatterSchema = z
   .passthrough();
 
 export type ACOFrontmatter = z.infer<typeof ACOFrontmatterSchema>;
+
+// ---------------------------------------------------------------------------
+// ACOEnvelopeSchema — JSON transport wrapper (§4)
+// ---------------------------------------------------------------------------
+
+/**
+ * ACOEnvelopeSchema — the JSON envelope format for transporting an ACO over
+ * wire protocols (MCP, REST, etc.).
+ *
+ * Wraps ACOFrontmatter under a single `acp` key so the payload is
+ * self-describing and namespace-safe when embedded in larger JSON documents.
+ *
+ * Example:
+ * ```json
+ * { "acp": { "id": "...", "object_type": "aco", ... } }
+ * ```
+ */
+export const ACOEnvelopeSchema = z.object({
+  acp: ACOFrontmatterSchema,
+});
+
+export type ACOEnvelope = z.infer<typeof ACOEnvelopeSchema>;
 
 // Re-export sub-schema types for consumers that need them individually
 export type Author = z.infer<typeof AuthorSchema>;

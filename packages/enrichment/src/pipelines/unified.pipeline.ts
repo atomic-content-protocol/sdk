@@ -1,4 +1,8 @@
 import type { ACO } from "@atomic-content-protocol/core";
+import {
+  getEnrichmentStrategy,
+  SOURCE_TYPE_MODALITY,
+} from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 import type {
   IEnrichmentPipeline,
@@ -74,7 +78,10 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     }
 
     const title = String(frontmatter["title"] ?? "");
-    const prompt = buildUnifiedPrompt(title, body);
+    const sourceType = String(frontmatter["source_type"] ?? "manual") as Parameters<typeof getEnrichmentStrategy>[0];
+    const strategy = getEnrichmentStrategy(sourceType, body);
+    const modality = SOURCE_TYPE_MODALITY[sourceType] ?? "text";
+    const prompt = buildUnifiedPrompt(title, body, modality);
 
     const output = await provider.structuredComplete<UnifiedEnrichmentOutput>(
       prompt,
@@ -90,23 +97,27 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     const newProvenance: Record<string, unknown> = { ...existingProvenance };
     const updatedFields: Record<string, unknown> = { ...frontmatter };
 
-    if (needsTags) {
+    if (needsTags && strategy.textEnrichment) {
       updatedFields["tags"] = output.tags;
       newProvenance["tags"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
-    if (needsSummary) {
+    if (needsSummary && strategy.summary) {
       updatedFields["summary"] = output.summary;
       newProvenance["summary"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
     if (needsClassification) {
-      updatedFields["classification"] = output.classification;
+      // For media source types, use the fixed default rather than the model's choice.
+      const classification = strategy.classificationDefault ?? output.classification;
+      updatedFields["classification"] = classification;
       newProvenance["classification"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
     }
-    if (needsEntities) {
+    if (needsEntities && strategy.textEnrichment) {
       updatedFields["key_entities"] = output.key_entities;
       newProvenance["key_entities"] = createProvenanceRecord(model, 0.80, { pipeline: this.name, tool: options?.tool });
     }
-    if (needsLanguage && output.language) {
+    // Only write language when the strategy permits it AND the model returned a
+    // non-null value. Never write a language inferred from a filename.
+    if (needsLanguage && strategy.language && output.language) {
       updatedFields["language"] = output.language;
       newProvenance["language"] = createProvenanceRecord(model, 0.95, { pipeline: this.name, tool: options?.tool });
     }

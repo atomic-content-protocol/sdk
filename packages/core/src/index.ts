@@ -8,7 +8,8 @@
  *   - io        — parseACO, parseAndValidateACO, serializeACO
  *   - storage   — IStorageAdapter, FilesystemAdapter
  *   - graph     — getRelatedACOs
- *   - utils     — generateId, computeContentHash, computeTokenCounts, error classes
+ *   - utils     — generateId, computeContentHash, computeTokenCounts, error classes,
+ *                 getEnrichmentStrategy, SOURCE_TYPE_MODALITY, MODALITY_ENRICHMENT
  *   - migrate   — migrate function + MigrationError
  *
  * Plus two convenience functions:
@@ -54,6 +55,14 @@ export {
   type FetchStatus,
 } from "./utils/errors.js";
 export { fetchBodyForUrl, type FetchBodyOptions } from "./utils/fetch-url.js";
+export {
+  SOURCE_TYPE_MODALITY,
+  MODALITY_ENRICHMENT,
+  MIN_BODY_LENGTH_FOR_ENRICHMENT,
+  getEnrichmentStrategy,
+  type ContentModality,
+  type EnrichmentStrategy,
+} from "./utils/source-type.js";
 
 // Migration
 export { migrate, MigrationError } from "./migrate.js";
@@ -69,6 +78,7 @@ import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
 import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
+import { SOURCE_TYPE_MODALITY } from "./utils/source-type.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -105,6 +115,7 @@ export interface CreateACOParams {
   source_type?:
     | "link"
     | "uploaded_md"
+    | "uploaded_image"
     | "manual"
     | "converted_pdf"
     | "converted_doc"
@@ -177,16 +188,28 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
   }
 
   const now = new Date().toISOString();
+  const resolvedSourceType = params.source_type ?? (hasUrl ? "link" : "manual");
+  const modality = SOURCE_TYPE_MODALITY[resolvedSourceType] ?? "text";
+  const isMediaOnly = modality === "image" || (modality === "video" && body.trim().length === 0);
 
   const generatedFields: Record<string, unknown> = {
     id: generateId(),
     acp_version: "0.2",
     object_type: "aco",
-    source_type: params.source_type ?? (hasUrl ? "link" : "manual"),
+    source_type: resolvedSourceType,
     created: now,
     author: params.author,
-    content_hash: computeContentHash(normalizeBody(body)),
-    token_counts: await computeTokenCounts(body),
+    // For media-only ACOs (images, videos without transcript) the body is empty
+    // or a filename. Hashing the empty string produces a well-known constant
+    // (sha256:e3b0c44...) that would incorrectly deduplicate all such ACOs.
+    // Omit content_hash; it should be set by the caller with the file hash.
+    ...(!isMediaOnly
+      ? { content_hash: computeContentHash(normalizeBody(body)) }
+      : {}),
+    // token_counts on an empty body is noise — omit for media-only ACOs.
+    ...(!isMediaOnly
+      ? { token_counts: await computeTokenCounts(body) }
+      : {}),
     // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.
     // Omitted entirely for body-only ACOs (no url provided).
     ...(fetchStatus !== undefined ? { fetch_status: fetchStatus } : {}),
