@@ -19,10 +19,12 @@ export type { RelationshipEdge, CoreRelType } from "./edge.schema.js";
 // ACO (Atomic Content Object)
 export {
   ACOFrontmatterSchema,
+  ACOEnvelopeSchema,
   SOURCE_TYPES,
 } from "./aco.schema.js";
 export type {
   ACOFrontmatter,
+  ACOEnvelope,
   Author,
   ACOTokenCounts,
   KeyEntity,

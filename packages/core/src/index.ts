@@ -8,7 +8,8 @@
  *   - io        — parseACO, parseAndValidateACO, serializeACO
  *   - storage   — IStorageAdapter, FilesystemAdapter
  *   - graph     — getRelatedACOs
- *   - utils     — generateId, computeContentHash, computeTokenCounts, error classes
+ *   - utils     — generateId, computeContentHash, computeTokenCounts, error classes,
+ *                 getEnrichmentStrategy, SOURCE_TYPE_MODALITY, MODALITY_ENRICHMENT
  *   - migrate   — migrate function + MigrationError
  *
  * Plus two convenience functions:
@@ -54,6 +55,14 @@ export {
   type FetchStatus,
 } from "./utils/errors.js";
 export { fetchBodyForUrl, type FetchBodyOptions } from "./utils/fetch-url.js";
+export {
+  SOURCE_TYPE_MODALITY,
+  MODALITY_ENRICHMENT,
+  MIN_BODY_LENGTH_FOR_ENRICHMENT,
+  getEnrichmentStrategy,
+  type ContentModality,
+  type EnrichmentStrategy,
+} from "./utils/source-type.js";
 
 // Migration
 export { migrate, MigrationError } from "./migrate.js";
@@ -66,9 +75,11 @@ import { generateId } from "./utils/id.js";
 import { computeContentHash, normalizeBody } from "./utils/hash.js";
 import { computeTokenCounts } from "./utils/token-count.js";
 import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
+import type { SourceType } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
 import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
+import { SOURCE_TYPE_MODALITY, MIN_BODY_LENGTH_FOR_ENRICHMENT } from "./utils/source-type.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -102,15 +113,7 @@ export interface CreateACOParams {
    * How the ACO was created.
    * Defaults to `"manual"` (or `"link"` when `url` is provided).
    */
-  source_type?:
-    | "link"
-    | "uploaded_md"
-    | "manual"
-    | "converted_pdf"
-    | "converted_doc"
-    | "converted_video"
-    | "selected_text"
-    | "llm_capture";
+  source_type?: SourceType;
   /**
    * Author identity. Required by spec §3.4.
    * `id` is the implementation-specific user/system identifier.
@@ -177,16 +180,34 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
   }
 
   const now = new Date().toISOString();
+  const resolvedSourceType = params.source_type ?? (hasUrl ? "link" : "manual");
+  const modality = SOURCE_TYPE_MODALITY[resolvedSourceType] ?? "text";
+
+  // content_hash is omitted for ALL media modalities (image + video) regardless
+  // of whether a transcript body exists. The hash should reflect the binary file,
+  // not the transcript — two videos with identical transcripts but different files
+  // would otherwise deduplicate incorrectly. Callers must set content_hash via
+  // params.frontmatter using the file's actual binary hash.
+  const omitContentHash = modality === "image" || modality === "video";
+
+  // token_counts are useful for transcript bodies but noise for empty/filename-only
+  // bodies. Use MIN_BODY_LENGTH_FOR_ENRICHMENT as the consistent threshold.
+  const omitTokenCounts = modality === "image" ||
+    (modality === "video" && body.trim().length < MIN_BODY_LENGTH_FOR_ENRICHMENT);
 
   const generatedFields: Record<string, unknown> = {
     id: generateId(),
     acp_version: "0.2",
     object_type: "aco",
-    source_type: params.source_type ?? (hasUrl ? "link" : "manual"),
+    source_type: resolvedSourceType,
     created: now,
     author: params.author,
-    content_hash: computeContentHash(normalizeBody(body)),
-    token_counts: await computeTokenCounts(body),
+    ...(!omitContentHash
+      ? { content_hash: computeContentHash(normalizeBody(body)) }
+      : {}),
+    ...(!omitTokenCounts
+      ? { token_counts: await computeTokenCounts(body) }
+      : {}),
     // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.
     // Omitted entirely for body-only ACOs (no url provided).
     ...(fetchStatus !== undefined ? { fetch_status: fetchStatus } : {}),

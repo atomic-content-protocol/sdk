@@ -5,6 +5,8 @@
  * without touching pipeline logic.
  */
 
+import { MIN_BODY_LENGTH_FOR_ENRICHMENT, type ContentModality } from "@atomic-content-protocol/core";
+
 const truncate = (s: string, max: number): string =>
   s.length > max ? s.slice(0, max) + "…" : s;
 
@@ -55,8 +57,19 @@ Return as JSON array: [{"type": "...", "name": "...", "confidence": 0.9}, ...]`;
 
 /**
  * Build a prompt that classifies content into a fixed taxonomy.
+ * Pass `modality` to steer the model toward media-appropriate values.
  */
-export function buildClassificationPrompt(title: string, body: string): string {
+export function buildClassificationPrompt(
+  title: string,
+  body: string,
+  modality: ContentModality = "text"
+): string {
+  if (modality === "image") {
+    return `Return the single word: image`;
+  }
+  if (modality === "video") {
+    return `Return the single word: video`;
+  }
   return `Classify this content into one of: reference, framework, memo, checklist, notes, transcript, snippet, code, tutorial, analysis, other. Return just the single word.
 
 Title: ${truncate(title, 200)}
@@ -70,13 +83,57 @@ Classification:`;
 // ---------------------------------------------------------------------------
 
 /**
- * Build a prompt that requests all four enrichment fields in a single call.
+ * Build a prompt that requests all enrichment fields in a single call.
  * Body is truncated to 4 000 characters to balance coverage vs. cost.
  *
- * This is intended for use with `provider.structuredComplete()` — the schema
- * enforces the shape of the response.
+ * Pass `modality` so the prompt steers the model correctly for media ACOs.
+ * For "image" and "video" with no body, the prompt instructs the model to
+ * use the media-appropriate classification and skip language detection.
  */
-export function buildUnifiedPrompt(title: string, body: string): string {
+export function buildUnifiedPrompt(
+  title: string,
+  body: string,
+  modality: ContentModality = "text"
+): string {
+  if (modality === "image") {
+    return `Extract structured enrichment data for an image file.
+
+Title/filename: ${truncate(title, 200)}
+
+Rules:
+- classification MUST be "image"
+- language MUST be null (images have no text language)
+- tags: 3-7 keywords describing the image based on the filename/title
+- summary: one sentence describing what kind of image this appears to be based on the filename
+- key_entities: extract any named entities from the filename/title only`;
+  }
+
+  if (modality === "video") {
+    const hasTranscript = body.trim().length >= MIN_BODY_LENGTH_FOR_ENRICHMENT;
+    if (hasTranscript) {
+      return `Extract structured enrichment data for a video with transcript.
+
+Title: ${truncate(title, 200)}
+Transcript:
+${truncate(body, 4_000)}
+
+Rules:
+- classification MUST be "video"
+- language: detect from the transcript text, return ISO 639-1 two-letter code
+- tags, summary, key_entities: derive from the transcript content`;
+    }
+    return `Extract structured enrichment data for a video file.
+
+Title/filename: ${truncate(title, 200)}
+
+Rules:
+- classification MUST be "video"
+- language MUST be null (no transcript available)
+- tags: 3-7 keywords based on the filename/title
+- summary: one sentence describing what kind of video this appears to be based on the filename
+- key_entities: extract any named entities from the filename/title only`;
+  }
+
   return `Analyze the following content and extract structured enrichment data.
 
 Title: ${truncate(title, 200)}
@@ -88,7 +145,7 @@ Extract:
 2. Summary: exactly 2 sentences, max 500 characters, starting with the subject
 3. Classification: one of reference, framework, memo, checklist, notes, transcript, snippet, code, tutorial, analysis, other
 4. Key entities: named entities with type (person, organization, technology, concept, location, event), name, and confidence (0.0-1.0)
-5. Language: Detect the primary language of the content. Return as ISO 639-1 two-letter code (en, de, ja, etc.)`;
+5. Language: detect the primary language of the content, return as ISO 639-1 two-letter code (en, de, ja, etc.)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -130,6 +187,9 @@ export const UNIFIED_SCHEMA = {
           "code",
           "tutorial",
           "analysis",
+          "image",
+          "video",
+          "audio",
           "other",
         ],
         description: "Content type classification",
@@ -158,8 +218,8 @@ export const UNIFIED_SCHEMA = {
         description: "Named entities found in the content",
       },
       language: {
-        type: "string",
-        description: "ISO 639-1 two-letter language code",
+        type: ["string", "null"],
+        description: "ISO 639-1 two-letter language code, or null for media ACOs with no text body",
       },
     },
     required: ["tags", "summary", "classification", "key_entities", "language"],
@@ -176,5 +236,5 @@ export interface UnifiedEnrichmentOutput {
     name: string;
     confidence: number;
   }>;
-  language: string;
+  language: string | null;
 }

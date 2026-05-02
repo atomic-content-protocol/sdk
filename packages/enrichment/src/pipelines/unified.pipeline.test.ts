@@ -183,4 +183,126 @@ describe('UnifiedPipeline', () => {
       expect(provider.callCount).toBe(1);
     });
   });
+
+  describe('uploaded_image — no LLM call, fixed classification', () => {
+    function makeImageACO(): ACO {
+      return {
+        frontmatter: { id: 'img-id', title: 'photo.jpeg', source_type: 'uploaded_image' },
+        body: '',
+      };
+    }
+
+    it('does not call the LLM provider', async () => {
+      const aco = makeImageACO();
+      const provider = makeMockProvider();
+      await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(0);
+    });
+
+    it('sets classification to "image"', async () => {
+      const aco = makeImageACO();
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['classification']).toBe('image');
+    });
+
+    it('does not write language', async () => {
+      const aco = makeImageACO();
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['language']).toBeUndefined();
+    });
+
+    it('does not write tags or key_entities', async () => {
+      const aco = makeImageACO();
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['tags']).toBeUndefined();
+      expect(result.aco.frontmatter['key_entities']).toBeUndefined();
+    });
+
+    it('does not overwrite pre-existing tags', async () => {
+      const aco: ACO = {
+        frontmatter: { id: 'img-id', title: 'photo.jpeg', source_type: 'uploaded_image', tags: ['existing'] },
+        body: '',
+      };
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['tags']).toEqual(['existing']);
+    });
+  });
+
+  describe('converted_video — no transcript, no LLM call', () => {
+    function makeVideoACO(body = ''): ACO {
+      return {
+        frontmatter: { id: 'vid-id', title: 'recording.mp4', source_type: 'converted_video' },
+        body,
+      };
+    }
+
+    it('does not call the LLM when body is empty', async () => {
+      const provider = makeMockProvider();
+      await pipeline.enrich(makeVideoACO(''), provider);
+      expect(provider.callCount).toBe(0);
+    });
+
+    it('sets classification to "video"', async () => {
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(makeVideoACO(''), provider);
+      expect(result.aco.frontmatter['classification']).toBe('video');
+    });
+
+    it('does not write language for empty body', async () => {
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(makeVideoACO(''), provider);
+      expect(result.aco.frontmatter['language']).toBeUndefined();
+    });
+  });
+
+  describe('converted_video — with transcript, calls LLM', () => {
+    const TRANSCRIPT = 'This is a full transcript of the video. '.repeat(5);
+
+    it('calls the LLM when transcript body is long enough', async () => {
+      const aco: ACO = {
+        frontmatter: { id: 'vid-id', title: 'recording.mp4', source_type: 'converted_video' },
+        body: TRANSCRIPT,
+      };
+      const provider = makeMockProvider();
+      await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(1);
+    });
+
+    it('classification is still forced to "video" even with transcript', async () => {
+      const aco: ACO = {
+        frontmatter: { id: 'vid-id', title: 'recording.mp4', source_type: 'converted_video' },
+        body: TRANSCRIPT,
+      };
+      const provider = makeMockProvider({ ...MOCK_OUTPUT, classification: 'transcript' });
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['classification']).toBe('video');
+    });
+
+    it('writes language from transcript', async () => {
+      const aco: ACO = {
+        frontmatter: { id: 'vid-id', title: 'recording.mp4', source_type: 'converted_video' },
+        body: TRANSCRIPT,
+      };
+      const provider = makeMockProvider({ ...MOCK_OUTPUT, language: 'en' });
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['language']).toBe('en');
+    });
+  });
+
+  describe('unknown source_type — falls back to text strategy', () => {
+    it('calls the LLM and enriches all fields', async () => {
+      const aco: ACO = {
+        frontmatter: { id: 'x', title: 'Test', source_type: 'future_unknown_type' },
+        body: 'Some body content here that is long enough to enrich.',
+      };
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(1);
+      expect(result.aco.frontmatter['classification']).toBe(MOCK_OUTPUT.classification);
+    });
+  });
 });
