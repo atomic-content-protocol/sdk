@@ -75,6 +75,7 @@ import { generateId } from "./utils/id.js";
 import { computeContentHash, normalizeBody } from "./utils/hash.js";
 import { computeTokenCounts } from "./utils/token-count.js";
 import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
+import type { SourceType } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
 import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
@@ -112,16 +113,7 @@ export interface CreateACOParams {
    * How the ACO was created.
    * Defaults to `"manual"` (or `"link"` when `url` is provided).
    */
-  source_type?:
-    | "link"
-    | "uploaded_md"
-    | "uploaded_image"
-    | "manual"
-    | "converted_pdf"
-    | "converted_doc"
-    | "converted_video"
-    | "selected_text"
-    | "llm_capture";
+  source_type?: SourceType;
   /**
    * Author identity. Required by spec §3.4.
    * `id` is the implementation-specific user/system identifier.

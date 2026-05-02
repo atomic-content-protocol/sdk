@@ -70,6 +70,10 @@ export interface EnrichmentStrategy {
  * "video" uses conditional flags throughout because converted_video ACOs may
  * carry a full transcript (body = text) or no transcript at all (body = "").
  * Pipelines must inspect body length before running any inference.
+ *
+ * @important Do not read this table directly in pipeline code. Use
+ * `getEnrichmentStrategy(sourceType, body)` instead — it resolves conditional
+ * flags and applies the body-length threshold automatically.
  */
 export const MODALITY_ENRICHMENT: Record<ContentModality, EnrichmentStrategy> =
   {

@@ -5,7 +5,7 @@
  * without touching pipeline logic.
  */
 
-import { MIN_BODY_LENGTH_FOR_ENRICHMENT } from "@atomic-content-protocol/core";
+import { MIN_BODY_LENGTH_FOR_ENRICHMENT, type ContentModality } from "@atomic-content-protocol/core";
 
 const truncate = (s: string, max: number): string =>
   s.length > max ? s.slice(0, max) + "…" : s;
@@ -62,7 +62,7 @@ Return as JSON array: [{"type": "...", "name": "...", "confidence": 0.9}, ...]`;
 export function buildClassificationPrompt(
   title: string,
   body: string,
-  modality: "text" | "document" | "image" | "video" = "text"
+  modality: ContentModality = "text"
 ): string {
   if (modality === "image") {
     return `Return the single word: image`;
@@ -93,7 +93,7 @@ Classification:`;
 export function buildUnifiedPrompt(
   title: string,
   body: string,
-  modality: "text" | "document" | "image" | "video" = "text"
+  modality: ContentModality = "text"
 ): string {
   if (modality === "image") {
     return `Extract structured enrichment data for an image file.
