@@ -2,7 +2,7 @@
 import Default from '@astrojs/starlight/components/Footer.astro';
 ---
 
-<Default><slot /></Default>
+<Default {...Astro.props}><slot /></Default>
 
 <div class="site-credits">
   <a
@@ -13,6 +13,7 @@ import Default from '@astrojs/starlight/components/Footer.astro';
   <span class="sep" aria-hidden="true">·</span>
   <a
     href="https://github.com/atomic-content-protocol/sdk/blob/main/LICENSE"
+    target="_blank"
     rel="noopener noreferrer"
   >Licensed under Apache 2.0</a>
   <span class="sep" aria-hidden="true">·</span>
