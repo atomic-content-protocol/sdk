@@ -57,6 +57,14 @@ export default defineConfig({
       favicon: '/favicon.svg',
       head: [
         {
+          tag: 'script',
+          attrs: {
+            src: 'https://cdn.usefathom.com/script.js',
+            'data-site': 'VBLPAXWY',
+            defer: true,
+          },
+        },
+        {
           tag: 'meta',
           attrs: { property: 'og:image', content: 'https://atomiccontentprotocol.org/og-default.png' },
         },
