@@ -1,0 +1,49 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default><slot /></Default>
+
+<div class="site-credits">
+  <a
+    href="https://stacks-inc.com"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Maintained by Stacks, Inc.</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a
+    href="https://github.com/atomic-content-protocol/sdk/blob/main/LICENSE"
+    rel="noopener noreferrer"
+  >Licensed under Apache 2.0</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a
+    href="https://github.com/atomic-content-protocol/sdk"
+    target="_blank"
+    rel="noopener noreferrer"
+  >GitHub</a>
+</div>
+
+<style>
+  .site-credits {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-3);
+  }
+  .site-credits a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .site-credits a:hover {
+    color: var(--sl-color-white);
+  }
+  .sep {
+    color: var(--sl-color-gray-5);
+  }
+</style>
