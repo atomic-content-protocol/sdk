@@ -1,52 +1,61 @@
-import { Command } from 'commander';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import { createInterface } from 'node:readline';
-import chalk from 'chalk';
+import { Command } from "commander";
+import { mkdir, writeFile, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import chalk from "chalk";
+import { MODEL_PRESETS, DEFAULT_QUALITY } from "@atomic-content-protocol/enrichment";
+import { ask } from "../utils/prompt.js";
+import { CONFIG_DIR, CONFIG_FILE, type ACPConfig } from "../utils/config.js";
+import { CliError, EXIT } from "../utils/errors.js";
 
-function promptLine(rl: ReturnType<typeof createInterface>, question: string): Promise<string> {
-  return new Promise((res) => rl.question(question, (answer) => res(answer.trim())));
-}
-
-export const initCommand = new Command('init')
-  .argument('[path]', 'path to create vault', '.')
-  .description('Initialize a new ACP vault')
-  .action(async (path: string) => {
+export const initCommand = new Command("init")
+  .argument("[path]", "directory to create the vault in", ".")
+  .description("Initialize a new ACP vault (.acp/config.json)")
+  .option("--author-id <id>", "Author email/id (skips the prompt)")
+  .option("--author-name <name>", "Author display name (skips the prompt)")
+  .option("-y, --yes", "Do not prompt; write defaults", false)
+  .option("--force", "Overwrite an existing config", false)
+  .action(async (path: string, options: { authorId?: string; authorName?: string; yes: boolean; force: boolean }) => {
     const vaultPath = resolve(path);
-    const acpDir = join(vaultPath, '.acp');
+    const acpDir = join(vaultPath, CONFIG_DIR);
+    const configPath = join(acpDir, CONFIG_FILE);
+
+    const already = await stat(configPath).then(() => true, () => false);
+    if (already && !options.force) {
+      throw new CliError(`Vault already initialised at ${vaultPath}`, EXIT.USAGE, "Pass --force to overwrite .acp/config.json.");
+    }
 
     await mkdir(acpDir, { recursive: true });
 
-    // Prompt for author details
-    const rl = createInterface({ input: process.stdin, output: process.stderr });
-    const authorName = await promptLine(rl, 'Author name (leave blank to skip): ');
-    const authorId = await promptLine(rl, 'Author email/id (leave blank to skip): ');
-    rl.close();
-
-    const config: Record<string, unknown> = {
-      vault_path: vaultPath,
-      enrichment: {
-        anthropic: { model: 'claude-haiku-4-5' },
-        openai: { model: 'gpt-4o-mini' },
-      },
-    };
-
-    if (authorName || authorId) {
-      config.author = {
-        id: authorId || authorName,
-        name: authorName || authorId,
-      };
+    let authorName = options.authorName ?? "";
+    let authorId = options.authorId ?? "";
+    if (!options.yes && !authorName && !authorId) {
+      authorName = await ask("Author name (leave blank to skip): ");
+      authorId = await ask("Author email/id (leave blank to skip): ");
     }
 
-    await writeFile(join(acpDir, 'config.json'), JSON.stringify(config, null, 2));
-    await writeFile(join(acpDir, '.gitignore'), 'config.json\nindex.json\n');
+    const preset = MODEL_PRESETS[DEFAULT_QUALITY];
+    const config: ACPConfig = {
+      // Relative to the config file so the vault can be moved or checked in.
+      vault_path: ".",
+      enrichment: {
+        quality: DEFAULT_QUALITY,
+        anthropic: { model: preset.anthropic },
+        openai: { model: preset.openai },
+      },
+    };
+    if (authorName || authorId) {
+      config.author = { id: authorId || authorName, name: authorName || authorId };
+    }
 
-    console.log(chalk.green('Vault initialized at'), chalk.bold(vaultPath));
+    await writeFile(configPath, JSON.stringify(config, null, 2) + "\n");
+    await writeFile(join(acpDir, ".gitignore"), "index.json\nembeddings.json\n");
+
+    console.log(chalk.green("Vault initialized at"), chalk.bold(vaultPath));
     console.log();
-    console.log('Next steps:');
-    console.log(`  ${chalk.cyan('acp create')}          Create your first ACO`);
-    console.log(`  ${chalk.cyan('acp validate')}        Validate ACOs in this vault`);
-    console.log(`  ${chalk.cyan('acp serve')}           Start MCP server for Claude`);
+    console.log("Next steps:");
+    console.log(`  ${chalk.cyan("acp create --title ...")}   Create your first ACO`);
+    console.log(`  ${chalk.cyan("acp validate")}             Validate ACOs in this vault`);
+    console.log(`  ${chalk.cyan("acp serve")}                Start the MCP server for Claude`);
     console.log();
-    console.log(chalk.dim('Set ANTHROPIC_API_KEY or OPENAI_API_KEY env vars to enable enrichment.'));
+    console.log(chalk.dim("Set ANTHROPIC_API_KEY or OPENAI_API_KEY to enable enrichment. API keys belong in the environment, not in config.json."));
   });

@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **cli:** Every failure now prints one clean line and a meaningful exit code (1 runtime, 2 usage, 3 invalid ACOs, 4 no provider) instead of an unhandled-rejection stack trace; `ACP_DEBUG=1` shows the stack. Uses `parseAsync` with a top-level catch.
+- **cli:** `--max-cost` is enforced *before* spending: ACOs are estimated up front, only those that fit the budget are sent to a provider, the rest are reported as deferred. Previously every ACO was enriched and the flag only stopped *saving*.
+- **cli:** Vault resolution walks up from the current directory to the nearest `.acp/config.json` (like git) and every command accepts `--vault <path>`. `vault_path` in the config is relative to the config file, so vaults can be moved or committed. Config is validated (unknown keys, bad values) instead of silently falling back to defaults.
+- **cli:** Prompts (author, confirmations) only run when stdin and stderr are TTYs; in CI or pipes they no longer hang.
+- **cli:** `--source-type` and `--pipelines` are validated; `create` gains `--url` (guarded fetch via core) and `--json`; `validate` accepts a single `.md` file and `--json`; `enrich` and `enrich-batch` accept the `embed` pipeline (vector persisted to the vault), `--json`, and stamp the ACP §3.13 `tool` id in provenance (single `enrich` previously did not); `enrich-batch` gains `--concurrency`. `init` gains `--yes`, `--author-*`, `--force`, refuses to clobber an existing vault, and writes current model presets (no more `gpt-4o-mini`). Version is read from `package.json`.
+- **cli:** README documents the real arguments (`serve` and `stats` take no positional path; `enrich` takes an id) and exit codes.
+
+### Added
+- **cli:** First test suite — unit tests for config discovery/validation, budget planning and pipeline parsing, plus an end-to-end test that drives the built binary (`init` → `create` → `validate` → `search` → `stats`, error paths and exit codes).
+
+### Changed
 - **enrichment:** Idempotency now follows the spec's authorship rule. A field that already holds a non-empty value is left alone unless `force` is set — a value without a provenance record is treated as human-authored and is never overwritten implicitly. Empty values (`""`, `[]`, missing) are (re)generated. Applies to every pipeline. Previously human-written tags/summaries without provenance were silently replaced.
 - **enrichment:** When a pipeline cannot extract a usable value it now returns the ACO unchanged and writes **no** provenance record, so the next run retries. Previously tag/entity pipelines wrote `[]` plus provenance, which made the field skip forever.
 - **enrichment:** `CircuitBreaker` HALF_OPEN admits exactly one probe; concurrent callers get a `CircuitOpenError` without executing. A failed probe re-opens immediately. The request timeout now aborts the underlying HTTP call via `AbortSignal` (`CircuitTimeoutError`) instead of leaving it running. `execute(fn)` passes the signal to `fn`.
