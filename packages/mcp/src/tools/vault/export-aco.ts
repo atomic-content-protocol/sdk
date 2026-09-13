@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { serializeACO } from "@atomic-content-protocol/core";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the ACO to export"),
@@ -20,11 +21,11 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: true },
 };
 
-export function createExportACOTool(storage: IStorageAdapter): ToolEntry {
+export function createExportACOTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const { id, format } = inputSchema.parse(input);
-      const aco = await storage.getACO(id);
+      const aco = await ctx.storage.getACO(id);
 
       if (!aco) {
         return { success: false, error: `ACO not found: ${id}` };
@@ -51,10 +52,7 @@ export function createExportACOTool(storage: IStorageAdapter): ToolEntry {
         },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

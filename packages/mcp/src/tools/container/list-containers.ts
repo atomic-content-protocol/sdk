@@ -1,6 +1,7 @@
 import { z } from "zod";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   limit: z
@@ -27,11 +28,11 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: true },
 };
 
-export function createListContainersTool(storage: IStorageAdapter): ToolEntry {
+export function createListContainersTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const { limit, offset } = inputSchema.parse(input);
-      const containers = await storage.listContainers({ limit, offset });
+      const containers = await ctx.storage.listContainers({ limit, offset });
 
       const items = containers.map((c) => c.frontmatter);
 
@@ -40,10 +41,7 @@ export function createListContainersTool(storage: IStorageAdapter): ToolEntry {
         data: { items, count: items.length, offset, limit },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

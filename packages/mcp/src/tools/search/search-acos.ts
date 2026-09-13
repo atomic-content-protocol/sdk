@@ -1,6 +1,8 @@
 import { z } from "zod";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
+import { SOURCE_TYPES } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   query: z.string().min(1).describe("Full-text search query applied to title and body"),
@@ -13,18 +15,7 @@ const inputSchema = z.object({
     .optional()
     .describe("Filter by lifecycle status"),
   source_type: z
-    .array(
-      z.enum([
-        "link",
-        "uploaded_md",
-        "manual",
-        "converted_pdf",
-        "converted_doc",
-        "converted_video",
-        "selected_text",
-        "llm_capture",
-      ])
-    )
+    .array(z.enum(SOURCE_TYPES))
     .optional()
     .describe("Filter by source type"),
   limit: z
@@ -44,12 +35,12 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: true },
 };
 
-export function createSearchACOsTool(storage: IStorageAdapter): ToolEntry {
+export function createSearchACOsTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const { query, tags, status, source_type, limit } = inputSchema.parse(input);
 
-      const acos = await storage.queryACOs({
+      const acos = await ctx.storage.queryACOs({
         search: query,
         tags,
         status,
@@ -67,10 +58,7 @@ export function createSearchACOsTool(storage: IStorageAdapter): ToolEntry {
         },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

@@ -1,48 +1,73 @@
 import type { ACPToolDefinition, ToolEntry, ToolHandler } from "./types/tool.js";
 
 /**
- * Module-level registry: maps tool name → ToolEntry.
- * Populated by the server during initialization via registerTool().
+ * ToolRegistry — maps tool name → ToolEntry for one server instance.
+ *
+ * Each `ACPMCPServer` owns its own registry, so two servers in one process
+ * (e.g. two vaults, or tests) never clobber each other.
  */
-const toolRegistry: Record<string, ToolEntry> = {};
+export class ToolRegistry {
+  private readonly tools = new Map<string, ToolEntry>();
 
-/**
- * Register a tool. Throws if a tool with the same name is already registered.
- */
+  /** Register a tool. Throws if a tool with the same name is already registered. */
+  register(name: string, entry: ToolEntry): void {
+    if (this.tools.has(name)) {
+      throw new Error(`Tool '${name}' is already registered`);
+    }
+    this.tools.set(name, entry);
+  }
+
+  /** All registered tool definitions (no handlers), in registration order. */
+  definitions(): ACPToolDefinition[] {
+    return [...this.tools.values()].map((entry) => entry.definition);
+  }
+
+  /** Handler for `name`, or null if not registered. */
+  handler(name: string): ToolHandler | null {
+    return this.tools.get(name)?.handler ?? null;
+  }
+
+  has(name: string): boolean {
+    return this.tools.has(name);
+  }
+
+  names(): string[] {
+    return [...this.tools.keys()];
+  }
+
+  clear(): void {
+    this.tools.clear();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Module-level default registry — kept for backwards compatibility with the
+// functional API exported in 0.1.x. `ACPMCPServer` no longer uses it.
+// ---------------------------------------------------------------------------
+
+const defaultRegistry = new ToolRegistry();
+
+/** @deprecated Use `new ToolRegistry()` — this shared instance is process-global. */
 export function registerTool(name: string, entry: ToolEntry): void {
-  if (toolRegistry[name]) {
-    throw new Error(`Tool '${name}' is already registered`);
-  }
-  toolRegistry[name] = entry;
+  defaultRegistry.register(name, entry);
 }
 
-/**
- * Return all registered tool definitions (no handlers).
- */
+/** @deprecated Use `ToolRegistry#definitions()`. */
 export function getAllTools(): ACPToolDefinition[] {
-  return Object.values(toolRegistry).map((entry) => entry.definition);
+  return defaultRegistry.definitions();
 }
 
-/**
- * Return the handler for a given tool name, or null if not found.
- */
+/** @deprecated Use `ToolRegistry#handler()`. */
 export function getToolHandler(name: string): ToolHandler | null {
-  const entry = toolRegistry[name];
-  return entry ? entry.handler : null;
+  return defaultRegistry.handler(name);
 }
 
-/**
- * Return true if a tool with the given name is registered.
- */
+/** @deprecated Use `ToolRegistry#has()`. */
 export function toolExists(name: string): boolean {
-  return name in toolRegistry;
+  return defaultRegistry.has(name);
 }
 
-/**
- * Clear all registered tools. Used for testing.
- */
+/** @deprecated Use `ToolRegistry#clear()`. */
 export function clearRegistry(): void {
-  for (const key of Object.keys(toolRegistry)) {
-    delete toolRegistry[key];
-  }
+  defaultRegistry.clear();
 }

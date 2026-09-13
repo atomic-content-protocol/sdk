@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **server:** First test suite (rate limiter, spend guard, config, HTTP integration against a fake provider: weights, CORS, auth, 413/400, SSRF refusals, batch errors, budget cap).
 ### Changed
+- **mcp:** Each `ACPMCPServer` owns its own `ToolRegistry` and one shared, lazily-built enrichment provider (circuit-breaker state persists across calls). The module-level `registerTool`/`getAllTools`/… functions still work but are deprecated. New public `listTools()`, `callTool()`, `toolNames`, `close()`.
+- **mcp:** `EnrichmentConfig` accepts `provider` (bring your own `IEnrichmentProvider`) and `routerOptions` in addition to `providers`.
+- **mcp:** `update_aco` accepts `relationships` (validated against the core edge schema) and `body` (content_hash and token_counts recomputed); `detect_relationships` now points at it correctly.
+- **mcp:** `find_similar` and `detect_relationships` no longer stop at 500 ACOs; they page through the whole vault. Cosine scores are calibrated (0.5 → 0, 1.0 → 1) so unrelated documents no longer pass as "high semantic similarity"; `detect_relationships` embeds the source once and reads stored vectors instead of embedding every candidate on every call.
+- **mcp:** `enrich_aco` / `enrich_batch` accept the `embed` pipeline and persist the vector via `storage.putEmbedding`, so vector search can actually return results. Skip logic mirrors the pipelines' idempotency rule (`needsPipeline`) and is identical for single and batch. `enrich_batch` gains `concurrency` and reports `skipped` / `missing`.
+- **mcp:** `list_acos` applies sort order and pagination after filters (previously ignored `sortBy`/`order` whenever a filter was set) and reports `total`.
+- **mcp:** `delete_aco` returns an error for unknown ids instead of `deleted: true`; unknown tools return a JSON-RPC method-not-found error; `$schema` is stripped from `inputSchema`; source-type enums come from core instead of hand-copied lists; server name/version default to the package's.
+
+### Added
+- **mcp:** First test suite — 14 integration tests over a temp filesystem vault with a fake provider (registry isolation, CRUD round trip incl. relationships, sort-after-filter, idempotent enrichment, embed → find_similar → detect_relationships, overlap fallbacks, batch accounting).
+
+### Changed
 - **enrichment:** Idempotency now follows the spec's authorship rule. A field that already holds a non-empty value is left alone unless `force` is set — a value without a provenance record is treated as human-authored and is never overwritten implicitly. Empty values (`""`, `[]`, missing) are (re)generated. Applies to every pipeline. Previously human-written tags/summaries without provenance were silently replaced.
 - **enrichment:** When a pipeline cannot extract a usable value it now returns the ACO unchanged and writes **no** provenance record, so the next run retries. Previously tag/entity pipelines wrote `[]` plus provenance, which made the field skip forever.
 - **enrichment:** `CircuitBreaker` HALF_OPEN admits exactly one probe; concurrent callers get a `CircuitOpenError` without executing. A failed probe re-opens immediately. The request timeout now aborts the underlying HTTP call via `AbortSignal` (`CircuitTimeoutError`) instead of leaving it running. `execute(fn)` passes the signal to `fn`.
