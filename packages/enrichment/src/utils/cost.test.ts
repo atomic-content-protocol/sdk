@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { MODEL_PRESETS, MODEL_PRICING } from "../providers/models.js";
 import { estimateEnrichmentCost, formatCostEstimate } from "./cost.js";
-import { MODEL_PRICING, MODEL_PRESETS } from "../providers/models.js";
 
 describe("estimateEnrichmentCost", () => {
   const content = "word ".repeat(1_000); // 5 000 chars → 1 250 approximate tokens

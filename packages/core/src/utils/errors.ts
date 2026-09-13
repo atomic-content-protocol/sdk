@@ -77,12 +77,7 @@ export class FetchError extends ACPError {
   readonly permanent: boolean;
   readonly networkCode?: string;
 
-  constructor(
-    message: string,
-    permanent: boolean,
-    networkCode?: string,
-    options?: ErrorOptions
-  ) {
+  constructor(message: string, permanent: boolean, networkCode?: string, options?: ErrorOptions) {
     super("FETCH_ERROR", message, options);
     this.name = "FetchError";
     this.permanent = permanent;

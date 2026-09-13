@@ -1,10 +1,10 @@
-import { Command } from "commander";
-import chalk from "chalk";
 import { createACO, SOURCE_TYPES, type SourceType } from "@atomic-content-protocol/core";
-import { loadConfig } from "../utils/config.js";
-import { createStorage } from "../utils/storage.js";
+import chalk from "chalk";
+import { Command } from "commander";
 import { resolveAuthor } from "../utils/author.js";
+import { loadConfig } from "../utils/config.js";
 import { CliError, EXIT } from "../utils/errors.js";
+import { createStorage } from "../utils/storage.js";
 
 interface CreateOptions {
   title?: string;
@@ -29,7 +29,11 @@ export const createCommand = new Command("create")
   .option("--json", "Print the created frontmatter as JSON", false)
   .action(async (options: CreateOptions, cmd: Command) => {
     if (!(SOURCE_TYPES as readonly string[]).includes(options.sourceType)) {
-      throw new CliError(`Invalid --source-type "${options.sourceType}"`, EXIT.USAGE, `Valid values: ${SOURCE_TYPES.join(", ")}`);
+      throw new CliError(
+        `Invalid --source-type "${options.sourceType}"`,
+        EXIT.USAGE,
+        `Valid values: ${SOURCE_TYPES.join(", ")}`
+      );
     }
     if (options.url && options.body) {
       throw new CliError("Provide --url or --body, not both", EXIT.USAGE);
@@ -45,7 +49,10 @@ export const createCommand = new Command("create")
       cwd: config.vault_path,
     });
 
-    const tags = options.tags?.split(",").map((t) => t.trim()).filter(Boolean);
+    const tags = options.tags
+      ?.split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     const aco = await createACO({
       title: options.title,

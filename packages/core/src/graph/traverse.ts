@@ -76,7 +76,9 @@ export async function getRelatedACOs(
   const queue: Array<[string, number]> = [[acoId, 0]];
 
   while (queue.length > 0) {
-    const [currentId, currentDepth] = queue.shift()!;
+    const next = queue.shift();
+    if (!next) break;
+    const [currentId, currentDepth] = next;
 
     if (currentDepth >= maxDepth) continue;
 
@@ -109,7 +111,5 @@ export async function getRelatedACOs(
   }
 
   // Sort by distance ascending, then id for deterministic output
-  return results.sort((a, b) =>
-    a.distance !== b.distance ? a.distance - b.distance : a.id.localeCompare(b.id)
-  );
+  return results.sort((a, b) => (a.distance !== b.distance ? a.distance - b.distance : a.id.localeCompare(b.id)));
 }

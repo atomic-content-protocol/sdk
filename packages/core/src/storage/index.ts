@@ -6,11 +6,11 @@
  * are implemented.
  */
 export type {
+  ACOQuery,
   IStorageAdapter,
   ListOptions,
-  ACOQuery,
-  SimilarityOptions,
   SearchResult,
+  SimilarityOptions,
 } from "./adapter.interface.js";
 
-export { FilesystemAdapter, assertSafeId } from "./filesystem.adapter.js";
+export { assertSafeId, FilesystemAdapter } from "./filesystem.adapter.js";

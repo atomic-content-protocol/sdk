@@ -1,20 +1,37 @@
-import { z } from "zod";
 import type { ACO } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { z } from "zod";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
-import { PIPELINE_NAMES, needsPipeline, runPipelines, type PipelineName } from "../../utils/pipelines.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { needsPipeline, PIPELINE_NAMES, type PipelineName, runPipelines } from "../../utils/pipelines.js";
 import { loadACOs } from "../../utils/storage.js";
 
 const inputSchema = z
   .object({
-    ids: z.array(z.string()).max(200).optional().describe("Array of ACO ids to enrich. Mutually exclusive with container_id."),
+    ids: z
+      .array(z.string())
+      .max(200)
+      .optional()
+      .describe("Array of ACO ids to enrich. Mutually exclusive with container_id."),
     container_id: z.string().optional().describe("Enrich all ACOs in this container. Mutually exclusive with ids."),
-    pipelines: z.array(z.enum(PIPELINE_NAMES)).optional().default(["unified"]).describe("Enrichment pipelines to run on each ACO"),
+    pipelines: z
+      .array(z.enum(PIPELINE_NAMES))
+      .optional()
+      .default(["unified"])
+      .describe("Enrichment pipelines to run on each ACO"),
     force: z.boolean().optional().default(false).describe("Regenerate fields even when they already have values"),
-    concurrency: z.number().int().min(1).max(8).optional().default(1).describe("How many ACOs to enrich at the same time (default 1)"),
+    concurrency: z
+      .number()
+      .int()
+      .min(1)
+      .max(8)
+      .optional()
+      .default(1)
+      .describe("How many ACOs to enrich at the same time (default 1)"),
   })
-  .refine((d) => Boolean(d.ids) !== Boolean(d.container_id), { message: "Provide either ids or container_id, not both" });
+  .refine((d) => Boolean(d.ids) !== Boolean(d.container_id), {
+    message: "Provide either ids or container_id, not both",
+  });
 
 const definition: ACPToolDefinition = {
   name: "enrich_batch",

@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
-import { ProviderRouter } from "@atomic-content-protocol/enrichment";
+import type { AddressInfo } from "node:net";
 import type { IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
+import { ProviderRouter } from "@atomic-content-protocol/enrichment";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { requestWeight } from "./mcp-handler.js";
@@ -26,7 +26,7 @@ function fakeProvider(): IEnrichmentProvider & { calls: number } {
     model: "fake-model",
     calls: 0,
     complete: async () => "",
-    structuredComplete: async <T,>() => {
+    structuredComplete: async <T>() => {
       p.calls++;
       return OUTPUT as unknown as T;
     },
@@ -45,7 +45,11 @@ function rpc(method: string, params: unknown, id = 1) {
 }
 
 async function post(body: unknown, extra: Record<string, string> = {}) {
-  const res = await fetch(`${base}/mcp`, { method: "POST", headers: { ...HEADERS, ...extra }, body: JSON.stringify(body) });
+  const res = await fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: { ...HEADERS, ...extra },
+    body: JSON.stringify(body),
+  });
   const text = await res.text();
   return { res, text };
 }
@@ -92,14 +96,19 @@ describe("weights", () => {
     expect(requestWeight(rpc("tools/call", { name: "enrich_content", arguments: {} }))).toBe(1);
     expect(toolCallWeight("enrich_batch", { items: [1, 2, 3] })).toBe(3);
     expect(toolCallWeight("enrich_batch", { items: new Array(50).fill(0) })).toBe(10);
-    expect(requestWeight([rpc("tools/call", { name: "enrich_content" }), rpc("tools/call", { name: "enrich_batch", arguments: { items: [1, 2] } })])).toBe(3);
+    expect(
+      requestWeight([
+        rpc("tools/call", { name: "enrich_content" }),
+        rpc("tools/call", { name: "enrich_batch", arguments: { items: [1, 2] } }),
+      ])
+    ).toBe(3);
   });
 });
 
 describe("HTTP surface", () => {
   it("GET /health reports config", async () => {
     const res = await fetch(`${base}/health`);
-    const body = await res.json();
+    const body = (await res.json()) as Record<string, any>;
     expect(body.status).toBe("ok");
     expect(body.providers.anthropic).toBe(true);
     expect(body.quality).toBe("fast");
@@ -125,7 +134,11 @@ describe("HTTP surface", () => {
   });
 
   it("rejects oversized and malformed bodies cleanly", async () => {
-    const big = await fetch(`${base}/mcp`, { method: "POST", headers: HEADERS, body: JSON.stringify({ x: "y".repeat(200_000) }) });
+    const big = await fetch(`${base}/mcp`, {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ x: "y".repeat(200_000) }),
+    });
     expect(big.status).toBe(413);
     const bad = await fetch(`${base}/mcp`, { method: "POST", headers: HEADERS, body: "{not json" });
     expect(bad.status).toBe(400);
@@ -138,7 +151,11 @@ describe("HTTP surface", () => {
 
 describe("tool calls", () => {
   it("enrich_content returns validated enriched frontmatter and truthful model", async () => {
-    const { res, tool } = await callTool("enrich_content", { content: "Alpha and beta are concepts.", title: "T" }, { "X-Forwarded-For": "10.9.9.1" });
+    const { res, tool } = await callTool(
+      "enrich_content",
+      { content: "Alpha and beta are concepts.", title: "T" },
+      { "X-Forwarded-For": "10.9.9.1" }
+    );
     expect(res.status).toBe(200);
     expect(tool.success).toBe(true);
     expect(tool.data.aco.tags).toEqual(["alpha", "beta"]);
@@ -181,7 +198,10 @@ describe("tool calls", () => {
     );
     expect(tool.success).toBe(true);
     expect(tool.data.items).toHaveLength(1);
-    expect(tool.data.errors.map((e: any) => [e.index, e.code])).toEqual([[1, "INVALID_URL"], [2, "EMPTY_CONTENT"]]);
+    expect(tool.data.errors.map((e: any) => [e.index, e.code])).toEqual([
+      [1, "INVALID_URL"],
+      [2, "EMPTY_CONTENT"],
+    ]);
   });
 });
 
@@ -191,7 +211,10 @@ describe("abuse controls", () => {
     const first = await post(rpc("tools/call", { name: "enrich_content", arguments: { content: "a b c" } }), ip);
     expect(first.res.headers.get("ratelimit-remaining")).toBe("5");
     // A 6-item batch does not fit into 5 remaining units → 429 and nothing consumed.
-    const batch = await post(rpc("tools/call", { name: "enrich_batch", arguments: { items: new Array(6).fill({ content: "x y" }) } }), ip);
+    const batch = await post(
+      rpc("tools/call", { name: "enrich_batch", arguments: { items: new Array(6).fill({ content: "x y" }) } }),
+      ip
+    );
     expect(batch.res.status).toBe(429);
     expect(batch.res.headers.get("retry-after")).toBeTruthy();
     expect((await post(rpc("tools/list", {}), ip)).res.headers.get("ratelimit-remaining")).toBe("5");
@@ -219,16 +242,31 @@ describe("bearer auth", () => {
   beforeAll(async () => {
     const config = loadConfig({ ANTHROPIC_API_KEY: "test", MCP_API_KEYS: "secret-1,secret-2" });
     const app = createApp(config, { router: new ProviderRouter([fakeProvider()]), log: () => {} });
-    await new Promise<void>((r) => { authHttp = app.listen(0, () => r()); });
+    await new Promise<void>((r) => {
+      authHttp = app.listen(0, () => r());
+    });
     authBase = `http://127.0.0.1:${(authHttp.address() as AddressInfo).port}`;
   });
-  afterAll(async () => { await new Promise<void>((r) => authHttp.close(() => r())); });
+  afterAll(async () => {
+    await new Promise<void>((r) => authHttp.close(() => r()));
+  });
 
   it("requires a valid bearer token when keys are configured", async () => {
     const body = JSON.stringify(rpc("tools/list", {}));
     expect((await fetch(`${authBase}/mcp`, { method: "POST", headers: HEADERS, body })).status).toBe(401);
-    expect((await fetch(`${authBase}/mcp`, { method: "POST", headers: { ...HEADERS, Authorization: "Bearer wrong" }, body })).status).toBe(401);
-    expect((await fetch(`${authBase}/mcp`, { method: "POST", headers: { ...HEADERS, Authorization: "Bearer secret-2" }, body })).status).toBe(200);
+    expect(
+      (await fetch(`${authBase}/mcp`, { method: "POST", headers: { ...HEADERS, Authorization: "Bearer wrong" }, body }))
+        .status
+    ).toBe(401);
+    expect(
+      (
+        await fetch(`${authBase}/mcp`, {
+          method: "POST",
+          headers: { ...HEADERS, Authorization: "Bearer secret-2" },
+          body,
+        })
+      ).status
+    ).toBe(200);
   });
 });
 

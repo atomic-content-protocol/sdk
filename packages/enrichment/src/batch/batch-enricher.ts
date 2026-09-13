@@ -1,5 +1,5 @@
 import type { ACO } from "@atomic-content-protocol/core";
-import type { IEnrichmentPipeline, EnrichmentOptions } from "../pipelines/pipeline.interface.js";
+import type { EnrichmentOptions, IEnrichmentPipeline } from "../pipelines/pipeline.interface.js";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 
 export interface BatchOptions extends EnrichmentOptions {

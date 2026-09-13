@@ -28,9 +28,7 @@ export { MigrationError };
 // Migration registry
 // ---------------------------------------------------------------------------
 
-type MigrationFn = (
-  frontmatter: Record<string, unknown>
-) => Record<string, unknown>;
+type MigrationFn = (frontmatter: Record<string, unknown>) => Record<string, unknown>;
 
 /** Key format: `"<fromVersion>→<toVersion>"`. */
 const MIGRATIONS: Map<string, MigrationFn> = new Map([

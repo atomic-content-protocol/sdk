@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
+import { describe, expect, it } from "vitest";
 import { ACOFrontmatterSchema } from "./aco.schema.js";
-import { ContainerFrontmatterSchema } from "./container.schema.js";
 import { CollectionFrontmatterSchema } from "./collection.schema.js";
+import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
+import { ContainerFrontmatterSchema } from "./container.schema.js";
 
 describe("shared schema fragments", () => {
   it("AuthorSchema requires id and name, allows extras", () => {
@@ -18,7 +18,14 @@ describe("shared schema fragments", () => {
   });
 
   it("ACO, Container and Collection all reject the same bad author", () => {
-    const base = { id: "x", acp_version: "0.2", source_type: "manual", created: "2026-01-01T00:00:00Z", author: { id: "", name: "" }, title: "t" };
+    const base = {
+      id: "x",
+      acp_version: "0.2",
+      source_type: "manual",
+      created: "2026-01-01T00:00:00Z",
+      author: { id: "", name: "" },
+      title: "t",
+    };
     expect(ACOFrontmatterSchema.safeParse({ ...base, object_type: "aco" }).success).toBe(false);
     expect(ContainerFrontmatterSchema.safeParse({ ...base, object_type: "container" }).success).toBe(false);
     expect(CollectionFrontmatterSchema.safeParse({ ...base, object_type: "collection" }).success).toBe(false);

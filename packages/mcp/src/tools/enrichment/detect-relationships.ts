@@ -1,11 +1,18 @@
 import { z } from "zod";
-import type { ACO } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
-import { extractStrings, extractEntityNames, jaccard, shared, titleOf, idOf, calibrateCosine } from "../../utils/frontmatter.js";
-import { listAllACOs, loadACOs } from "../../utils/storage.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import {
+  calibrateCosine,
+  extractEntityNames,
+  extractStrings,
+  idOf,
+  jaccard,
+  shared,
+  titleOf,
+} from "../../utils/frontmatter.js";
 import { embeddingText } from "../../utils/pipelines.js";
+import { listAllACOs, loadACOs } from "../../utils/storage.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the source ACO to find relationships for"),
@@ -13,7 +20,14 @@ const inputSchema = z.object({
     .array(z.string())
     .optional()
     .describe("Specific ACO ids to compare against. If not provided, compares against every ACO in the vault."),
-  max_results: z.number().int().positive().max(100).optional().default(10).describe("Maximum number of relationship suggestions to return"),
+  max_results: z
+    .number()
+    .int()
+    .positive()
+    .max(100)
+    .optional()
+    .default(10)
+    .describe("Maximum number of relationship suggestions to return"),
   min_confidence: z.number().min(0).max(1).optional().default(0.1).describe("Drop suggestions below this confidence"),
 });
 
@@ -43,9 +57,10 @@ export function createDetectRelationshipsTool(ctx: ToolContext): ToolEntry {
         return { success: false, error: `ACO not found: ${id}` };
       }
 
-      const candidates = (candidate_ids && candidate_ids.length > 0
-        ? await loadACOs(ctx.storage, candidate_ids)
-        : await listAllACOs(ctx.storage)
+      const candidates = (
+        candidate_ids && candidate_ids.length > 0
+          ? await loadACOs(ctx.storage, candidate_ids)
+          : await listAllACOs(ctx.storage)
       ).filter((a) => idOf(a.frontmatter) !== id);
 
       // ------------------------------------------------------------------

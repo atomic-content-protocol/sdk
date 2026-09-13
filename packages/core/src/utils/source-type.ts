@@ -75,45 +75,44 @@ export interface EnrichmentStrategy {
  * `getEnrichmentStrategy(sourceType, body)` instead — it resolves conditional
  * flags and applies the body-length threshold automatically.
  */
-export const MODALITY_ENRICHMENT: Record<ContentModality, EnrichmentStrategy> =
-  {
-    text: {
-      language: true,
-      languageConditional: false,
-      classificationDefault: null,
-      summary: true,
-      summaryConditional: false,
-      textEnrichment: true,
-      textEnrichmentConditional: false,
-    },
-    document: {
-      language: true,
-      languageConditional: false,
-      classificationDefault: null,
-      summary: true,
-      summaryConditional: false,
-      textEnrichment: true,
-      textEnrichmentConditional: false,
-    },
-    image: {
-      language: false,
-      languageConditional: false,
-      classificationDefault: "image",
-      summary: false,
-      summaryConditional: false,
-      textEnrichment: false,
-      textEnrichmentConditional: false,
-    },
-    video: {
-      language: false,
-      languageConditional: true,   // only if transcript body is present
-      classificationDefault: "video",
-      summary: false,
-      summaryConditional: true,    // only if transcript body is present
-      textEnrichment: false,
-      textEnrichmentConditional: true, // only if transcript body is present
-    },
-  };
+export const MODALITY_ENRICHMENT: Record<ContentModality, EnrichmentStrategy> = {
+  text: {
+    language: true,
+    languageConditional: false,
+    classificationDefault: null,
+    summary: true,
+    summaryConditional: false,
+    textEnrichment: true,
+    textEnrichmentConditional: false,
+  },
+  document: {
+    language: true,
+    languageConditional: false,
+    classificationDefault: null,
+    summary: true,
+    summaryConditional: false,
+    textEnrichment: true,
+    textEnrichmentConditional: false,
+  },
+  image: {
+    language: false,
+    languageConditional: false,
+    classificationDefault: "image",
+    summary: false,
+    summaryConditional: false,
+    textEnrichment: false,
+    textEnrichmentConditional: false,
+  },
+  video: {
+    language: false,
+    languageConditional: true, // only if transcript body is present
+    classificationDefault: "video",
+    summary: false,
+    summaryConditional: true, // only if transcript body is present
+    textEnrichment: false,
+    textEnrichmentConditional: true, // only if transcript body is present
+  },
+};
 
 /** Minimum body length (characters) for conditional enrichment to run. */
 export const MIN_BODY_LENGTH_FOR_ENRICHMENT = 50;
@@ -132,12 +131,7 @@ export const MIN_BODY_LENGTH_FOR_ENRICHMENT = 50;
 export function getEnrichmentStrategy(
   sourceType: SourceType,
   body: string
-): Omit<
-  EnrichmentStrategy,
-  | "languageConditional"
-  | "summaryConditional"
-  | "textEnrichmentConditional"
-> {
+): Omit<EnrichmentStrategy, "languageConditional" | "summaryConditional" | "textEnrichmentConditional"> {
   // Defensive fallback: unknown source_type values (e.g. from future spec versions
   // or malformed frontmatter) default to "text" enrichment rather than crashing.
   const modality = SOURCE_TYPE_MODALITY[sourceType] ?? "text";
@@ -148,7 +142,6 @@ export function getEnrichmentStrategy(
     language: base.language || (base.languageConditional && hasBody),
     classificationDefault: base.classificationDefault,
     summary: base.summary || (base.summaryConditional && hasBody),
-    textEnrichment:
-      base.textEnrichment || (base.textEnrichmentConditional && hasBody),
+    textEnrichment: base.textEnrichment || (base.textEnrichmentConditional && hasBody),
   };
 }

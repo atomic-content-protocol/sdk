@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ACOFrontmatterSchema } from "./aco.schema.js";
 
 // ---------------------------------------------------------------------------
@@ -44,9 +44,7 @@ const FULL_ACO = {
       confidence: 0.9,
     },
   },
-  relationships: [
-    { rel_type: "references", target_id: "0193f5e6-c5f0-7000-8000-000000000002" },
-  ],
+  relationships: [{ rel_type: "references", target_id: "0193f5e6-c5f0-7000-8000-000000000002" }],
   visibility: "public" as const,
   agent_accessible: true,
   rights: "CC-BY-4.0",
@@ -293,15 +291,7 @@ describe("ACOFrontmatterSchema", () => {
   });
 
   it("validates all core rel_type values", () => {
-    const coreTypes = [
-      "references",
-      "derived-from",
-      "supersedes",
-      "supports",
-      "contradicts",
-      "part-of",
-      "related",
-    ];
+    const coreTypes = ["references", "derived-from", "supersedes", "supports", "contradicts", "part-of", "related"];
     for (const rel_type of coreTypes) {
       const result = ACOFrontmatterSchema.safeParse({
         ...MINIMAL_ACO,
@@ -338,9 +328,7 @@ describe("ACOFrontmatterSchema", () => {
   it("validates relationship confidence within 0-1 range", () => {
     const result = ACOFrontmatterSchema.safeParse({
       ...MINIMAL_ACO,
-      relationships: [
-        { rel_type: "references", target_id: "target-id", confidence: 0.75 },
-      ],
+      relationships: [{ rel_type: "references", target_id: "target-id", confidence: 0.75 }],
     });
     expect(result.success).toBe(true);
   });

@@ -48,11 +48,7 @@ export interface IEnrichmentProvider {
    * Providers return the parsed JSON as-is; callers are responsible for
    * validating it (see the Zod schemas in `utils/prompts.ts`).
    */
-  structuredComplete<T>(
-    prompt: string,
-    schema: StructuredSchema,
-    options?: CompletionOptions
-  ): Promise<T>;
+  structuredComplete<T>(prompt: string, schema: StructuredSchema, options?: CompletionOptions): Promise<T>;
 
   /** Generate a vector embedding for the given text. Optional capability. */
   embed?(text: string, options?: { signal?: AbortSignal }): Promise<number[]>;

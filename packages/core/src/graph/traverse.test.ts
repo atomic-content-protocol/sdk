@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { getRelatedACOs } from "./traverse.js";
+import { describe, expect, it } from "vitest";
 import type { IStorageAdapter } from "../storage/adapter.interface.js";
+import { getRelatedACOs } from "./traverse.js";
 
 type Edge = { rel_type: string; target_id: string; confidence?: number };
 
@@ -18,7 +18,10 @@ describe("getRelatedACOs", () => {
       { rel_type: "related", target_id: "c" },
       { rel_type: "references", target_id: "https://example.com/ext" },
     ],
-    b: [{ rel_type: "supports", target_id: "d" }, { rel_type: "related", target_id: "a" }],
+    b: [
+      { rel_type: "supports", target_id: "d" },
+      { rel_type: "related", target_id: "a" },
+    ],
     c: [{ rel_type: "related", target_id: "d" }],
     d: [{ rel_type: "related", target_id: "a" }],
   });
@@ -33,7 +36,11 @@ describe("getRelatedACOs", () => {
 
   it("walks breadth-first with shortest distance and handles cycles", async () => {
     const r = await getRelatedACOs(g, "a", { depth: 3 });
-    expect(r.map((x) => [x.id, x.distance])).toEqual([["b", 1], ["c", 1], ["d", 2]]);
+    expect(r.map((x) => [x.id, x.distance])).toEqual([
+      ["b", 1],
+      ["c", 1],
+      ["d", 2],
+    ]);
     // 'a' never appears (visited from the start), and 'd' reported once
     expect(r.filter((x) => x.id === "a")).toHaveLength(0);
   });

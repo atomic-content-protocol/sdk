@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseACO, parseAndValidateACO } from "./parse.js";
 import { serializeACO } from "./serialize.js";
 
@@ -16,10 +16,7 @@ const VALID_FRONTMATTER = {
 };
 
 // Build a well-formed ACO file string directly for parse tests
-function buildAcoFile(
-  frontmatter: Record<string, unknown>,
-  body: string
-): string {
+function buildAcoFile(frontmatter: Record<string, unknown>, body: string): string {
   const fmLines = Object.entries(frontmatter)
     .map(([k, v]) => {
       if (typeof v === "object" && v !== null) {

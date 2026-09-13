@@ -1,15 +1,6 @@
 import OpenAI from "openai";
-import type {
-  IEnrichmentProvider,
-  CompletionOptions,
-  StructuredSchema,
-} from "./provider.interface.js";
-import {
-  MODEL_PRESETS,
-  DEFAULT_QUALITY,
-  DEFAULT_EMBEDDING_MODELS,
-  openaiIsReasoningModel,
-} from "./models.js";
+import { DEFAULT_EMBEDDING_MODELS, DEFAULT_QUALITY, MODEL_PRESETS, openaiIsReasoningModel } from "./models.js";
+import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "./provider.interface.js";
 
 export interface OpenAIProviderOptions {
   /** Embedding model used by `embed()`. Default `text-embedding-3-small`. */
@@ -101,11 +92,7 @@ export class OpenAIProvider implements IEnrichmentProvider {
     return text;
   }
 
-  async structuredComplete<T>(
-    prompt: string,
-    schema: StructuredSchema,
-    options?: CompletionOptions
-  ): Promise<T> {
+  async structuredComplete<T>(prompt: string, schema: StructuredSchema, options?: CompletionOptions): Promise<T> {
     const client = this.getClient();
 
     const response = await client.chat.completions.create(

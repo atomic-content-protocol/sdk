@@ -1,8 +1,7 @@
 import matter from "gray-matter";
 import type { ZodError } from "zod";
-
-import { ACOFrontmatterSchema } from "../schema/aco.schema.js";
 import type { ACOFrontmatter } from "../schema/aco.schema.js";
+import { ACOFrontmatterSchema } from "../schema/aco.schema.js";
 import { grayMatterOptions } from "./yaml-engine.js";
 
 /**

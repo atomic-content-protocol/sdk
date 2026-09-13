@@ -21,40 +21,34 @@
 // Sub-module re-exports
 // ---------------------------------------------------------------------------
 
-// Schema (Zod validators + inferred TypeScript types)
-export * from "./schema/index.js";
-
-// Runtime interfaces
-export * from "./types/index.js";
-
-// File I/O
-export * from "./io/index.js";
-
-// Storage
-export * from "./storage/index.js";
-
 // Graph traversal
 export * from "./graph/index.js";
-
-// Utilities (ids, hashing, token counting, errors, URL fetching, source-type strategy)
-export * from "./utils/index.js";
-
+// File I/O
+export * from "./io/index.js";
 // Migration
 export { migrate } from "./migrate.js";
+// Schema (Zod validators + inferred TypeScript types)
+export * from "./schema/index.js";
+// Storage
+export * from "./storage/index.js";
+// Runtime interfaces
+export * from "./types/index.js";
+// Utilities (ids, hashing, token counting, errors, URL fetching, source-type strategy)
+export * from "./utils/index.js";
 
 // ---------------------------------------------------------------------------
 // Convenience imports (used by createACO / validateACO below)
 // ---------------------------------------------------------------------------
 
-import { generateId } from "./utils/id.js";
-import { computeContentHash, normalizeBody } from "./utils/hash.js";
-import { computeTokenCounts } from "./utils/token-count.js";
-import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { SourceType } from "./schema/aco.schema.js";
+import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
+import { FetchError, type FetchStatus, ValidationError } from "./utils/errors.js";
 import { fetchBodyForUrl } from "./utils/fetch-url.js";
-import { ValidationError, FetchError, type FetchStatus } from "./utils/errors.js";
-import { SOURCE_TYPE_MODALITY, MIN_BODY_LENGTH_FOR_ENRICHMENT } from "./utils/source-type.js";
+import { computeContentHash, normalizeBody } from "./utils/hash.js";
+import { generateId } from "./utils/id.js";
+import { MIN_BODY_LENGTH_FOR_ENRICHMENT, SOURCE_TYPE_MODALITY } from "./utils/source-type.js";
+import { computeTokenCounts } from "./utils/token-count.js";
 
 // ---------------------------------------------------------------------------
 // createACO
@@ -120,9 +114,7 @@ export interface CreateACOParams {
 export async function createACO(params: CreateACOParams): Promise<ACO> {
   // Programmer error — mutually exclusive fields
   if (params.url !== undefined && params.body !== undefined) {
-    throw new ValidationError(
-      "`url` and `body` are mutually exclusive in CreateACOParams"
-    );
+    throw new ValidationError("`url` and `body` are mutually exclusive in CreateACOParams");
   }
 
   // Capture before the async fetch so we can reference it in generatedFields
@@ -167,8 +159,8 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
 
   // token_counts are useful for transcript bodies but noise for empty/filename-only
   // bodies. Use MIN_BODY_LENGTH_FOR_ENRICHMENT as the consistent threshold.
-  const omitTokenCounts = modality === "image" ||
-    (modality === "video" && body.trim().length < MIN_BODY_LENGTH_FOR_ENRICHMENT);
+  const omitTokenCounts =
+    modality === "image" || (modality === "video" && body.trim().length < MIN_BODY_LENGTH_FOR_ENRICHMENT);
 
   const generatedFields: Record<string, unknown> = {
     id: generateId(),
@@ -177,12 +169,8 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     source_type: resolvedSourceType,
     created: now,
     author: params.author,
-    ...(!omitContentHash
-      ? { content_hash: computeContentHash(normalizeBody(body)) }
-      : {}),
-    ...(!omitTokenCounts
-      ? { token_counts: await computeTokenCounts(body) }
-      : {}),
+    ...(!omitContentHash ? { content_hash: computeContentHash(normalizeBody(body)) } : {}),
+    ...(!omitTokenCounts ? { token_counts: await computeTokenCounts(body) } : {}),
     // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.
     // Omitted entirely for body-only ACOs (no url provided).
     ...(fetchStatus !== undefined ? { fetch_status: fetchStatus } : {}),
@@ -237,9 +225,10 @@ export interface ValidationIssue {
  * @returns            `{ valid: true, errors: null }` on success,
  *                     `{ valid: false, errors: [...] }` on failure.
  */
-export function validateACO(
-  frontmatter: Record<string, unknown>
-): { valid: boolean; errors: ValidationIssue[] | null } {
+export function validateACO(frontmatter: Record<string, unknown>): {
+  valid: boolean;
+  errors: ValidationIssue[] | null;
+} {
   const result = ACOFrontmatterSchema.safeParse(frontmatter);
 
   if (result.success) {

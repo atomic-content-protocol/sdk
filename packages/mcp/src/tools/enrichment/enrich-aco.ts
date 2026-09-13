@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
-import { PIPELINE_NAMES, runPipelines, type PipelineName } from "../../utils/pipelines.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { PIPELINE_NAMES, type PipelineName, runPipelines } from "../../utils/pipelines.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the ACO to enrich"),
@@ -17,7 +17,9 @@ const inputSchema = z.object({
     .boolean()
     .optional()
     .default(false)
-    .describe("If true, regenerate fields even when they already have values. If false, fields with values are left untouched."),
+    .describe(
+      "If true, regenerate fields even when they already have values. If false, fields with values are left untouched."
+    ),
 });
 
 const definition: ACPToolDefinition = {
@@ -39,7 +41,11 @@ export function createEnrichACOTool(ctx: ToolContext): ToolEntry {
       }
 
       const provider = ctx.getProvider();
-      const { aco: enriched, ran, embedded } = await runPipelines(aco, pipelines as PipelineName[], provider, ctx.storage, {
+      const {
+        aco: enriched,
+        ran,
+        embedded,
+      } = await runPipelines(aco, pipelines as PipelineName[], provider, ctx.storage, {
         force,
         tool: ctx.toolId,
       });

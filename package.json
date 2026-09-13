@@ -10,11 +10,15 @@
     "start": "node apps/server/dist/index.js",
     "test": "turbo test",
     "lint": "turbo lint",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "check": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "turbo lint"
   },
   "devDependencies": {
     "turbo": "^2.4.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "@biomejs/biome": "^2.5.13"
   },
   "optionalDependencies": {
     "@rollup/rollup-darwin-arm64": "4.60.1",
@@ -25,5 +29,8 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "npm@10.8.0"
+  "packageManager": "npm@10.8.0",
+  "overrides": {
+    "qs": "^6.16.0"
+  }
 }

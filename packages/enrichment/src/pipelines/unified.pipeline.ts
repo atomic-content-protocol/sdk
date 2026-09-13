@@ -1,18 +1,10 @@
 import type { ACO, SourceType } from "@atomic-content-protocol/core";
-import {
-  getEnrichmentStrategy,
-  SOURCE_TYPE_MODALITY,
-  SOURCE_TYPES,
-} from "@atomic-content-protocol/core";
+import { getEnrichmentStrategy, SOURCE_TYPE_MODALITY, SOURCE_TYPES } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type {
-  IEnrichmentPipeline,
-  EnrichmentResult,
-  EnrichmentOptions,
-} from "./pipeline.interface.js";
-import { buildUnifiedPrompt, UNIFIED_SCHEMA, parseUnifiedOutput } from "../utils/prompts.js";
+import { buildUnifiedPrompt, parseUnifiedOutput, UNIFIED_SCHEMA } from "../utils/prompts.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
 import { structuredCompleteWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions, EnrichmentResult, IEnrichmentPipeline } from "./pipeline.interface.js";
 import { hasValue, readProvenance } from "./single-field.pipeline.js";
 
 /**
@@ -35,11 +27,7 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
   readonly name = "unified";
   readonly field = "multiple";
 
-  async enrich(
-    aco: ACO,
-    provider: IEnrichmentProvider,
-    options?: EnrichmentOptions
-  ): Promise<EnrichmentResult> {
+  async enrich(aco: ACO, provider: IEnrichmentProvider, options?: EnrichmentOptions): Promise<EnrichmentResult> {
     const { frontmatter, body } = aco;
     const existingProvenance = readProvenance(frontmatter);
     const force = options?.force === true;
@@ -83,14 +71,21 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     const llmNeededForEntities = needsEntities && strategy.textEnrichment;
     const llmNeededForLanguage = needsLanguage && strategy.language;
     const llmNeededForClassification = needsClassification && !strategy.classificationDefault;
-    const needsLLM = llmNeededForTags || llmNeededForSummary || llmNeededForEntities ||
-      llmNeededForLanguage || llmNeededForClassification;
+    const needsLLM =
+      llmNeededForTags ||
+      llmNeededForSummary ||
+      llmNeededForEntities ||
+      llmNeededForLanguage ||
+      llmNeededForClassification;
 
     let model = "skipped";
 
     if (needsClassification && strategy.classificationDefault) {
       updatedFields["classification"] = strategy.classificationDefault;
-      newProvenance["classification"] = createProvenanceRecord("system", 1.0, { pipeline: this.name, tool: options?.tool });
+      newProvenance["classification"] = createProvenanceRecord("system", 1.0, {
+        pipeline: this.name,
+        tool: options?.tool,
+      });
     }
 
     if (needsLLM) {
@@ -115,11 +110,17 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
       }
       if (llmNeededForClassification) {
         updatedFields["classification"] = output.classification;
-        newProvenance["classification"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
+        newProvenance["classification"] = createProvenanceRecord(model, 0.85, {
+          pipeline: this.name,
+          tool: options?.tool,
+        });
       }
       if (llmNeededForEntities) {
         updatedFields["key_entities"] = output.key_entities;
-        newProvenance["key_entities"] = createProvenanceRecord(model, 0.80, { pipeline: this.name, tool: options?.tool });
+        newProvenance["key_entities"] = createProvenanceRecord(model, 0.8, {
+          pipeline: this.name,
+          tool: options?.tool,
+        });
       }
       // Never write language inferred from a filename — only when strategy permits
       // it and the model returned a non-null value.

@@ -5,11 +5,10 @@
  * without touching pipeline logic.
  */
 
+import { type ContentModality, MIN_BODY_LENGTH_FOR_ENRICHMENT } from "@atomic-content-protocol/core";
 import { z } from "zod";
-import { MIN_BODY_LENGTH_FOR_ENRICHMENT, type ContentModality } from "@atomic-content-protocol/core";
 
-const truncate = (s: string, max: number): string =>
-  s.length > max ? s.slice(0, max) + "…" : s;
+const truncate = (s: string, max: number): string => (s.length > max ? s.slice(0, max) + "…" : s);
 
 // ---------------------------------------------------------------------------
 // Individual field prompts
@@ -60,11 +59,7 @@ Return as JSON array: [{"type": "...", "name": "...", "confidence": 0.9}, ...]`;
  * Build a prompt that classifies content into a fixed taxonomy.
  * Pass `modality` to steer the model toward media-appropriate values.
  */
-export function buildClassificationPrompt(
-  title: string,
-  body: string,
-  modality: ContentModality = "text"
-): string {
+export function buildClassificationPrompt(title: string, body: string, modality: ContentModality = "text"): string {
   if (modality === "image") {
     return `Return the single word: image`;
   }
@@ -91,11 +86,7 @@ Classification:`;
  * For "image" and "video" with no body, the prompt instructs the model to
  * use the media-appropriate classification and skip language detection.
  */
-export function buildUnifiedPrompt(
-  title: string,
-  body: string,
-  modality: ContentModality = "text"
-): string {
+export function buildUnifiedPrompt(title: string, body: string, modality: ContentModality = "text"): string {
   if (modality === "image") {
     return `Extract structured enrichment data for an image file.
 
@@ -159,21 +150,18 @@ Extract:
  */
 export const UNIFIED_SCHEMA = {
   name: "enrich_aco",
-  description:
-    "Extract tags, summary, classification, and key entities from content",
+  description: "Extract tags, summary, classification, and key entities from content",
   parameters: {
     type: "object",
     properties: {
       tags: {
         type: "array",
         items: { type: "string" },
-        description:
-          "3-7 relevant tags/keywords (lowercase, single words or hyphenated phrases)",
+        description: "3-7 relevant tags/keywords (lowercase, single words or hyphenated phrases)",
       },
       summary: {
         type: "string",
-        description:
-          "Exactly 2 sentences, max 500 characters, starting with the subject",
+        description: "Exactly 2 sentences, max 500 characters, starting with the subject",
       },
       classification: {
         type: "string",
@@ -202,14 +190,7 @@ export const UNIFIED_SCHEMA = {
           properties: {
             type: {
               type: "string",
-              enum: [
-                "person",
-                "organization",
-                "technology",
-                "concept",
-                "location",
-                "event",
-              ],
+              enum: ["person", "organization", "technology", "concept", "location", "event"],
             },
             name: { type: "string" },
             confidence: { type: "number", minimum: 0, maximum: 1 },
@@ -250,24 +231,20 @@ const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
  * from the model reaches frontmatter without passing through here.
  */
 export const UnifiedOutputSchema = z.object({
-  tags: z
-    .array(z.string())
-    .transform((tags) => {
-      const seen = new Set<string>();
-      const out: string[] = [];
-      for (const raw of tags) {
-        const tag = raw.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 64);
-        if (tag && !seen.has(tag)) {
-          seen.add(tag);
-          out.push(tag);
-        }
-        if (out.length >= MAX_TAGS) break;
+  tags: z.array(z.string()).transform((tags) => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const raw of tags) {
+      const tag = raw.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 64);
+      if (tag && !seen.has(tag)) {
+        seen.add(tag);
+        out.push(tag);
       }
-      return out;
-    }),
-  summary: z
-    .string()
-    .transform((s) => s.trim().replace(/\s+/g, " ").slice(0, MAX_SUMMARY_CHARS)),
+      if (out.length >= MAX_TAGS) break;
+    }
+    return out;
+  }),
+  summary: z.string().transform((s) => s.trim().replace(/\s+/g, " ").slice(0, MAX_SUMMARY_CHARS)),
   classification: z.string().transform((c) => {
     const v = c.trim().toLowerCase();
     return (CLASSIFICATIONS as readonly string[]).includes(v) ? v : "other";

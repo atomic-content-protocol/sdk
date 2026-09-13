@@ -1,10 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type {
-  IEnrichmentProvider,
-  CompletionOptions,
-  StructuredSchema,
-} from "./provider.interface.js";
-import { MODEL_PRESETS, DEFAULT_QUALITY, anthropicSupportsSampling } from "./models.js";
+import { anthropicSupportsSampling, DEFAULT_QUALITY, MODEL_PRESETS } from "./models.js";
+import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "./provider.interface.js";
 
 /**
  * JSON Schema keywords Anthropic's constrained decoder rejects (verified live
@@ -145,11 +141,7 @@ export class AnthropicProvider implements IEnrichmentProvider {
     return text;
   }
 
-  async structuredComplete<T>(
-    prompt: string,
-    schema: StructuredSchema,
-    options?: CompletionOptions
-  ): Promise<T> {
+  async structuredComplete<T>(prompt: string, schema: StructuredSchema, options?: CompletionOptions): Promise<T> {
     const client = this.getClient();
 
     const params: Anthropic.MessageCreateParamsNonStreaming = {

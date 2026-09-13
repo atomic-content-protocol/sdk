@@ -1,26 +1,20 @@
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import {
-  createACO,
-  fetchPageForUrl,
-  FetchError,
-  ValidationError,
-  SOURCE_TYPES,
-} from "@atomic-content-protocol/core";
 import type { ACO, FetchedPage } from "@atomic-content-protocol/core";
+import { createACO, FetchError, fetchPageForUrl, SOURCE_TYPES, ValidationError } from "@atomic-content-protocol/core";
+import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
 import {
-  ProviderRouter,
-  UnifiedPipeline,
   BatchEnricher,
   CircuitTimeoutError,
   estimateEnrichmentCost,
   MODEL_PRESETS,
+  ProviderRouter,
+  UnifiedPipeline,
 } from "@atomic-content-protocol/enrichment";
-import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { trackBudgetExceeded, trackEnrichment, trackEnrichmentFailed } from "./analytics.js";
 import type { ServerConfig } from "./config.js";
 import { TOOL_ID } from "./config.js";
 import { SpendGuard } from "./rate-limit.js";
-import { trackEnrichment, trackEnrichmentFailed, trackBudgetExceeded } from "./analytics.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,7 +70,9 @@ export interface EnrichedItem {
 const depthSchema = z
   .enum(["basic", "standard", "deep"])
   .default("standard")
-  .describe("Cost-estimate profile. Enrichment output is the same for every value; the estimate assumes shorter or longer frontmatter.");
+  .describe(
+    "Cost-estimate profile. Enrichment output is the same for every value; the estimate assumes shorter or longer frontmatter."
+  );
 
 const enrichContentSchema = z.object({
   content: z.string().min(1).describe("The text content to enrich"),
@@ -258,14 +254,23 @@ export class EnrichmentService {
 
   /** SSRF-guarded fetch via core (HTTPS only, private ranges blocked, DNS checked, 10 MB cap). */
   private fetchPage(url: string): Promise<FetchedPage> {
-    return fetchPageForUrl(url, { maxChars: this.config.maxContentLength, userAgent: `ACP-MCP-Server/${this.config.version}` });
+    return fetchPageForUrl(url, {
+      maxChars: this.config.maxContentLength,
+      userAgent: `ACP-MCP-Server/${this.config.version}`,
+    });
   }
 
   // ---- core enrichment --------------------------------------------------------
 
   private async enrichACO(
     content: string,
-    options: { title?: string; source_type?: (typeof SOURCE_TYPES)[number]; depth: Depth; source_url?: string; ogImage?: string }
+    options: {
+      title?: string;
+      source_type?: (typeof SOURCE_TYPES)[number];
+      depth: Depth;
+      source_url?: string;
+      ogImage?: string;
+    }
   ): Promise<EnrichedItem> {
     const estimate = estimateEnrichmentCost(content, options.depth, { model: this.estimateModel });
 
@@ -323,7 +328,8 @@ export class EnrichmentService {
   // ---- dispatch ---------------------------------------------------------------
 
   async handleToolCall(name: string, args: unknown, ctx: ToolContext): Promise<ToolResult> {
-    const percentUsed = ctx.rateLimitLimit > 0 ? ((ctx.rateLimitLimit - ctx.rateLimitRemaining) / ctx.rateLimitLimit) * 100 : 0;
+    const percentUsed =
+      ctx.rateLimitLimit > 0 ? ((ctx.rateLimitLimit - ctx.rateLimitRemaining) / ctx.rateLimitLimit) * 100 : 0;
     const start = this.now();
 
     const track = (tool: string, depth: Depth, item: EnrichedItem, batchSize: number, sourceUrl?: string) =>
@@ -343,7 +349,11 @@ export class EnrichmentService {
 
     const failed = (tool: string, error: ToolError): ToolError => {
       if (error.code === "BUDGET_EXCEEDED") {
-        trackBudgetExceeded({ clientId: ctx.clientId, spentToday: this.spendGuard.spentToday, cap: this.spendGuard.cap });
+        trackBudgetExceeded({
+          clientId: ctx.clientId,
+          spentToday: this.spendGuard.spentToday,
+          cap: this.spendGuard.cap,
+        });
       } else {
         trackEnrichmentFailed({ clientId: ctx.clientId, tool, errorType: error.code, errorMessage: error.error });
       }
@@ -411,7 +421,13 @@ export class EnrichmentService {
               if (item.url) {
                 const page = await this.fetchPage(item.url);
                 content = page.text;
-                opts = { title: item.title || page.title, source_type: "link", depth: input.depth, source_url: page.url, ogImage: page.ogImage };
+                opts = {
+                  title: item.title || page.title,
+                  source_type: "link",
+                  depth: input.depth,
+                  source_url: page.url,
+                  ogImage: page.ogImage,
+                };
               } else {
                 content = item.content as string;
                 opts = { title: item.title, source_type: "manual", depth: input.depth };
@@ -445,7 +461,12 @@ export class EnrichmentService {
               batchSize: input.items.length,
             });
           } else if (errors.length > 0) {
-            trackEnrichmentFailed({ clientId: ctx.clientId, tool: name, errorType: "BATCH_ALL_FAILED", errorMessage: `All ${input.items.length} items failed` });
+            trackEnrichmentFailed({
+              clientId: ctx.clientId,
+              tool: name,
+              errorType: "BATCH_ALL_FAILED",
+              errorMessage: `All ${input.items.length} items failed`,
+            });
           }
 
           return { success: true, data: { items: results, errors: errors.length > 0 ? errors : undefined } };

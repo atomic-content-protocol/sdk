@@ -1,14 +1,14 @@
 import type { ACO, IStorageAdapter } from "@atomic-content-protocol/core";
-import {
-  TagPipeline,
-  SummaryPipeline,
-  EntityPipeline,
-  ClassificationPipeline,
-  UnifiedPipeline,
-  EmbedPipeline,
-  hasValue,
-} from "@atomic-content-protocol/enrichment";
 import type { IEnrichmentPipeline, IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
+import {
+  ClassificationPipeline,
+  EmbedPipeline,
+  EntityPipeline,
+  hasValue,
+  SummaryPipeline,
+  TagPipeline,
+  UnifiedPipeline,
+} from "@atomic-content-protocol/enrichment";
 
 export const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified", "embed"] as const;
 export type PipelineName = (typeof PIPELINE_NAMES)[number];

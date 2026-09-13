@@ -1,29 +1,17 @@
-import { z } from "zod";
 import { generateId } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { z } from "zod";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   title: z.string().min(1).describe("Title of the container"),
-  objects: z
-    .array(z.string())
-    .optional()
-    .describe("Array of ACO ids to include in the container"),
+  objects: z.array(z.string()).optional().describe("Array of ACO ids to include in the container"),
   summary: z.string().optional().describe("Summary description of the container"),
   tags: z.array(z.string()).optional().describe("Tags to apply to the container"),
-  visibility: z
-    .enum(["public", "private", "restricted"])
-    .optional()
-    .describe("Discovery visibility"),
-  author_id: z
-    .string()
-    .min(1)
-    .describe("Unique identifier for the author"),
-  author_name: z
-    .string()
-    .min(1)
-    .describe("Human-readable display name for the author"),
+  visibility: z.enum(["public", "private", "restricted"]).optional().describe("Discovery visibility"),
+  author_id: z.string().min(1).describe("Unique identifier for the author"),
+  author_name: z.string().min(1).describe("Human-readable display name for the author"),
 });
 
 const definition: ACPToolDefinition = {

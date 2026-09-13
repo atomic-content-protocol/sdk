@@ -32,17 +32,10 @@ export const RelationshipEdgeSchema = z
      * Relationship type. Core types are enumerated above.
      * Extension types must start with "x-" (e.g. "x-cites", "x-inspired-by").
      */
-    rel_type: z
-      .string()
-      .refine(
-        (v) =>
-          (CORE_REL_TYPES as readonly string[]).includes(v) ||
-          v.startsWith("x-"),
-        {
-          message:
-            'rel_type must be a core type (references, derived-from, supersedes, supports, contradicts, part-of, related) or start with "x-" for extensions.',
-        }
-      ),
+    rel_type: z.string().refine((v) => (CORE_REL_TYPES as readonly string[]).includes(v) || v.startsWith("x-"), {
+      message:
+        'rel_type must be a core type (references, derived-from, supersedes, supports, contradicts, part-of, related) or start with "x-" for extensions.',
+    }),
     /**
      * ID of the related object. UUID for ACP objects; URL for external references.
      */

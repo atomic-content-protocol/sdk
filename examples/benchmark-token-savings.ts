@@ -429,15 +429,11 @@ interface ClaudeResponse {
   latencyMs: number;
 }
 
-const HAIKU_INPUT_COST_PER_MILLION = 0.25;
+const HAIKU_INPUT_COST_PER_MILLION = 1.0; // Claude Haiku 4.5 list price (USD per 1M input tokens)
 const HAIKU_OUTPUT_COST_PER_MILLION = 1.25;
 
 function calcCost(inputTokens: number, outputTokens: number): number {
-  return (
-    (inputTokens * HAIKU_INPUT_COST_PER_MILLION +
-      outputTokens * HAIKU_OUTPUT_COST_PER_MILLION) /
-    1_000_000
-  );
+  return (inputTokens * HAIKU_INPUT_COST_PER_MILLION + outputTokens * HAIKU_OUTPUT_COST_PER_MILLION) / 1_000_000;
 }
 
 async function callClaude(prompt: string): Promise<ClaudeResponse> {
@@ -446,7 +442,7 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
@@ -477,21 +473,18 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
 async function enrichDocument(doc: Document): Promise<EnrichedDocument> {
   const UNIFIED_SCHEMA = {
     name: "enrich_aco",
-    description:
-      "Extract tags, summary, classification, and key entities from content",
+    description: "Extract tags, summary, classification, and key entities from content",
     input_schema: {
       type: "object",
       properties: {
         tags: {
           type: "array",
           items: { type: "string" },
-          description:
-            "3-7 relevant tags/keywords (lowercase, single words or hyphenated phrases)",
+          description: "3-7 relevant tags/keywords (lowercase, single words or hyphenated phrases)",
         },
         summary: {
           type: "string",
-          description:
-            "Exactly 2 sentences, max 500 characters, starting with the subject",
+          description: "Exactly 2 sentences, max 500 characters, starting with the subject",
         },
         classification: {
           type: "string",
@@ -517,14 +510,7 @@ async function enrichDocument(doc: Document): Promise<EnrichedDocument> {
             properties: {
               type: {
                 type: "string",
-                enum: [
-                  "person",
-                  "organization",
-                  "technology",
-                  "concept",
-                  "location",
-                  "event",
-                ],
+                enum: ["person", "organization", "technology", "concept", "location", "event"],
               },
               name: { type: "string" },
               confidence: { type: "number", minimum: 0, maximum: 1 },
@@ -538,18 +524,11 @@ async function enrichDocument(doc: Document): Promise<EnrichedDocument> {
           description: "ISO 639-1 two-letter language code",
         },
       },
-      required: [
-        "tags",
-        "summary",
-        "classification",
-        "key_entities",
-        "language",
-      ],
+      required: ["tags", "summary", "classification", "key_entities", "language"],
     },
   };
 
-  const truncate = (s: string, max: number) =>
-    s.length > max ? s.slice(0, max) + "…" : s;
+  const truncate = (s: string, max: number) => (s.length > max ? s.slice(0, max) + "…" : s);
 
   const prompt = `Analyze the following content and extract structured enrichment data.
 
@@ -569,7 +548,7 @@ Extract:
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
@@ -629,8 +608,7 @@ const TRIAGE_QUERY =
 async function runA(docs: Document[]): Promise<RunResult> {
   console.log("\n--- Run A: Raw documents (no ACP) ---");
 
-  let prompt =
-    `Here are 20 documents. ${TRIAGE_QUERY}\n\nFor each selected document, provide: document number, title, and a one-sentence reason for selection.\n\n`;
+  let prompt = `Here are 20 documents. ${TRIAGE_QUERY}\n\nFor each selected document, provide: document number, title, and a one-sentence reason for selection.\n\n`;
 
   for (const doc of docs) {
     prompt += `Document ${doc.id}: ${doc.title}\n${doc.body}\n\n`;
@@ -657,13 +635,10 @@ async function runB(enriched: EnrichedDocument[]): Promise<RunResult> {
   console.log("\n--- Run B: ACP frontmatter + deep read ---");
 
   // Step 1: triage on frontmatter
-  let step1Prompt =
-    `Here are 20 document summaries. ${TRIAGE_QUERY}\n\nReturn only the document numbers.\n\n`;
+  let step1Prompt = `Here are 20 document summaries. ${TRIAGE_QUERY}\n\nReturn only the document numbers.\n\n`;
 
   for (const e of enriched) {
-    const entities = e.enrichment.key_entities
-      .map((ent) => `${ent.name} (${ent.type})`)
-      .join(", ");
+    const entities = e.enrichment.key_entities.map((ent) => `${ent.name} (${ent.type})`).join(", ");
     step1Prompt +=
       `Document ${e.doc.id}: ${e.doc.title}\n` +
       `Summary: ${e.enrichment.summary}\n` +
@@ -674,9 +649,7 @@ async function runB(enriched: EnrichedDocument[]): Promise<RunResult> {
 
   console.log("  Step 1: Triaging on frontmatter...");
   const step1 = await callClaude(step1Prompt);
-  console.log(
-    `  Step 1 tokens: ${step1.inputTokens} in / ${step1.outputTokens} out`
-  );
+  console.log(`  Step 1 tokens: ${step1.inputTokens} in / ${step1.outputTokens} out`);
   console.log(`  Step 1 latency: ${step1.latencyMs}ms`);
   console.log(`  Step 1 response: ${step1.text}`);
 
@@ -691,9 +664,7 @@ async function runB(enriched: EnrichedDocument[]): Promise<RunResult> {
 
   console.log(`  Step 2: Deep reading docs ${selectedNums.join(", ")}...`);
   const step2 = await callClaude(step2Prompt);
-  console.log(
-    `  Step 2 tokens: ${step2.inputTokens} in / ${step2.outputTokens} out`
-  );
+  console.log(`  Step 2 tokens: ${step2.inputTokens} in / ${step2.outputTokens} out`);
   console.log(`  Step 2 latency: ${step2.latencyMs}ms`);
 
   const totalInput = step1.inputTokens + step2.inputTokens;
@@ -716,13 +687,10 @@ async function runB(enriched: EnrichedDocument[]): Promise<RunResult> {
 async function runC(enriched: EnrichedDocument[]): Promise<RunResult> {
   console.log("\n--- Run C: ACP frontmatter only ---");
 
-  let prompt =
-    `Here are 20 document summaries. ${TRIAGE_QUERY}\n\nFor each selected document, provide: document number, title, and a one-sentence reason.\n\n`;
+  let prompt = `Here are 20 document summaries. ${TRIAGE_QUERY}\n\nFor each selected document, provide: document number, title, and a one-sentence reason.\n\n`;
 
   for (const e of enriched) {
-    const entities = e.enrichment.key_entities
-      .map((ent) => `${ent.name} (${ent.type})`)
-      .join(", ");
+    const entities = e.enrichment.key_entities.map((ent) => `${ent.name} (${ent.type})`).join(", ");
     prompt +=
       `Document ${e.doc.id}: ${e.doc.title}\n` +
       `Summary: ${e.enrichment.summary}\n` +
@@ -754,17 +722,12 @@ async function runC(enriched: EnrichedDocument[]): Promise<RunResult> {
 
 function extractDocNumbers(text: string): number[] {
   // Match patterns like "Document 1", "Doc 3", "#5", standalone numbers 1-20
-  const patterns = [
-    /document\s+(\d{1,2})/gi,
-    /doc(?:ument)?\s*#?\s*(\d{1,2})/gi,
-    /\b(\d{1,2})\b/g,
-  ];
+  const patterns = [/document\s+(\d{1,2})/gi, /doc(?:ument)?\s*#?\s*(\d{1,2})/gi, /\b(\d{1,2})\b/g];
 
   const found = new Set<number>();
   for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const n = parseInt(match[1], 10);
+    for (const match of text.matchAll(pattern)) {
+      const n = parseInt(match[1] ?? "", 10);
       if (n >= 1 && n <= 20) found.add(n);
     }
   }
@@ -804,49 +767,31 @@ function buildReport(
   const now = new Date().toISOString();
   const avgTok = avgTokensPerDoc(docs);
 
-  const totalEnrichInput = enriched.reduce(
-    (s, e) => s + e.enrichmentTokens.input,
-    0
-  );
-  const totalEnrichOutput = enriched.reduce(
-    (s, e) => s + e.enrichmentTokens.output,
-    0
-  );
+  const totalEnrichInput = enriched.reduce((s, e) => s + e.enrichmentTokens.input, 0);
+  const totalEnrichOutput = enriched.reduce((s, e) => s + e.enrichmentTokens.output, 0);
   const totalEnrichCost = enriched.reduce((s, e) => s + e.enrichmentCostUsd, 0);
 
   const savingsB = runA.costUsd - runB.costUsd;
   const savingsC = runA.costUsd - runC.costUsd;
-  const breakEvenB =
-    savingsB > 0 ? Math.ceil(totalEnrichCost / savingsB) : "N/A";
-  const breakEvenC =
-    savingsC > 0 ? Math.ceil(totalEnrichCost / savingsC) : "N/A";
+  const breakEvenB = savingsB > 0 ? Math.ceil(totalEnrichCost / savingsB) : "N/A";
+  const breakEvenC = savingsC > 0 ? Math.ceil(totalEnrichCost / savingsC) : "N/A";
 
   const allSame =
-    JSON.stringify(runA.selectedDocs.sort()) ===
-      JSON.stringify(runB.selectedDocs.sort()) &&
-    JSON.stringify(runA.selectedDocs.sort()) ===
-      JSON.stringify(runC.selectedDocs.sort());
+    JSON.stringify(runA.selectedDocs.sort()) === JSON.stringify(runB.selectedDocs.sort()) &&
+    JSON.stringify(runA.selectedDocs.sort()) === JSON.stringify(runC.selectedDocs.sort());
 
   const accuracySection = allSame
     ? "All three methods selected the same documents. ACP's structured metadata enables equivalent triage accuracy at a fraction of the token cost."
     : `Methods diverged in document selection:\n- Run A selected: ${runA.selectedDocs.join(", ")}\n- Run B selected: ${runB.selectedDocs.join(", ")}\n- Run C selected: ${runC.selectedDocs.join(", ")}\n\nNote any differences above for manual review.`;
 
-  const tokenReductionBC = pct(
-    runB.inputTokens + runB.outputTokens,
-    runA.inputTokens + runA.outputTokens
-  );
-  const tokenReductionCC = pct(
-    runC.inputTokens + runC.outputTokens,
-    runA.inputTokens + runA.outputTokens
-  );
+  const tokenReductionBC = pct(runB.inputTokens + runB.outputTokens, runA.inputTokens + runA.outputTokens);
+  const tokenReductionCC = pct(runC.inputTokens + runC.outputTokens, runA.inputTokens + runA.outputTokens);
   const costReductionBC = pct(runB.costUsd, runA.costUsd);
   const costReductionCC = pct(runC.costUsd, runA.costUsd);
   const speedReductionBC = speedup(runB.latencyMs, runA.latencyMs);
   const speedReductionCC = speedup(runC.latencyMs, runA.latencyMs);
 
-  const conclusionTokens =
-    runC.inputTokens + runC.outputTokens <
-    runA.inputTokens + runA.outputTokens;
+  const conclusionTokens = runC.inputTokens + runC.outputTokens < runA.inputTokens + runA.outputTokens;
   const conclusionText = conclusionTokens
     ? `ACP frontmatter-only triage (Run C) used ${tokenReductionCC} fewer tokens than raw-document triage (Run A) while${allSame ? " selecting identical documents" : " producing comparable results"}. The one-time enrichment cost of $${totalEnrichCost.toFixed(4)} for 20 documents breaks even after ${breakEvenC} triage operations using frontmatter-only. For workloads where the same document corpus is triaged repeatedly, ACP structured metadata provides compounding cost savings with no loss of selection accuracy.`
     : `Results were mixed — see individual run details above. Consider re-running with a larger document set.`;
@@ -901,9 +846,7 @@ async function main() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.error("Error: ANTHROPIC_API_KEY environment variable not set.");
-    console.error(
-      "Usage: export $(cat .env | xargs) && npx tsx examples/benchmark-token-savings.ts"
-    );
+    console.error("Usage: export $(cat .env | xargs) && npx tsx examples/benchmark-token-savings.ts");
     process.exit(1);
   }
 
@@ -933,13 +876,8 @@ async function main() {
     }
   }
 
-  const totalEnrichCost = enrichedDocs.reduce(
-    (s, e) => s + e.enrichmentCostUsd,
-    0
-  );
-  console.log(
-    `\n  Total enrichment cost: $${totalEnrichCost.toFixed(4)}`
-  );
+  const totalEnrichCost = enrichedDocs.reduce((s, e) => s + e.enrichmentCostUsd, 0);
+  console.log(`\n  Total enrichment cost: $${totalEnrichCost.toFixed(4)}`);
 
   // ---- Benchmark runs ----
   console.log("\n[Phase 2] Running benchmark...");

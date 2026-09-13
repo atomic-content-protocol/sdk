@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the ACO to retrieve"),
@@ -9,8 +9,7 @@ const inputSchema = z.object({
 
 const definition: ACPToolDefinition = {
   name: "read_aco",
-  description:
-    "Retrieve a single Atomic Content Object by its id. Returns frontmatter and body.",
+  description: "Retrieve a single Atomic Content Object by its id. Returns frontmatter and body.",
   inputSchema,
   annotations: { readOnlyHint: true },
 };

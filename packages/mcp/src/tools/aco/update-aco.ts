@@ -1,8 +1,13 @@
+import {
+  computeContentHash,
+  computeTokenCounts,
+  normalizeBody,
+  RelationshipEdgeSchema,
+} from "@atomic-content-protocol/core";
 import { z } from "zod";
-import { RelationshipEdgeSchema, computeContentHash, normalizeBody, computeTokenCounts } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the ACO to update"),
@@ -12,12 +17,17 @@ const inputSchema = z.object({
   summary: z.string().max(500).optional().describe("Summary text (max 500 characters)"),
   status: z.enum(["draft", "final", "archived"]).optional().describe("Lifecycle status"),
   visibility: z.enum(["public", "private", "restricted"]).optional().describe("Discovery visibility"),
-  agent_accessible: z.boolean().optional().describe("Whether AI agents can access this ACO via agent transport protocols"),
+  agent_accessible: z
+    .boolean()
+    .optional()
+    .describe("Whether AI agents can access this ACO via agent transport protocols"),
   rights: z.string().optional().describe("Rights statement or license identifier"),
   relationships: z
     .array(RelationshipEdgeSchema)
     .optional()
-    .describe("Replacement list of relationship edges ({ rel_type, target_id, confidence? }). Use detect_relationships to get suggestions."),
+    .describe(
+      "Replacement list of relationship edges ({ rel_type, target_id, confidence? }). Use detect_relationships to get suggestions."
+    ),
 });
 
 const definition: ACPToolDefinition = {

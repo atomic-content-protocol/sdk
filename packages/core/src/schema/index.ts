@@ -2,44 +2,39 @@
 // ACP Core Schema — public exports
 // ---------------------------------------------------------------------------
 
-// Shared fragments
-export { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
-
-// Provenance
-export {
-  ProvenanceRecordSchema,
-  ProvenanceMapSchema,
-} from "./provenance.schema.js";
-export type { ProvenanceRecord, ProvenanceMap } from "./provenance.schema.js";
-
-// Relationship edges
-export {
-  RelationshipEdgeSchema,
-  CORE_REL_TYPES,
-} from "./edge.schema.js";
-export type { RelationshipEdge, CoreRelType } from "./edge.schema.js";
-
-// ACO (Atomic Content Object)
-export {
-  ACOFrontmatterSchema,
-  ACOEnvelopeSchema,
-  SOURCE_TYPES,
-} from "./aco.schema.js";
 export type {
-  ACOFrontmatter,
   ACOEnvelope,
-  Author,
+  ACOFrontmatter,
   ACOTokenCounts,
+  Author,
   KeyEntity,
-  SourceContext,
   Media,
+  SourceContext,
   SourceType,
 } from "./aco.schema.js";
-
-// Container
-export { ContainerFrontmatterSchema } from "./container.schema.js";
-export type { ContainerFrontmatter } from "./container.schema.js";
-
+// ACO (Atomic Content Object)
+export {
+  ACOEnvelopeSchema,
+  ACOFrontmatterSchema,
+  SOURCE_TYPES,
+} from "./aco.schema.js";
+export type { CollectionFrontmatter } from "./collection.schema.js";
 // Collection
 export { CollectionFrontmatterSchema } from "./collection.schema.js";
-export type { CollectionFrontmatter } from "./collection.schema.js";
+// Shared fragments
+export { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
+export type { ContainerFrontmatter } from "./container.schema.js";
+// Container
+export { ContainerFrontmatterSchema } from "./container.schema.js";
+export type { CoreRelType, RelationshipEdge } from "./edge.schema.js";
+// Relationship edges
+export {
+  CORE_REL_TYPES,
+  RelationshipEdgeSchema,
+} from "./edge.schema.js";
+export type { ProvenanceMap, ProvenanceRecord } from "./provenance.schema.js";
+// Provenance
+export {
+  ProvenanceMapSchema,
+  ProvenanceRecordSchema,
+} from "./provenance.schema.js";

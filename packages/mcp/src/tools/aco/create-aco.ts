@@ -1,42 +1,18 @@
-import { z } from "zod";
 import { createACO, SOURCE_TYPES } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { z } from "zod";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   title: z.string().optional().describe("Human-readable title for the ACO"),
-  body: z
-    .string()
-    .optional()
-    .default("")
-    .describe("Markdown body content"),
-  source_type: z
-    .enum(SOURCE_TYPES)
-    .optional()
-    .default("manual")
-    .describe("How the ACO was created"),
-  author_id: z
-    .string()
-    .min(1)
-    .describe("Unique identifier for the author"),
-  author_name: z
-    .string()
-    .min(1)
-    .describe("Human-readable display name for the author"),
-  tags: z
-    .array(z.string())
-    .optional()
-    .describe("Tags to apply to the ACO"),
-  visibility: z
-    .enum(["public", "private", "restricted"])
-    .optional()
-    .describe("Discovery visibility of the ACO"),
-  source_url: z
-    .string()
-    .url()
-    .optional()
-    .describe("Original URL (required when source_type is 'link')"),
+  body: z.string().optional().default("").describe("Markdown body content"),
+  source_type: z.enum(SOURCE_TYPES).optional().default("manual").describe("How the ACO was created"),
+  author_id: z.string().min(1).describe("Unique identifier for the author"),
+  author_name: z.string().min(1).describe("Human-readable display name for the author"),
+  tags: z.array(z.string()).optional().describe("Tags to apply to the ACO"),
+  visibility: z.enum(["public", "private", "restricted"]).optional().describe("Discovery visibility of the ACO"),
+  source_url: z.string().url().optional().describe("Original URL (required when source_type is 'link')"),
   source_context: z
     .record(z.unknown())
     .optional()

@@ -1,8 +1,4 @@
-import type {
-  IEnrichmentProvider,
-  CompletionOptions,
-  StructuredSchema,
-} from "./provider.interface.js";
+import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "./provider.interface.js";
 
 export interface OllamaProviderOptions {
   /**
@@ -49,11 +45,7 @@ export class OllamaProvider implements IEnrichmentProvider {
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
 
-  constructor(
-    baseUrl = "http://localhost:11434",
-    model = "llama3.2",
-    options: OllamaProviderOptions = {}
-  ) {
+  constructor(baseUrl = "http://localhost:11434", model = "llama3.2", options: OllamaProviderOptions = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, ""); // strip trailing slash
     this.model = model;
     this.name = `Ollama/${model}`;
@@ -107,18 +99,10 @@ export class OllamaProvider implements IEnrichmentProvider {
     return data.response;
   }
 
-  async structuredComplete<T>(
-    prompt: string,
-    schema: StructuredSchema,
-    options?: CompletionOptions
-  ): Promise<T> {
+  async structuredComplete<T>(prompt: string, schema: StructuredSchema, options?: CompletionOptions): Promise<T> {
     const body: Record<string, unknown> = {
       model: this.model,
-      prompt: [
-        `Respond with a single JSON object for "${schema.name}": ${schema.description}.`,
-        ``,
-        prompt,
-      ].join("\n"),
+      prompt: [`Respond with a single JSON object for "${schema.name}": ${schema.description}.`, ``, prompt].join("\n"),
       stream: false,
       // Ollama accepts a full JSON schema here and constrains decoding to it.
       format: schema.parameters,
@@ -137,9 +121,7 @@ export class OllamaProvider implements IEnrichmentProvider {
     try {
       return JSON.parse(data.response) as T;
     } catch {
-      throw new Error(
-        `Failed to parse JSON from Ollama structured response: ${data.response.slice(0, 200)}`
-      );
+      throw new Error(`Failed to parse JSON from Ollama structured response: ${data.response.slice(0, 200)}`);
     }
   }
 

@@ -1,13 +1,13 @@
-import { Command } from "commander";
 import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
-import chalk from "chalk";
-import ora from "ora";
-import { parseACO, validateACO } from "@atomic-content-protocol/core";
 import type { ACO } from "@atomic-content-protocol/core";
+import { parseACO, validateACO } from "@atomic-content-protocol/core";
+import chalk from "chalk";
+import { Command } from "commander";
+import ora from "ora";
 import { loadConfig } from "../utils/config.js";
-import { createStorage } from "../utils/storage.js";
 import { CliError, EXIT } from "../utils/errors.js";
+import { createStorage } from "../utils/storage.js";
 
 interface Report {
   total: number;

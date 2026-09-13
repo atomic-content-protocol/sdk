@@ -20,8 +20,9 @@ import {
 } from "@atomic-content-protocol/enrichment";
 
 const router = ProviderRouter.fromConfig({
+  quality: "fast", // fast (Haiku 4.5 / GPT-5.6 Luna) | balanced | best
   anthropic: { apiKey: process.env.ANTHROPIC_API_KEY! },
-  openai: { apiKey: process.env.OPENAI_API_KEY! },
+  openai: { apiKey: process.env.OPENAI_API_KEY! }, // fallback + embeddings
 });
 
 const enricher = new BatchEnricher(router, [new UnifiedPipeline()]);
@@ -33,7 +34,10 @@ const enriched = await enricher.enrichOne(myACO);
 - `providers/` — `AnthropicProvider`, `OpenAIProvider`, `OllamaProvider`
 - `router/` — `ProviderRouter`, `CircuitBreaker`
 - `pipelines/` — `TagPipeline`, `SummaryPipeline`, `EntityPipeline`, `ClassificationPipeline`, `UnifiedPipeline`, `EmbedPipeline`
-- `batch/` — `BatchEnricher` for bulk enrichment
+- `batch/` — `BatchEnricher` for bulk enrichment (`concurrency` option)
+- `utils/` — `estimateEnrichmentCost`, `parseUnifiedOutput` (Zod validation of model output), provenance helpers
+
+Enrichment never overwrites a field that already has a value unless `force: true`; provenance records the model that actually answered after any fallback.
 
 `UnifiedPipeline` runs tags + summary + entities + classification + language in a single LLM call — the cheapest path to a fully enriched ACO.
 

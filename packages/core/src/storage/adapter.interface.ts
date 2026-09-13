@@ -14,7 +14,7 @@
  *   all backends. Call sites must check for existence before calling.
  */
 
-import type { ACO, Container, Collection } from "../types/aco.js";
+import type { ACO, Collection, Container } from "../types/aco.js";
 
 // ---------------------------------------------------------------------------
 // Query / filter helpers
@@ -165,9 +165,7 @@ export interface IStorageAdapter {
    * Edge direction convention: all stored edges are outbound. This method
    * reads `frontmatter.relationships` from the source ACO.
    */
-  getEdgesFrom(
-    acoId: string
-  ): Promise<Array<{ rel_type: string; target_id: string; confidence?: number }>>;
+  getEdgesFrom(acoId: string): Promise<Array<{ rel_type: string; target_id: string; confidence?: number }>>;
 
   /**
    * Return all inbound relationship edges that point TO the given ACO.
@@ -176,9 +174,7 @@ export interface IStorageAdapter {
    * requires scanning the index. Adapters may implement this as a full scan
    * or maintain a reverse index for performance.
    */
-  getEdgesTo(
-    acoId: string
-  ): Promise<Array<{ rel_type: string; source_id: string; confidence?: number }>>;
+  getEdgesTo(acoId: string): Promise<Array<{ rel_type: string; source_id: string; confidence?: number }>>;
 
   // ---- Optional: vector embeddings ----------------------------------------
 
@@ -197,8 +193,5 @@ export interface IStorageAdapter {
    *
    * This method is optional. Same guard as `putEmbedding`.
    */
-  findSimilar?(
-    vector: number[],
-    options?: SimilarityOptions
-  ): Promise<SearchResult[]>;
+  findSimilar?(vector: number[], options?: SimilarityOptions): Promise<SearchResult[]>;
 }

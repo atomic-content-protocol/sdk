@@ -1,40 +1,37 @@
-import { z } from "zod";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import {
-  ListToolsRequestSchema,
-  CallToolRequestSchema,
-  McpError,
-  ErrorCode,
-  type CallToolRequest,
-} from "@modelcontextprotocol/sdk/types.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-
 import type { IStorageAdapter } from "@atomic-content-protocol/core";
-import { ProviderRouter } from "@atomic-content-protocol/enrichment";
 import type { IEnrichmentProvider, ProviderConfig, RouterOptions } from "@atomic-content-protocol/enrichment";
-
-import { ToolRegistry } from "./tool-registry.js";
-import { adaptToolForMCP } from "./tool-adapter.js";
+import { ProviderRouter } from "@atomic-content-protocol/enrichment";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  type CallToolRequest,
+  CallToolRequestSchema,
+  ErrorCode,
+  ListToolsRequestSchema,
+  McpError,
+} from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 import { EnrichmentNotConfiguredError, type ToolContext } from "./context.js";
+import { adaptToolForMCP } from "./tool-adapter.js";
 import { PKG, TOOL } from "./tool-id.js";
-import type { ToolEntry, ToolOutput } from "./types/tool.js";
-
+import { ToolRegistry } from "./tool-registry.js";
 // Tool factories
 import { createCreateACOTool } from "./tools/aco/create-aco.js";
-import { createReadACOTool } from "./tools/aco/read-aco.js";
-import { createUpdateACOTool } from "./tools/aco/update-aco.js";
 import { createDeleteACOTool } from "./tools/aco/delete-aco.js";
 import { createListACOsTool } from "./tools/aco/list-acos.js";
+import { createReadACOTool } from "./tools/aco/read-aco.js";
+import { createUpdateACOTool } from "./tools/aco/update-aco.js";
 import { createCreateContainerTool } from "./tools/container/create-container.js";
-import { createReadContainerTool } from "./tools/container/read-container.js";
 import { createListContainersTool } from "./tools/container/list-containers.js";
+import { createReadContainerTool } from "./tools/container/read-container.js";
+import { createDetectRelationshipsTool } from "./tools/enrichment/detect-relationships.js";
 import { createEnrichACOTool } from "./tools/enrichment/enrich-aco.js";
 import { createEnrichBatchTool } from "./tools/enrichment/enrich-batch.js";
-import { createDetectRelationshipsTool } from "./tools/enrichment/detect-relationships.js";
-import { createSearchACOsTool } from "./tools/search/search-acos.js";
 import { createFindSimilarTool } from "./tools/search/find-similar.js";
-import { createValidateVaultTool } from "./tools/vault/validate-vault.js";
+import { createSearchACOsTool } from "./tools/search/search-acos.js";
 import { createExportACOTool } from "./tools/vault/export-aco.js";
+import { createValidateVaultTool } from "./tools/vault/validate-vault.js";
+import type { ToolEntry, ToolOutput } from "./types/tool.js";
 
 // ---------------------------------------------------------------------------
 // Config types
@@ -102,7 +99,7 @@ export class ACPMCPServer {
   private readonly context: ToolContext;
   private provider: IEnrichmentProvider | null = null;
 
-  constructor(private readonly config: ACPMCPServerConfig) {
+  constructor(readonly config: ACPMCPServerConfig) {
     this.mcpServer = new Server(
       {
         name: config.server?.name ?? PKG.name,
@@ -122,7 +119,8 @@ export class ACPMCPServer {
         if (!hasEnrichment || !enrichment) throw new EnrichmentNotConfiguredError("This tool");
         if (!this.provider) {
           this.provider =
-            enrichment.provider ?? ProviderRouter.fromConfig(enrichment.providers as ProviderConfig, enrichment.routerOptions);
+            enrichment.provider ??
+            ProviderRouter.fromConfig(enrichment.providers as ProviderConfig, enrichment.routerOptions);
         }
         return this.provider;
       },

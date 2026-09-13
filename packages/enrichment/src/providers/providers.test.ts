@@ -1,14 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AnthropicProvider, toAnthropicOutputSchema } from "./anthropic.provider.js";
-import { OpenAIProvider } from "./openai.provider.js";
-import { OllamaProvider } from "./ollama.provider.js";
 import {
+  anthropicSupportsSampling,
   MODEL_PRESETS,
   MODEL_PRICING,
-  anthropicSupportsSampling,
   openaiIsReasoningModel,
   pricingFor,
 } from "./models.js";
+import { OllamaProvider } from "./ollama.provider.js";
+import { OpenAIProvider } from "./openai.provider.js";
 
 const SCHEMA = {
   name: "extract",
@@ -64,7 +64,10 @@ function anthropicClient(response: Record<string, unknown>) {
 describe("AnthropicProvider", () => {
   it("complete() joins text blocks and omits temperature for Claude 5 models", async () => {
     const { client, create } = anthropicClient({
-      content: [{ type: "text", text: "Hello " }, { type: "text", text: "world" }],
+      content: [
+        { type: "text", text: "Hello " },
+        { type: "text", text: "world" },
+      ],
       stop_reason: "end_turn",
     });
     const provider = new AnthropicProvider("k", "claude-opus-5", { client });
@@ -173,7 +176,10 @@ describe("OpenAIProvider", () => {
     const { client, create } = openaiClient({
       choices: [{ message: { tool_calls: [{ function: { name: "extract", arguments: '{"a":"z"}' } }] } }],
     });
-    const out = await new OpenAIProvider("k", "gpt-5.6-luna", { client }).structuredComplete<{ a: string }>("p", SCHEMA);
+    const out = await new OpenAIProvider("k", "gpt-5.6-luna", { client }).structuredComplete<{ a: string }>(
+      "p",
+      SCHEMA
+    );
     expect(out).toEqual({ a: "z" });
     const [params] = create.mock.calls[0]!;
     expect(params.tool_choice).toEqual({ type: "function", function: { name: "extract" } });
@@ -183,9 +189,9 @@ describe("OpenAIProvider", () => {
     const { client } = openaiClient({
       choices: [{ message: { tool_calls: [{ function: { name: "other", arguments: "{}" } }] } }],
     });
-    await expect(
-      new OpenAIProvider("k", "gpt-5.6-luna", { client }).structuredComplete("p", SCHEMA)
-    ).rejects.toThrow(/No structured output/);
+    await expect(new OpenAIProvider("k", "gpt-5.6-luna", { client }).structuredComplete("p", SCHEMA)).rejects.toThrow(
+      /No structured output/
+    );
   });
 
   it("embed() uses the configured embedding model and exposes it", async () => {

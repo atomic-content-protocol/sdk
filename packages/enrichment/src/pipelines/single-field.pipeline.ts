@@ -1,8 +1,8 @@
 import type { ACO, SourceType } from "@atomic-content-protocol/core";
-import { SOURCE_TYPES, SOURCE_TYPE_MODALITY, type ContentModality } from "@atomic-content-protocol/core";
+import { type ContentModality, SOURCE_TYPE_MODALITY, SOURCE_TYPES } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type { IEnrichmentPipeline, EnrichmentResult, EnrichmentOptions } from "./pipeline.interface.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
+import type { EnrichmentOptions, EnrichmentResult, IEnrichmentPipeline } from "./pipeline.interface.js";
 
 /**
  * Whether a frontmatter value counts as "present" for idempotency purposes.

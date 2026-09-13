@@ -1,9 +1,9 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type { EnrichmentOptions } from "./pipeline.interface.js";
-import { SingleFieldPipeline, resolveModality, type GeneratedField } from "./single-field.pipeline.js";
 import { buildClassificationPrompt } from "../utils/prompts.js";
 import { completeWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { type GeneratedField, resolveModality, SingleFieldPipeline } from "./single-field.pipeline.js";
 
 export const VALID_CLASSIFICATIONS = [
   "reference",
@@ -56,7 +56,10 @@ export class ClassificationPipeline extends SingleFieldPipeline<Classification> 
       { maxTokens: 20, temperature: 0.1 } // low temperature: deterministic classification
     );
 
-    const raw = result.trim().toLowerCase().replace(/[^a-z\s]/g, "");
+    const raw = result
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, "");
     const firstWord = raw.split(/\s+/)[0] ?? "";
     const classification: Classification = isValidClassification(raw)
       ? raw

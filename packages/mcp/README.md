@@ -15,7 +15,7 @@ Settings → Connectors → *Add custom connector*
 
 The `enrich_url`, `enrich_content`, and `enrich_batch` tools are immediately available in any chat.
 
-Rate-limited to 50 enrichments/hour per IP. For higher limits, private data, or self-hosting, use the package below and bring your own key.
+Rate-limited to 50 enrichments/hour per client (a batch of N counts as N). For higher limits, private data, or self-hosting, use the package below and bring your own key.
 
 ## Self-host
 
@@ -27,7 +27,7 @@ npm install @atomic-content-protocol/mcp @atomic-content-protocol/core
 import { ACPMCPServer } from "@atomic-content-protocol/mcp";
 import { FilesystemAdapter } from "@atomic-content-protocol/core";
 
-const storage = new FilesystemAdapter({ vaultPath: "./my-vault" });
+const storage = new FilesystemAdapter("./my-vault");
 
 const server = new ACPMCPServer({
   storage,
@@ -41,11 +41,23 @@ const server = new ACPMCPServer({
 await server.start();
 ```
 
+## Tools
+
+| Tool | Purpose |
+|---|---|
+| `create_aco`, `read_aco`, `update_aco`, `delete_aco`, `list_acos` | CRUD over the vault. `update_aco` accepts `relationships` and `body`. |
+| `create_container`, `read_container`, `list_containers` | Group ACOs. |
+| `enrich_aco`, `enrich_batch` | Run pipelines (`unified`, `tag`, `summary`, `entity`, `classification`, `embed`). Existing values are kept unless `force`. `embed` stores a vector for search. |
+| `search_acos`, `find_similar` | Full-text search; vector similarity over stored embeddings with overlap fallback. |
+| `detect_relationships` | Suggest edges from overlap + stored embeddings; apply with `update_aco`. |
+| `validate_vault`, `export_aco` | Schema validation report; Markdown/JSON export. |
+
 ## Exports
 
-- `ACPMCPServer` — server class
-- `registerTool`, `getAllTools`, `getToolHandler` — tool registry API
+- `ACPMCPServer` — server class (`listTools()`, `callTool()`, `start()`, `close()`)
+- `ToolRegistry` — per-instance registry (the module-level `registerTool` family is deprecated)
 - `adaptToolForMCP`, `zodSchemaToJsonSchema` — adapter helpers
+- `PIPELINE_NAMES`, `needsPipeline`, `runPipelines` — enrichment helpers
 
 ## Links
 

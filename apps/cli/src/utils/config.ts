@@ -1,7 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { z } from "zod";
 import { QUALITY_TIERS, type QualityTier } from "@atomic-content-protocol/enrichment";
+import { z } from "zod";
 import { CliError, EXIT } from "./errors.js";
 
 const providerSchema = z.object({ api_key: z.string().optional(), model: z.string().optional() }).strict();
@@ -15,7 +15,14 @@ export const ConfigSchema = z
         quality: z.enum(QUALITY_TIERS as unknown as [QualityTier, ...QualityTier[]]).optional(),
         anthropic: providerSchema.optional(),
         openai: providerSchema.extend({ embedding_model: z.string().optional() }).optional(),
-        ollama: z.object({ base_url: z.string().optional(), model: z.string().optional(), embedding_model: z.string().optional() }).strict().optional(),
+        ollama: z
+          .object({
+            base_url: z.string().optional(),
+            model: z.string().optional(),
+            embedding_model: z.string().optional(),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .optional(),

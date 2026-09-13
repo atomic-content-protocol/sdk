@@ -3,8 +3,6 @@ import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
 import { RelationshipEdgeSchema } from "./edge.schema.js";
 import { ProvenanceMapSchema } from "./provenance.schema.js";
 
-
-
 // ---------------------------------------------------------------------------
 // CollectionFrontmatterSchema
 // ---------------------------------------------------------------------------

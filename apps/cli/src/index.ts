@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import { Command, CommanderError } from "commander";
 import chalk from "chalk";
-import { initCommand } from "./commands/init.js";
+import { Command, CommanderError } from "commander";
 import { createCommand } from "./commands/create.js";
-import { validateCommand } from "./commands/validate.js";
 import { enrichCommand } from "./commands/enrich.js";
 import { enrichBatchCommand } from "./commands/enrich-batch.js";
+import { initCommand } from "./commands/init.js";
 import { searchCommand } from "./commands/search.js";
 import { serveCommand } from "./commands/serve.js";
 import { statsCommand } from "./commands/stats.js";
-import { PKG } from "./utils/pkg.js";
+import { validateCommand } from "./commands/validate.js";
 import { CliError, EXIT } from "./utils/errors.js";
+import { PKG } from "./utils/pkg.js";
 
 export function buildProgram(): Command {
   const program = new Command();

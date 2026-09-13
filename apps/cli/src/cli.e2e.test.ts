@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const exec = promisify(execFile);
 const BIN = fileURLToPath(new URL("../dist/index.js", import.meta.url));
@@ -19,7 +19,14 @@ interface Run {
 
 /** Run the built CLI with stdin closed (non-interactive) and no provider keys. */
 async function acp(args: string[], cwd = vault): Promise<Run> {
-  const env = { ...process.env, ANTHROPIC_API_KEY: "", OPENAI_API_KEY: "", ACP_QUALITY: "", FORCE_COLOR: "0", NO_COLOR: "1" };
+  const env = {
+    ...process.env,
+    ANTHROPIC_API_KEY: "",
+    OPENAI_API_KEY: "",
+    ACP_QUALITY: "",
+    FORCE_COLOR: "0",
+    NO_COLOR: "1",
+  };
   try {
     const { stdout, stderr } = await exec(process.execPath, [BIN, ...args], { cwd, env });
     return { code: 0, stdout, stderr };
@@ -62,7 +69,19 @@ describe("acp (built binary)", () => {
     const nested = path.join(vault, "notes", "deep");
     await fs.mkdir(nested, { recursive: true });
 
-    const created = await acp(["create", "--title", "Alpha protocol", "--body", "Knowledge about alpha.", "--tags", "alpha, protocol", "--json"], nested);
+    const created = await acp(
+      [
+        "create",
+        "--title",
+        "Alpha protocol",
+        "--body",
+        "Knowledge about alpha.",
+        "--tags",
+        "alpha, protocol",
+        "--json",
+      ],
+      nested
+    );
     expect(created.code).toBe(0);
     const fm = JSON.parse(created.stdout);
     expect(fm.tags).toEqual(["alpha", "protocol"]);
@@ -88,7 +107,10 @@ describe("acp (built binary)", () => {
 
   it("validate exits 3 and lists errors for an invalid ACO", async () => {
     const bad = path.join(vault, "0193f5e6-0000-7000-8000-00000000bad1.md");
-    await fs.writeFile(bad, "---\nid: 0193f5e6-0000-7000-8000-00000000bad1\nacp_version: '0.2'\nobject_type: aco\n---\nno source_type, author, created\n");
+    await fs.writeFile(
+      bad,
+      "---\nid: 0193f5e6-0000-7000-8000-00000000bad1\nacp_version: '0.2'\nobject_type: aco\n---\nno source_type, author, created\n"
+    );
     const r = await acp(["validate", "--json"]);
     expect(r.code).toBe(3);
     const report = JSON.parse(r.stdout);
@@ -119,7 +141,23 @@ describe("acp (built binary)", () => {
   it("--vault points a command at another vault", async () => {
     const other = await fs.mkdtemp(path.join(os.tmpdir(), "acp-cli-other-"));
     try {
-      const r = await acp(["--vault", other, "create", "--title", "Elsewhere", "--body", "b", "--author-id", "x", "--author-name", "X", "--json"], os.tmpdir());
+      const r = await acp(
+        [
+          "--vault",
+          other,
+          "create",
+          "--title",
+          "Elsewhere",
+          "--body",
+          "b",
+          "--author-id",
+          "x",
+          "--author-name",
+          "X",
+          "--json",
+        ],
+        os.tmpdir()
+      );
       expect(r.code).toBe(0);
       const fm = JSON.parse(r.stdout);
       await fs.access(path.join(other, `${fm.id}.md`));

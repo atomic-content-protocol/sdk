@@ -1,20 +1,20 @@
-import { Command } from 'commander';
-import { loadConfig } from '../utils/config.js';
-import { createStorage } from '../utils/storage.js';
-import chalk from 'chalk';
-import ora from 'ora';
+import chalk from "chalk";
+import { Command } from "commander";
+import ora from "ora";
+import { loadConfig } from "../utils/config.js";
+import { createStorage } from "../utils/storage.js";
 
-export const searchCommand = new Command('search')
-  .argument('<query>', 'Search query')
-  .description('Search ACOs in the vault by title, tags, summary, or body')
-  .option('--tags <tags>', 'Filter by tags (comma-separated)')
-  .option('--status <status>', 'Filter by status')
-  .option('-l, --limit <n>', 'Max results to show', '20')
+export const searchCommand = new Command("search")
+  .argument("<query>", "Search query")
+  .description("Search ACOs in the vault by title, tags, summary, or body")
+  .option("--tags <tags>", "Filter by tags (comma-separated)")
+  .option("--status <status>", "Filter by status")
+  .option("-l, --limit <n>", "Max results to show", "20")
   .action(async (query: string, options, cmd: Command) => {
-    const { config } = await loadConfig(cmd.optsWithGlobals()['vault'] as string | undefined);
+    const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
     const storage = createStorage(config);
 
-    const spinner = ora('Searching...').start();
+    const spinner = ora("Searching...").start();
 
     const searchQuery: {
       search?: string;
@@ -25,7 +25,7 @@ export const searchCommand = new Command('search')
     };
 
     if (options.tags) {
-      searchQuery.tags = (options.tags as string).split(',').map((t: string) => t.trim());
+      searchQuery.tags = (options.tags as string).split(",").map((t: string) => t.trim());
     }
     if (options.status) {
       searchQuery.status = [(options.status as string).trim()];
@@ -35,31 +35,31 @@ export const searchCommand = new Command('search')
     const results = await storage.queryACOs(searchQuery);
     const limited = results.slice(0, limit);
 
-    spinner.succeed(`Found ${results.length} result${results.length !== 1 ? 's' : ''}`);
+    spinner.succeed(`Found ${results.length} result${results.length !== 1 ? "s" : ""}`);
 
     if (limited.length === 0) {
-      console.log(chalk.dim('\n  No ACOs matched your search.'));
+      console.log(chalk.dim("\n  No ACOs matched your search."));
       return;
     }
 
     console.log();
     for (const aco of limited) {
       const fm = aco.frontmatter as Record<string, unknown>;
-      const id = fm['id'] as string;
-      const title = (fm['title'] as string | undefined) || chalk.italic('(untitled)');
-      const tags = Array.isArray(fm['tags']) ? (fm['tags'] as string[]) : [];
-      const status = (fm['status'] as string | undefined) || '';
-      const created = (fm['created'] as string | undefined) || '';
-      const summary = (fm['summary'] as string | undefined) || '';
+      const id = fm["id"] as string;
+      const title = (fm["title"] as string | undefined) || chalk.italic("(untitled)");
+      const tags = Array.isArray(fm["tags"]) ? (fm["tags"] as string[]) : [];
+      const status = (fm["status"] as string | undefined) || "";
+      const created = (fm["created"] as string | undefined) || "";
+      const summary = (fm["summary"] as string | undefined) || "";
 
       console.log(`${chalk.bold(title)}`);
-      console.log(`  ${chalk.dim('id:')} ${id}`);
-      if (created) console.log(`  ${chalk.dim('created:')} ${created.split('T')[0]}`);
-      if (status) console.log(`  ${chalk.dim('status:')} ${status}`);
-      if (tags.length > 0) console.log(`  ${chalk.dim('tags:')} ${tags.join(', ')}`);
+      console.log(`  ${chalk.dim("id:")} ${id}`);
+      if (created) console.log(`  ${chalk.dim("created:")} ${created.split("T")[0]}`);
+      if (status) console.log(`  ${chalk.dim("status:")} ${status}`);
+      if (tags.length > 0) console.log(`  ${chalk.dim("tags:")} ${tags.join(", ")}`);
       if (summary) {
-        const truncated = summary.length > 120 ? summary.slice(0, 117) + '...' : summary;
-        console.log(`  ${chalk.dim('summary:')} ${truncated}`);
+        const truncated = summary.length > 120 ? summary.slice(0, 117) + "..." : summary;
+        console.log(`  ${chalk.dim("summary:")} ${truncated}`);
       }
       console.log();
     }
