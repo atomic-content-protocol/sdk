@@ -144,3 +144,81 @@ describe('ProviderRouter', () => {
     });
   });
 });
+
+describe('ProviderRouter — metadata, signals, skips', () => {
+  it('structuredCompleteWithMeta reports the provider that actually answered after fallback', async () => {
+    const p1 = createMockProvider('primary', { shouldFail: true });
+    const p2 = createMockProvider('secondary');
+    const router = new ProviderRouter([p1, p2]);
+    const meta = await router.structuredCompleteWithMeta('p', { name: 'x', description: '', parameters: {} });
+    expect(meta.provider).toBe('secondary');
+    expect(meta.model).toBe('mock-secondary');
+    // The identity getter still describes the primary — pipelines must use WithMeta.
+    expect(router.model).toBe('mock-primary');
+  });
+
+  it('embedWithMeta reports the embedding model, not the chat model', async () => {
+    const p: IEnrichmentProvider = {
+      ...createMockProvider('e'),
+      embeddingModel: 'embed-x',
+      embed: async () => [1],
+    };
+    const router = new ProviderRouter([p]);
+    expect((await router.embedWithMeta('t')).model).toBe('embed-x');
+    expect(router.embeddingModel).toBe('embed-x');
+  });
+
+  it('forwards the breaker timeout signal to the provider', async () => {
+    let received: AbortSignal | undefined;
+    const p: IEnrichmentProvider = {
+      ...createMockProvider('sig'),
+      complete: async (_prompt, options) => { received = options?.signal; return 'ok'; },
+    };
+    await new ProviderRouter([p]).complete('x');
+    expect(received).toBeInstanceOf(AbortSignal);
+  });
+
+  it('merges a caller-supplied signal with the breaker signal', async () => {
+    let received: AbortSignal | undefined;
+    const p: IEnrichmentProvider = {
+      ...createMockProvider('sig'),
+      complete: async (_prompt, options) => { received = options?.signal; return 'ok'; },
+    };
+    const controller = new AbortController();
+    await new ProviderRouter([p]).complete('x', { signal: controller.signal });
+    expect(received?.aborted).toBe(false);
+    controller.abort();
+    expect(received?.aborted).toBe(true);
+  });
+
+  it('calls onProviderSkipped (not onProviderFailure) for OPEN circuits', async () => {
+    const onProviderSkipped = vi.fn();
+    const onProviderFailure = vi.fn();
+    const p1 = createMockProvider('flaky', { shouldFail: true });
+    const p2 = createMockProvider('stable');
+    const router = new ProviderRouter([p1, p2], {
+      failureThreshold: 1,
+      resetTimeoutMs: 60_000,
+      onProviderSkipped,
+      onProviderFailure,
+    });
+    await router.complete('a');
+    expect(onProviderFailure).toHaveBeenCalledTimes(1);
+    await router.complete('b');
+    expect(onProviderSkipped).toHaveBeenCalledWith('flaky', expect.stringMatching(/OPEN/));
+    expect(onProviderFailure).toHaveBeenCalledTimes(1);
+    expect(router.providers[0]!.state).toBe('OPEN');
+  });
+
+  it('times out a hung provider and falls back', async () => {
+    const hung: IEnrichmentProvider = {
+      ...createMockProvider('hung'),
+      complete: (_p, options) => new Promise((_, reject) => {
+        options?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+      }),
+    };
+    const p2 = createMockProvider('stable');
+    const router = new ProviderRouter([hung, p2], { requestTimeoutMs: 10 });
+    expect(await router.complete('x')).toBe('response from stable');
+  });
+});

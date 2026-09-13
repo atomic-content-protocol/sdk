@@ -12,6 +12,8 @@ import type {
 } from "./pipeline.interface.js";
 import { buildUnifiedPrompt, UNIFIED_SCHEMA, parseUnifiedOutput } from "../utils/prompts.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
+import { structuredCompleteWithModel } from "../utils/provider-meta.js";
+import { hasValue, readProvenance } from "./single-field.pipeline.js";
 
 /**
  * UnifiedPipeline — enriches tags, summary, classification, and key_entities
@@ -20,9 +22,14 @@ import { createProvenanceRecord } from "../utils/provenance.js";
  * This is the preferred pipeline for most use cases: at ~$0.002/ACO it
  * replaces four separate calls with one structured completion.
  *
- * Per-field idempotency: fields that already have provenance are skipped
- * (the LLM still runs, but the field is not overwritten) unless `force` is true.
- * If ALL four fields already have provenance, the LLM call is skipped entirely.
+ * Per-field idempotency: a field that already holds a non-empty value is left
+ * untouched unless `force` is true — a value without a provenance record is
+ * treated as human-authored and never overwritten implicitly. Empty values
+ * (missing, "", []) are (re)generated. If nothing needs generating, the LLM
+ * call is skipped entirely.
+ *
+ * Provenance records the model that actually answered (after any
+ * `ProviderRouter` fallback), not the first configured provider.
  */
 export class UnifiedPipeline implements IEnrichmentPipeline {
   readonly name = "unified";
@@ -34,38 +41,18 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     options?: EnrichmentOptions
   ): Promise<EnrichmentResult> {
     const { frontmatter, body } = aco;
-    const existingProvenance = (
-      frontmatter["provenance"] as Record<string, unknown> | undefined
-    ) ?? {};
+    const existingProvenance = readProvenance(frontmatter);
+    const force = options?.force === true;
 
     // Determine which fields need enrichment
-    const needsTags =
-      !frontmatter["tags"] || !existingProvenance["tags"] || options?.force;
-    const needsSummary =
-      !frontmatter["summary"] ||
-      !existingProvenance["summary"] ||
-      options?.force;
-    const needsClassification =
-      !frontmatter["classification"] ||
-      !existingProvenance["classification"] ||
-      options?.force;
-    const needsEntities =
-      !frontmatter["key_entities"] ||
-      !existingProvenance["key_entities"] ||
-      options?.force;
-    const needsLanguage =
-      !frontmatter["language"] ||
-      !existingProvenance["language"] ||
-      options?.force;
+    const needsTags = force || !hasValue(frontmatter["tags"]);
+    const needsSummary = force || !hasValue(frontmatter["summary"]);
+    const needsClassification = force || !hasValue(frontmatter["classification"]);
+    const needsEntities = force || !hasValue(frontmatter["key_entities"]);
+    const needsLanguage = force || !hasValue(frontmatter["language"]);
 
     // Short-circuit if nothing to do
-    if (
-      !needsTags &&
-      !needsSummary &&
-      !needsClassification &&
-      !needsEntities &&
-      !needsLanguage
-    ) {
+    if (!needsTags && !needsSummary && !needsClassification && !needsEntities && !needsLanguage) {
       return {
         aco,
         fieldUpdated: this.field,
@@ -108,13 +95,15 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
 
     if (needsLLM) {
       const prompt = buildUnifiedPrompt(title, body, modality);
-      const raw = await provider.structuredComplete<unknown>(prompt, UNIFIED_SCHEMA, {
-        maxTokens: 1_024,
-        temperature: 0.3,
-      });
+      const { result: raw, model: usedModel } = await structuredCompleteWithModel<unknown>(
+        provider,
+        prompt,
+        UNIFIED_SCHEMA,
+        { maxTokens: 1_024, temperature: 0.3 }
+      );
       // Model output is untrusted: validate + normalise before it touches frontmatter.
       const output = parseUnifiedOutput(raw);
-      model = provider.model;
+      model = usedModel;
 
       if (llmNeededForTags) {
         updatedFields["tags"] = output.tags;

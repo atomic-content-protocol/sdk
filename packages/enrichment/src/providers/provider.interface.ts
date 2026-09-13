@@ -59,4 +59,26 @@ export interface IEnrichmentProvider {
 
   /** Count tokens in the given text using the provider's tokeniser. Optional. */
   countTokens?(text: string): Promise<number>;
+
+  // ---------------------------------------------------------------------------
+  // Optional "with meta" variants — implemented by composite providers such as
+  // `ProviderRouter` so callers learn which underlying provider/model answered.
+  // Pipelines use `utils/provider-meta.ts`, which falls back to `model` above.
+  // ---------------------------------------------------------------------------
+
+  completeWithMeta?(
+    prompt: string,
+    options?: CompletionOptions
+  ): Promise<{ result: string; provider: string; model: string }>;
+
+  structuredCompleteWithMeta?<T>(
+    prompt: string,
+    schema: StructuredSchema,
+    options?: CompletionOptions
+  ): Promise<{ result: T; provider: string; model: string }>;
+
+  embedWithMeta?(
+    text: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ result: number[]; provider: string; model: string }>;
 }

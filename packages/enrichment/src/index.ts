@@ -43,9 +43,10 @@ export {
 export type { QualityTier, ModelPricing } from "./providers/index.js";
 
 // Router
-export { CircuitBreaker, ProviderRouter } from "./router/index.js";
+export { CircuitBreaker, CircuitOpenError, CircuitTimeoutError, ProviderRouter } from "./router/index.js";
 export type {
   CircuitBreakerOptions,
+  CircuitState,
   ProviderConfig,
   RouterOptions,
   CompletionResponse,
@@ -60,19 +61,30 @@ export type {
   EnrichmentOptions,
 } from "./pipelines/index.js";
 export {
+  SingleFieldPipeline,
   TagPipeline,
   SummaryPipeline,
   EntityPipeline,
   ClassificationPipeline,
   UnifiedPipeline,
   EmbedPipeline,
+  ENTITY_TYPES,
+  VALID_CLASSIFICATIONS,
+  hasValue,
+  extractJsonArray,
 } from "./pipelines/index.js";
-export type { KeyEntity } from "./pipelines/index.js";
+export type { KeyEntity, Classification, GeneratedField } from "./pipelines/index.js";
 
 // Batch
 export { BatchEnricher } from "./batch/index.js";
+export type { BatchOptions, BatchResult } from "./batch/index.js";
 
 // Utilities
+export {
+  completeWithModel,
+  structuredCompleteWithModel,
+  embedWithModel,
+} from "./utils/provider-meta.js";
 export {
   createProvenanceRecord,
   buildTagPrompt,

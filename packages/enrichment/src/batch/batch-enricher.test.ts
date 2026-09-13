@@ -214,3 +214,84 @@ describe('BatchEnricher', () => {
     });
   });
 });
+
+describe('BatchEnricher — concurrency', () => {
+  function makeSlowPipeline(delays: Record<string, number>, log: string[]): IEnrichmentPipeline {
+    return {
+      name: 'slow',
+      field: 'done',
+      enrich: async (aco): Promise<EnrichmentResult> => {
+        const id = String(aco.frontmatter['id']);
+        log.push(`start:${id}`);
+        await new Promise((r) => setTimeout(r, delays[id] ?? 0));
+        log.push(`end:${id}`);
+        return { aco: { ...aco, frontmatter: { ...aco.frontmatter, done: true } }, fieldUpdated: 'done', confidence: 1, model: 'm' };
+      },
+    };
+  }
+
+  it('is strictly serial by default', async () => {
+    const log: string[] = [];
+    const enricher = new BatchEnricher(NOOP_PROVIDER, [makeSlowPipeline({ a: 10, b: 1 }, log)]);
+    await enricher.enrichMany([makeACO('a'), makeACO('b')]);
+    expect(log).toEqual(['start:a', 'end:a', 'start:b', 'end:b']);
+  });
+
+  it('runs up to `concurrency` ACOs at once and keeps input order in results', async () => {
+    const log: string[] = [];
+    const enricher = new BatchEnricher(NOOP_PROVIDER, [makeSlowPipeline({ a: 30, b: 1, c: 1 }, log)]);
+    const { results } = await enricher.enrichMany([makeACO('a'), makeACO('b'), makeACO('c')], { concurrency: 2 });
+    expect(log.slice(0, 2)).toEqual(['start:a', 'start:b']); // two in flight
+    expect(results.map((r) => r.frontmatter['id'])).toEqual(['a', 'b', 'c']);
+  });
+
+  it('never exceeds the concurrency limit', async () => {
+    let inFlight = 0;
+    let peak = 0;
+    const gauge: IEnrichmentPipeline = {
+      name: 'gauge',
+      field: 'x',
+      enrich: async (aco): Promise<EnrichmentResult> => {
+        inFlight++; peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 2));
+        inFlight--;
+        return { aco, fieldUpdated: 'x', confidence: 1, model: 'm' };
+      },
+    };
+    await new BatchEnricher(NOOP_PROVIDER, [gauge]).enrichMany(
+      Array.from({ length: 12 }, (_, i) => makeACO(`n${i}`)),
+      { concurrency: 3 }
+    );
+    expect(peak).toBe(3);
+  });
+
+  it('reports the input index of failures and sorts them', async () => {
+    const selective: IEnrichmentPipeline = {
+      name: 's',
+      field: 'x',
+      enrich: async (aco): Promise<EnrichmentResult> => {
+        if (String(aco.frontmatter['id']).startsWith('bad')) throw new Error('nope');
+        return { aco, fieldUpdated: 'x', confidence: 1, model: 'm' };
+      },
+    };
+    const { results, errors } = await new BatchEnricher(NOOP_PROVIDER, [selective]).enrichMany(
+      [makeACO('ok0'), makeACO('bad1'), makeACO('ok2'), makeACO('bad3')],
+      { concurrency: 4 }
+    );
+    expect(results.map((r) => r.frontmatter['id'])).toEqual(['ok0', 'ok2']);
+    expect(errors.map((e) => [e.id, e.index])).toEqual([['bad1', 1], ['bad3', 3]]);
+  });
+
+  it('does not leak batch-only options into pipelines', async () => {
+    let received: Record<string, unknown> | undefined;
+    const capture: IEnrichmentPipeline = {
+      name: 'c', field: 'x',
+      enrich: async (aco, _p, options): Promise<EnrichmentResult> => {
+        received = options as Record<string, unknown>;
+        return { aco, fieldUpdated: 'x', confidence: 1, model: 'm' };
+      },
+    };
+    await new BatchEnricher(NOOP_PROVIDER, [capture]).enrichMany([makeACO('a')], { concurrency: 2, force: true, onProgress: () => {} });
+    expect(received).toEqual({ force: true });
+  });
+});

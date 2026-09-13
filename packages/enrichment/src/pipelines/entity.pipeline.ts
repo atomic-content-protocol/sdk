@@ -1,105 +1,62 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type {
-  IEnrichmentPipeline,
-  EnrichmentResult,
-  EnrichmentOptions,
-} from "./pipeline.interface.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { SingleFieldPipeline, extractJsonArray, type GeneratedField } from "./single-field.pipeline.js";
 import { buildEntityPrompt } from "../utils/prompts.js";
-import { createProvenanceRecord } from "../utils/provenance.js";
+import { completeWithModel } from "../utils/provider-meta.js";
+
+export const ENTITY_TYPES = ["person", "organization", "technology", "concept", "location", "event"] as const;
 
 export interface KeyEntity {
-  type:
-    | "person"
-    | "organization"
-    | "technology"
-    | "concept"
-    | "location"
-    | "event";
+  type: (typeof ENTITY_TYPES)[number];
   name: string;
   confidence: number;
+}
+
+const MAX_ENTITIES = 50;
+
+function toKeyEntity(item: unknown): KeyEntity | null {
+  if (typeof item !== "object" || item === null) return null;
+  const obj = item as Record<string, unknown>;
+  const name = typeof obj["name"] === "string" ? obj["name"].trim().slice(0, 200) : "";
+  if (!name) return null;
+  const rawType = typeof obj["type"] === "string" ? obj["type"].trim().toLowerCase() : "";
+  const type = (ENTITY_TYPES as readonly string[]).includes(rawType)
+    ? (rawType as KeyEntity["type"])
+    : "concept";
+  const rawConf = typeof obj["confidence"] === "number" && Number.isFinite(obj["confidence"]) ? obj["confidence"] : 0.5;
+  return { type, name, confidence: Math.min(1, Math.max(0, rawConf)) };
 }
 
 /**
  * EntityPipeline — extracts named entities from ACO content.
  *
- * Idempotent: skips enrichment if `frontmatter.key_entities` and a provenance
- * record for "key_entities" already exist, unless `options.force` is true.
+ * Idempotent: leaves existing non-empty `key_entities` alone unless `force` is set.
  */
-export class EntityPipeline implements IEnrichmentPipeline {
+export class EntityPipeline extends SingleFieldPipeline<KeyEntity[]> {
   readonly name = "entity";
   readonly field = "key_entities";
 
-  async enrich(
+  protected async generate(
     aco: ACO,
     provider: IEnrichmentProvider,
-    options?: EnrichmentOptions
-  ): Promise<EnrichmentResult> {
-    const { frontmatter, body } = aco;
-
-    // Idempotency check
-    const existing = frontmatter["key_entities"];
-    const existingProvenance = (
-      frontmatter["provenance"] as Record<string, unknown> | undefined
-    )?.["key_entities"];
-    if (existing && existingProvenance && !options?.force) {
-      return {
-        aco,
-        fieldUpdated: this.field,
-        confidence: 0,
-        model: "skipped",
-      };
-    }
-
-    const title = String(frontmatter["title"] ?? "");
-    const prompt = buildEntityPrompt(title, body);
-
-    const response = await provider.complete(prompt, {
+    _options?: EnrichmentOptions
+  ): Promise<GeneratedField<KeyEntity[]> | null> {
+    const title = String(aco.frontmatter["title"] ?? "");
+    const { result, model } = await completeWithModel(provider, buildEntityPrompt(title, aco.body), {
       maxTokens: 500,
       temperature: 0.3,
     });
 
-    // Parse JSON array from response
-    let entities: KeyEntity[] = [];
-    const jsonMatch = response.match(/\[[\s\S]*?\]/);
-    if (jsonMatch) {
-      try {
-        const parsed: unknown = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed)) {
-          entities = parsed.filter(
-            (item): item is KeyEntity =>
-              typeof item === "object" &&
-              item !== null &&
-              "type" in item &&
-              "name" in item &&
-              "confidence" in item
-          );
-        }
-      } catch {
-        // Fall through — entities remains []
-      }
-    }
+    const parsed = extractJsonArray(result);
+    if (!parsed) return null;
 
-    const confidence = entities.length > 0 ? 0.8 : 0.0;
-    const provRecord = createProvenanceRecord(provider.model, confidence, {
-      pipeline: this.name,
-      tool: options?.tool,
-    });
+    const entities = parsed
+      .map(toKeyEntity)
+      .filter((e): e is KeyEntity => e !== null)
+      .slice(0, MAX_ENTITIES);
+    if (entities.length === 0) return null;
 
-    const updatedFrontmatter: Record<string, unknown> = {
-      ...frontmatter,
-      key_entities: entities,
-      provenance: {
-        ...(frontmatter["provenance"] as Record<string, unknown> | undefined),
-        key_entities: provRecord,
-      },
-    };
-
-    return {
-      aco: { frontmatter: updatedFrontmatter, body },
-      fieldUpdated: this.field,
-      confidence,
-      model: provider.model,
-    };
+    return { value: entities, confidence: 0.8, model };
   }
 }
