@@ -1,6 +1,7 @@
 import { z } from "zod";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the container to retrieve"),
@@ -14,11 +15,11 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: true },
 };
 
-export function createReadContainerTool(storage: IStorageAdapter): ToolEntry {
+export function createReadContainerTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const { id } = inputSchema.parse(input);
-      const container = await storage.getContainer(id);
+      const container = await ctx.storage.getContainer(id);
 
       if (!container) {
         return { success: false, error: `Container not found: ${id}` };
@@ -33,14 +34,15 @@ export function createReadContainerTool(storage: IStorageAdapter): ToolEntry {
         let loadedCount = 0;
 
         for (const acoId of objectIds) {
-          const aco = await storage.getACO(acoId);
+          const aco = await ctx.storage.getACO(acoId);
           if (aco) {
             loadedCount++;
             const tokenCounts = aco.frontmatter["token_counts"] as
               | Record<string, number>
               | undefined;
-            if (tokenCounts?.["approximate"]) {
-              totalApproximate += tokenCounts["approximate"];
+            const approx = tokenCounts?.["approximate"];
+            if (typeof approx === "number" && Number.isFinite(approx)) {
+              totalApproximate += approx;
             }
           }
         }
@@ -60,10 +62,7 @@ export function createReadContainerTool(storage: IStorageAdapter): ToolEntry {
         },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

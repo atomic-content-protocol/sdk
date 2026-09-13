@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { validateACO } from "@atomic-content-protocol/core";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({});
 
@@ -19,7 +20,7 @@ interface ValidationError {
   errors: Array<{ path: string; message: string }>;
 }
 
-export function createValidateVaultTool(storage: IStorageAdapter): ToolEntry {
+export function createValidateVaultTool(ctx: ToolContext): ToolEntry {
   const handler = async (_input: unknown): Promise<ToolOutput> => {
     try {
       // Load all ACOs in batches to avoid memory issues with large vaults
@@ -30,7 +31,7 @@ export function createValidateVaultTool(storage: IStorageAdapter): ToolEntry {
       const invalid: ValidationError[] = [];
 
       while (true) {
-        const page = await storage.listACOs({ limit: PAGE_SIZE, offset });
+        const page = await ctx.storage.listACOs({ limit: PAGE_SIZE, offset, sortBy: "created", order: "asc" });
         if (page.length === 0) break;
 
         for (const aco of page) {
@@ -61,10 +62,7 @@ export function createValidateVaultTool(storage: IStorageAdapter): ToolEntry {
         },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

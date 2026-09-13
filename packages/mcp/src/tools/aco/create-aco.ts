@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { createACO } from "@atomic-content-protocol/core";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
+import { createACO, SOURCE_TYPES } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   title: z.string().optional().describe("Human-readable title for the ACO"),
@@ -11,16 +12,7 @@ const inputSchema = z.object({
     .default("")
     .describe("Markdown body content"),
   source_type: z
-    .enum([
-      "link",
-      "uploaded_md",
-      "manual",
-      "converted_pdf",
-      "converted_doc",
-      "converted_video",
-      "selected_text",
-      "llm_capture",
-    ])
+    .enum(SOURCE_TYPES)
     .optional()
     .default("manual")
     .describe("How the ACO was created"),
@@ -59,7 +51,7 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
 };
 
-export function createCreateACOTool(storage: IStorageAdapter): ToolEntry {
+export function createCreateACOTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const validated = inputSchema.parse(input);
@@ -78,7 +70,7 @@ export function createCreateACOTool(storage: IStorageAdapter): ToolEntry {
         frontmatter: extraFrontmatter,
       });
 
-      await storage.putACO(aco);
+      await ctx.storage.putACO(aco);
 
       return {
         success: true,
@@ -88,10 +80,7 @@ export function createCreateACOTool(storage: IStorageAdapter): ToolEntry {
         },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

@@ -1,110 +1,53 @@
 import { z } from "zod";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
+import { SOURCE_TYPES } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
+import { sortACOs } from "../../utils/storage.js";
 
 const inputSchema = z.object({
-  limit: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .default(50)
-    .describe("Maximum number of ACOs to return"),
-  offset: z
-    .number()
-    .int()
-    .nonnegative()
-    .optional()
-    .default(0)
-    .describe("Number of ACOs to skip (for pagination)"),
-  sortBy: z
-    .enum(["created", "modified", "title"])
-    .optional()
-    .default("created")
-    .describe("Field to sort by"),
-  order: z
-    .enum(["asc", "desc"])
-    .optional()
-    .default("desc")
-    .describe("Sort direction"),
-  tags: z
-    .array(z.string())
-    .optional()
-    .describe("Filter: return ACOs with at least one of these tags"),
-  status: z
-    .array(z.enum(["draft", "final", "archived"]))
-    .optional()
-    .describe("Filter: return ACOs with one of these statuses"),
-  source_type: z
-    .array(
-      z.enum([
-        "link",
-        "uploaded_md",
-        "manual",
-        "converted_pdf",
-        "converted_doc",
-        "converted_video",
-        "selected_text",
-        "llm_capture",
-      ])
-    )
-    .optional()
-    .describe("Filter: return ACOs with one of these source types"),
-  visibility: z
-    .array(z.enum(["public", "private", "restricted"]))
-    .optional()
-    .describe("Filter: return ACOs with one of these visibility values"),
+  limit: z.number().int().positive().max(500).optional().default(50).describe("Maximum number of ACOs to return"),
+  offset: z.number().int().nonnegative().optional().default(0).describe("Number of ACOs to skip (for pagination)"),
+  sortBy: z.enum(["created", "modified", "title"]).optional().default("created").describe("Field to sort by"),
+  order: z.enum(["asc", "desc"]).optional().default("desc").describe("Sort direction"),
+  tags: z.array(z.string()).optional().describe("Filter: return ACOs with at least one of these tags"),
+  status: z.array(z.enum(["draft", "final", "archived"])).optional().describe("Filter: return ACOs with one of these statuses"),
+  source_type: z.array(z.enum(SOURCE_TYPES)).optional().describe("Filter: return ACOs with one of these source types"),
+  visibility: z.array(z.enum(["public", "private", "restricted"])).optional().describe("Filter: return ACOs with one of these visibility values"),
 });
 
 const definition: ACPToolDefinition = {
   name: "list_acos",
   description:
-    "List ACOs in the vault with optional filtering by tags, status, source_type, and visibility. Returns frontmatter only (no body) for efficiency.",
+    "List ACOs in the vault with optional filtering by tags, status, source_type, and visibility. Sorting and pagination apply after filtering. Returns frontmatter only (no body) for efficiency.",
   inputSchema,
   annotations: { readOnlyHint: true },
 };
 
-export function createListACOsTool(storage: IStorageAdapter): ToolEntry {
+export function createListACOsTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
-      const validated = inputSchema.parse(input);
-      const { limit, offset, sortBy, order, tags, status, source_type, visibility } = validated;
+      const { limit, offset, sortBy, order, tags, status, source_type, visibility } = inputSchema.parse(input);
+      const hasFilters = Boolean(tags || status || source_type || visibility);
 
-      // Build query if any filters are set
-      const hasFilters = tags || status || source_type || visibility;
-
-      let acos;
+      let total: number;
+      let page;
       if (hasFilters) {
-        acos = await storage.queryACOs({
-          tags,
-          status,
-          source_type,
-          visibility,
-        });
-
-        // Apply pagination manually after filtering
-        acos = acos.slice(offset, offset + limit);
+        const filtered = sortACOs(await ctx.storage.queryACOs({ tags, status, source_type, visibility }), sortBy, order);
+        total = filtered.length;
+        page = filtered.slice(offset, offset + limit);
       } else {
-        acos = await storage.listACOs({ limit, offset, sortBy, order });
+        page = await ctx.storage.listACOs({ limit, offset, sortBy, order });
+        total = page.length < limit && offset === 0 ? page.length : -1;
       }
 
-      // Return frontmatter only — bodies are too large for a list response
-      const items = acos.map((aco) => aco.frontmatter);
-
+      const items = page.map((aco) => aco.frontmatter);
       return {
         success: true,
-        data: {
-          items,
-          count: items.length,
-          offset,
-          limit,
-        },
+        data: { items, count: items.length, offset, limit, ...(total >= 0 ? { total } : {}) },
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 

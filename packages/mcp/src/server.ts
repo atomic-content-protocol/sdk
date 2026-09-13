@@ -3,21 +3,21 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
+  McpError,
+  ErrorCode,
   type CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 import type { IStorageAdapter } from "@atomic-content-protocol/core";
-import type { ProviderConfig } from "@atomic-content-protocol/enrichment";
+import { ProviderRouter } from "@atomic-content-protocol/enrichment";
+import type { IEnrichmentProvider, ProviderConfig, RouterOptions } from "@atomic-content-protocol/enrichment";
 
-import {
-  registerTool,
-  getAllTools,
-  getToolHandler,
-  toolExists,
-  clearRegistry,
-} from "./tool-registry.js";
+import { ToolRegistry } from "./tool-registry.js";
 import { adaptToolForMCP } from "./tool-adapter.js";
+import { EnrichmentNotConfiguredError, type ToolContext } from "./context.js";
+import { PKG, TOOL } from "./tool-id.js";
+import type { ToolEntry, ToolOutput } from "./types/tool.js";
 
 // Tool factories
 import { createCreateACOTool } from "./tools/aco/create-aco.js";
@@ -41,10 +41,15 @@ import { createExportACOTool } from "./tools/vault/export-aco.js";
 // ---------------------------------------------------------------------------
 
 export interface EnrichmentConfig {
-  /** Provider connection details (Anthropic, OpenAI, Ollama). */
-  providers: ProviderConfig;
-  /** Default pipelines to run when no pipelines are specified. Not currently used by server — per-tool default. */
-  defaultPipelines?: string[];
+  /** Provider connection details (Anthropic, OpenAI, Ollama). Builds a `ProviderRouter`. */
+  providers?: ProviderConfig;
+  /** Router tuning (timeouts, breaker thresholds, callbacks). */
+  routerOptions?: RouterOptions;
+  /**
+   * Bring your own provider instead of `providers` — any `IEnrichmentProvider`
+   * (a custom router, a mock in tests, …). Takes precedence over `providers`.
+   */
+  provider?: IEnrichmentProvider;
 }
 
 export interface ACPMCPServerConfig {
@@ -52,7 +57,7 @@ export interface ACPMCPServerConfig {
   storage: IStorageAdapter;
   /** Enrichment configuration. Optional — enrichment tools return an error if not configured. */
   enrichment?: EnrichmentConfig;
-  /** MCP server metadata. */
+  /** MCP server metadata. Defaults to this package's name and version. */
   server?: {
     name?: string;
     version?: string;
@@ -63,28 +68,7 @@ export interface ACPMCPServerConfig {
 // ACPMCPServer
 // ---------------------------------------------------------------------------
 
-/**
- * ACPMCPServer — wraps the MCP SDK Server and registers all ACP tools.
- *
- * Usage:
- *   const server = new ACPMCPServer({ storage, enrichment });
- *   await server.start(); // blocks, communicates over stdio
- */
-export class ACPMCPServer {
-  private readonly mcpServer: Server;
-  private readonly config: ACPMCPServerConfig;
-
-  constructor(config: ACPMCPServerConfig) {
-    this.config = config;
-
-    this.mcpServer = new Server(
-      {
-        name: config.server?.name ?? "acp-server",
-        version: config.server?.version ?? "0.1.0",
-      },
-      {
-        capabilities: { tools: {} },
-        instructions: `ACP MCP server — create, read, update, delete, enrich, and search Atomic Content Objects (ACOs).
+const INSTRUCTIONS = `ACP MCP server — create, read, update, delete, enrich, and search Atomic Content Objects (ACOs).
 
 Data model:
 - ACO: Atomic Content Object — the fundamental unit. Has YAML frontmatter + Markdown body.
@@ -94,75 +78,104 @@ Data model:
 Common workflows:
 1. Create & enrich: create_aco → enrich_aco → read_aco
 2. Browse: list_acos → read_aco
-3. Search: search_acos (text search), detect_relationships (tag/entity overlap)
-4. Batch enrich: enrich_batch (by id list or container)
-5. Validate: validate_vault
-6. Export: export_aco (markdown or JSON)
+3. Search: search_acos (full text), find_similar (vectors or overlap)
+4. Relationships: detect_relationships → review → update_aco { relationships: [...] }
+5. Batch enrich: enrich_batch (by id list or container). Add the 'embed' pipeline to enable vector search.
+6. Validate: validate_vault
+7. Export: export_aco (markdown or JSON)
 
-All IDs are UUID v7 strings. Tags and entities are the primary signals for relationship detection.`,
-      }
+All IDs are UUID v7 strings. Enrichment never overwrites a field that already has a value unless force=true.`;
+
+/**
+ * ACPMCPServer — wraps the MCP SDK Server and registers all ACP tools.
+ *
+ * Usage:
+ *   const server = new ACPMCPServer({ storage, enrichment });
+ *   await server.start(); // blocks, communicates over stdio
+ *
+ * Each instance owns its tool registry and (lazily) one shared enrichment
+ * provider, so several servers can coexist in one process.
+ */
+export class ACPMCPServer {
+  private readonly mcpServer: Server;
+  private readonly registry = new ToolRegistry();
+  private readonly context: ToolContext;
+  private provider: IEnrichmentProvider | null = null;
+
+  constructor(private readonly config: ACPMCPServerConfig) {
+    this.mcpServer = new Server(
+      {
+        name: config.server?.name ?? PKG.name,
+        version: config.server?.version ?? PKG.version,
+      },
+      { capabilities: { tools: {} }, instructions: INSTRUCTIONS }
     );
+
+    const enrichment = config.enrichment;
+    const hasEnrichment = Boolean(enrichment?.provider || enrichment?.providers);
+
+    this.context = {
+      storage: config.storage,
+      hasEnrichment,
+      toolId: TOOL,
+      getProvider: () => {
+        if (!hasEnrichment || !enrichment) throw new EnrichmentNotConfiguredError("This tool");
+        if (!this.provider) {
+          this.provider =
+            enrichment.provider ?? ProviderRouter.fromConfig(enrichment.providers as ProviderConfig, enrichment.routerOptions);
+        }
+        return this.provider;
+      },
+    };
 
     this.registerTools();
     this.bindHandlers();
   }
 
   // ---------------------------------------------------------------------------
-  // Private: register all tools into the module-level registry
+  // Private: register all tools into this instance's registry
   // ---------------------------------------------------------------------------
 
   private registerTools(): void {
-    // Clear any previously registered tools (e.g. in tests)
-    clearRegistry();
-
-    const { storage, enrichment } = this.config;
+    const ctx = this.context;
+    const reg = (entry: ToolEntry) => this.registry.register(entry.definition.name, entry);
 
     // ACO tools
-    registerTool("create_aco", createCreateACOTool(storage));
-    registerTool("read_aco", createReadACOTool(storage));
-    registerTool("update_aco", createUpdateACOTool(storage));
-    registerTool("delete_aco", createDeleteACOTool(storage));
-    registerTool("list_acos", createListACOsTool(storage));
+    reg(createCreateACOTool(ctx));
+    reg(createReadACOTool(ctx));
+    reg(createUpdateACOTool(ctx));
+    reg(createDeleteACOTool(ctx));
+    reg(createListACOsTool(ctx));
 
     // Container tools
-    registerTool("create_container", createCreateContainerTool(storage));
-    registerTool("read_container", createReadContainerTool(storage));
-    registerTool("list_containers", createListContainersTool(storage));
+    reg(createCreateContainerTool(ctx));
+    reg(createReadContainerTool(ctx));
+    reg(createListContainersTool(ctx));
 
-    // Enrichment tools (require enrichment config)
-    if (enrichment) {
-      registerTool("enrich_aco", createEnrichACOTool(storage, enrichment));
-      registerTool("enrich_batch", createEnrichBatchTool(storage, enrichment));
+    // Enrichment tools
+    if (ctx.hasEnrichment) {
+      reg(createEnrichACOTool(ctx));
+      reg(createEnrichBatchTool(ctx));
     } else {
-      registerTool("enrich_aco", this.makeUnconfiguredTool("enrich_aco", "enrich_aco requires enrichment providers to be configured in ACPMCPServerConfig."));
-      registerTool("enrich_batch", this.makeUnconfiguredTool("enrich_batch", "enrich_batch requires enrichment providers to be configured in ACPMCPServerConfig."));
+      reg(this.unconfiguredTool("enrich_aco"));
+      reg(this.unconfiguredTool("enrich_batch"));
     }
-
-    registerTool(
-      "detect_relationships",
-      createDetectRelationshipsTool(storage, enrichment)
-    );
+    reg(createDetectRelationshipsTool(ctx));
 
     // Search tools
-    registerTool("search_acos", createSearchACOsTool(storage));
-    registerTool("find_similar", createFindSimilarTool(storage, enrichment));
+    reg(createSearchACOsTool(ctx));
+    reg(createFindSimilarTool(ctx));
 
     // Vault tools
-    registerTool("validate_vault", createValidateVaultTool(storage));
-    registerTool("export_aco", createExportACOTool(storage));
+    reg(createValidateVaultTool(ctx));
+    reg(createExportACOTool(ctx));
   }
 
-  /**
-   * Create a stub tool entry that always returns a configuration error.
-   * Used for tools that require enrichment when enrichment is not configured.
-   */
-  private makeUnconfiguredTool(name: string, message: string) {
+  /** Stub for tools that need enrichment when none is configured. */
+  private unconfiguredTool(name: string): ToolEntry {
+    const message = new EnrichmentNotConfiguredError(name).message;
     return {
-      definition: {
-        name,
-        description: message,
-        inputSchema: z.object({}),
-      },
+      definition: { name, description: message, inputSchema: z.object({}).passthrough() },
       handler: async () => ({ success: false as const, error: message }),
     };
   }
@@ -172,43 +185,42 @@ All IDs are UUID v7 strings. Tags and entities are the primary signals for relat
   // ---------------------------------------------------------------------------
 
   private bindHandlers(): void {
-    this.mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-      return { tools: getAllTools().map(adaptToolForMCP) };
+    this.mcpServer.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: this.listTools() }));
+
+    this.mcpServer.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
+      const result = await this.callTool(request.params.name, request.params.arguments ?? {});
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        ...(result.success === false && { isError: true }),
+      };
     });
-
-    this.mcpServer.setRequestHandler(
-      CallToolRequestSchema,
-      async (request: CallToolRequest) => {
-        const toolName = request.params.name;
-        const toolInput = request.params.arguments ?? {};
-
-        if (!toolExists(toolName)) {
-          throw new Error(`Unknown tool: ${toolName}`);
-        }
-
-        const handler = getToolHandler(toolName);
-        if (!handler) {
-          throw new Error(`No handler registered for tool: ${toolName}`);
-        }
-
-        const result = await handler(toolInput);
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(result, null, 2),
-            },
-          ],
-          ...(result.success === false && { isError: true }),
-        };
-      }
-    );
   }
 
   // ---------------------------------------------------------------------------
-  // Public: start the server
+  // Public API
   // ---------------------------------------------------------------------------
+
+  /** Tool definitions in MCP wire shape. */
+  listTools() {
+    return this.registry.definitions().map(adaptToolForMCP);
+  }
+
+  /** Registered tool names, in registration order. */
+  get toolNames(): string[] {
+    return this.registry.names();
+  }
+
+  /**
+   * Invoke a tool directly (no transport). Throws `McpError(MethodNotFound)`
+   * for unknown tools; tool-level failures come back as `{ success: false }`.
+   */
+  async callTool(name: string, input: unknown): Promise<ToolOutput> {
+    const handler = this.registry.handler(name);
+    if (!handler) {
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+    }
+    return handler(input);
+  }
 
   /**
    * Connect to the stdio transport and begin serving requests.
@@ -217,15 +229,17 @@ All IDs are UUID v7 strings. Tags and entities are the primary signals for relat
    * stdout must remain clean for JSON-RPC — the MCP SDK writes there directly.
    */
   async start(): Promise<void> {
-    // Redirect console to stderr so library noise doesn't corrupt the JSON-RPC stream
-    console.log = (...args: unknown[]) =>
-      process.stderr.write(args.map(String).join(" ") + "\n");
-    console.info = (...args: unknown[]) =>
-      process.stderr.write(args.map(String).join(" ") + "\n");
-    console.warn = (...args: unknown[]) =>
-      process.stderr.write(args.map(String).join(" ") + "\n");
+    const toStderr = (...args: unknown[]) => process.stderr.write(args.map(String).join(" ") + "\n");
+    console.log = toStderr;
+    console.info = toStderr;
+    console.warn = toStderr;
 
     const transport = new StdioServerTransport();
     await this.mcpServer.connect(transport);
+  }
+
+  /** Close the underlying MCP server / transport. */
+  async close(): Promise<void> {
+    await this.mcpServer.close();
   }
 }

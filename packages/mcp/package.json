@@ -1,7 +1,7 @@
 {
   "name": "@atomic-content-protocol/mcp",
   "version": "0.1.1",
-  "description": "MCP server for the Atomic Content Protocol — exposes ACO tools to AI agents",
+  "description": "MCP server for the Atomic Content Protocol \u2014 exposes ACO tools to AI agents",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo 'No tests yet'",
+    "test": "vitest run",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
@@ -36,7 +36,9 @@
     "vitest": "^3.1.0"
   },
   "license": "Apache-2.0",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { generateId } from "@atomic-content-protocol/core";
-import type { IStorageAdapter } from "@atomic-content-protocol/core";
 import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import type { ToolContext } from "../../context.js";
+import { toErrorMessage } from "../../context.js";
 
 const inputSchema = z.object({
   title: z.string().min(1).describe("Title of the container"),
@@ -33,7 +34,7 @@ const definition: ACPToolDefinition = {
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
 };
 
-export function createCreateContainerTool(storage: IStorageAdapter): ToolEntry {
+export function createCreateContainerTool(ctx: ToolContext): ToolEntry {
   const handler = async (input: unknown): Promise<ToolOutput> => {
     try {
       const validated = inputSchema.parse(input);
@@ -56,14 +57,11 @@ export function createCreateContainerTool(storage: IStorageAdapter): ToolEntry {
       if (validated.visibility) frontmatter["visibility"] = validated.visibility;
 
       const container = { frontmatter, body: "" };
-      await storage.putContainer(container);
+      await ctx.storage.putContainer(container);
 
       return { success: true, data: frontmatter };
     } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      };
+      return { success: false, error: toErrorMessage(err) };
     }
   };
 
