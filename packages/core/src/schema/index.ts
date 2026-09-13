@@ -2,6 +2,9 @@
 // ACP Core Schema — public exports
 // ---------------------------------------------------------------------------
 
+// Shared fragments
+export { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
+
 // Provenance
 export {
   ProvenanceRecordSchema,

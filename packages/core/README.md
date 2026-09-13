@@ -13,17 +13,26 @@ npm install @atomic-content-protocol/core
 ## Quick start
 
 ```typescript
-import { createACO, validateACO, parseACO, serializeACO } from "@atomic-content-protocol/core";
+import { createACO, validateACO, parseACO, serializeACO, FilesystemAdapter } from "@atomic-content-protocol/core";
 
-const aco = createACO({
+const aco = await createACO({
   title: "My First ACO",
   author: { id: "you@example.com", name: "Your Name" },
   body: "# Hello, world\n\nThe smallest valid ACO.",
 });
 
-const markdown = serializeACO(aco);
-const parsed = parseACO(markdown);
+const { valid, errors } = validateACO(aco.frontmatter);
+
+const markdown = serializeACO(aco.frontmatter, aco.body); // "---\n…\n---\n# Hello, world…\n"
+const parsed = parseACO(markdown);                          // { frontmatter, body, raw }
+
+const vault = new FilesystemAdapter("./vault");
+await vault.putACO(aco);
 ```
+
+## Runtime support
+
+Node.js ≥ 20. The package entry point uses `node:fs`, `node:crypto` and `node:dns` (filesystem vault, content hashing, SSRF-safe URL fetching), so it is not browser-bundleable as a whole. The Zod schemas in `schema/` have no Node dependencies and can be deep-imported by browser code once subpath exports land (tracked for 0.2).
 
 ## What's in the package
 

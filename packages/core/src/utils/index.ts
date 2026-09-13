@@ -11,7 +11,13 @@ export {
   FetchError,
   type FetchStatus,
 } from "./errors.js";
-export { fetchBodyForUrl, type FetchBodyOptions } from "./fetch-url.js";
+export {
+  fetchBodyForUrl,
+  fetchPageForUrl,
+  isBlockedAddress,
+  type FetchBodyOptions,
+  type FetchedPage,
+} from "./fetch-url.js";
 export {
   SOURCE_TYPE_MODALITY,
   MODALITY_ENRICHMENT,

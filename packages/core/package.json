@@ -4,6 +4,7 @@
   "description": "Core schema, validation, and file I/O for the Atomic Content Protocol",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -23,7 +24,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -37,7 +38,6 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.6.0",
-    "@types/uuid": "^10.0.0",
     "typescript": "^5.8.0",
     "vitest": "^3.1.0"
   },

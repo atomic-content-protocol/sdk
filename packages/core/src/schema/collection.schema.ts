@@ -1,30 +1,9 @@
 import { z } from "zod";
+import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
 import { RelationshipEdgeSchema } from "./edge.schema.js";
 import { ProvenanceMapSchema } from "./provenance.schema.js";
 
-/**
- * AuthorSchema (local) — mirrors ACO author, kept local to avoid circular imports.
- * See §3.4. Additional subfields are permitted (passthrough).
- */
-const AuthorSchema = z
-  .object({
-    id: z.string().min(1),
-    name: z.string().min(1),
-  })
-  .passthrough();
 
-/**
- * TokenCountsSchema (local) — per-tokenizer token counts (§3.6).
- * On a Collection, this is the aggregate sum across all contained Containers.
- */
-const TokenCountsSchema = z
-  .object({
-    cl100k: z.number().int().nonnegative().optional(),
-    claude: z.number().int().nonnegative().optional(),
-    llama3: z.number().int().nonnegative().optional(),
-    approximate: z.number().int().nonnegative().optional(),
-  })
-  .passthrough();
 
 // ---------------------------------------------------------------------------
 // CollectionFrontmatterSchema

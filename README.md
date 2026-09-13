@@ -139,7 +139,7 @@ import {
   EntityPipeline,         // Named entity extraction
   ClassificationPipeline, // Content type classification
   EmbedPipeline,          // Embedding generation
-  BatchEnricher,          // Enrich many ACOs with concurrency control
+  BatchEnricher,          // Enrich many ACOs (serial by default, optional concurrency)
 } from '@atomic-content-protocol/enrichment';
 ```
 
@@ -316,7 +316,7 @@ Three layers. Each works independently.
 └─────────────────────────────────────────┘
 ```
 
-**`@atomic-content-protocol/core`** is the protocol layer. It defines the schema (via Zod), handles parse/serialize, and provides a storage adapter interface. No AI dependencies. Use it anywhere — browsers, edge functions, CI pipelines.
+**`@atomic-content-protocol/core`** is the protocol layer. It defines the schema (via Zod), handles parse/serialize, and provides a storage adapter interface plus a filesystem vault. No AI dependencies; requires Node.js ≥ 20 (it uses `node:fs`, `node:crypto` and `node:dns`).
 
 **`@atomic-content-protocol/enrichment`** adds LLM-powered pipelines. It depends on `@atomic-content-protocol/core` but not on `@atomic-content-protocol/mcp`. The `ProviderRouter` handles provider selection, fallback ordering, and circuit-breaking across Anthropic, OpenAI, and Ollama.
 
