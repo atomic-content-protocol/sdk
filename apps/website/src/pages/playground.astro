@@ -1106,14 +1106,13 @@ provenance:
     }
 
     // ===================================================================
-    // Fetch URL content via public CORS proxy
+    // Fetch URL content via our same-origin proxy (/api/fetch-url).
+    // Third-party CORS proxies were removed: they received every URL the
+    // user typed plus the fetched page content.
     // ===================================================================
     async function fetchUrlContent(url) {
-      // Try our own proxy first (Vercel Edge Function), then public fallbacks
       var proxies = [
         { prefix: '/api/fetch-url?url=', encode: true },
-        { prefix: 'https://api.allorigins.win/raw?url=', encode: true },
-        { prefix: 'https://corsproxy.io/?url=', encode: true },
       ];
 
       var html = null;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { fetchBodyForUrl, isBlockedAddress } from "./fetch-url.js";
+import { fetchBodyForUrl, fetchPageForUrl, isBlockedAddress } from "./fetch-url.js";
 import { ValidationError, FetchError } from "./errors.js";
 import { createACO } from "../index.js";
 
@@ -686,5 +686,39 @@ describe("isBlockedAddress", () => {
 
   it("treats non-IP strings as blocked", () => {
     expect(isBlockedAddress("not-an-ip")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchPageForUrl — metadata
+// ---------------------------------------------------------------------------
+
+describe("fetchPageForUrl", () => {
+  it("returns text plus og:title, og:image and description", async () => {
+    mockFetch(`<html><head>
+      <title>Fallback &amp; Title</title>
+      <meta property="og:title" content="OG Title" />
+      <meta property="og:image" content="https://cdn.example.com/img.png" />
+      <meta name="description" content="A &quot;desc&quot;" />
+    </head><body><article><p>Hello there</p></article></body></html>`);
+    const page = await fetchPageForUrl("https://example.com/a");
+    expect(page.text).toBe("Hello there");
+    expect(page.title).toBe("OG Title");
+    expect(page.ogImage).toBe("https://cdn.example.com/img.png");
+    expect(page.description).toBe('A "desc"');
+    expect(page.url).toBe("https://example.com/a");
+  });
+
+  it("falls back to <title> and omits absent metadata", async () => {
+    mockFetch("<html><head><title>Only &amp; Title</title></head><body><p>x y</p></body></html>");
+    const page = await fetchPageForUrl("https://example.com/b");
+    expect(page.title).toBe("Only & Title");
+    expect(page).not.toHaveProperty("ogImage");
+    expect(page).not.toHaveProperty("description");
+  });
+
+  it("fetchBodyForUrl returns the same text", async () => {
+    mockFetch("<html><body><main>same text</main></body></html>");
+    expect(await fetchBodyForUrl("https://example.com/c")).toBe("same text");
   });
 });

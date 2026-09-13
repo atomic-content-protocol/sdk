@@ -1,34 +1,45 @@
-import { PostHog } from 'posthog-node';
-import { createHash } from 'node:crypto';
+import { PostHog } from "posthog-node";
+import { createHash } from "node:crypto";
 
 let client: PostHog | null = null;
 
-export function initPostHog() {
-  const apiKey = process.env.POSTHOG_API_KEY;
+export function initPostHog(apiKey: string | undefined, host: string): void {
   if (!apiKey) {
-    console.log('PostHog: not configured (no POSTHOG_API_KEY)');
+    console.log("PostHog: not configured (no POSTHOG_API_KEY)");
     return;
   }
-  client = new PostHog(apiKey, {
-    host: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
-    flushAt: 10,
-    flushInterval: 30000,
-  });
-  console.log('PostHog: initialized');
+  client = new PostHog(apiKey, { host, flushAt: 10, flushInterval: 30_000 });
+  console.log("PostHog: initialized");
 }
 
-export function shutdownPostHog() {
-  if (client) {
-    client.shutdown();
+/** Flush and close. Awaited during graceful shutdown so buffered events are not lost. */
+export async function shutdownPostHog(): Promise<void> {
+  if (!client) return;
+  const c = client;
+  client = null;
+  try {
+    await c.shutdown();
+  } catch (err) {
+    console.error("PostHog: shutdown failed", err);
   }
 }
 
-function hashIp(ip: string): string {
-  return createHash('sha256').update(ip).digest('hex').slice(0, 16);
+/** Clients are identified by a salted hash of their key/IP — never the raw value. */
+function hashClient(id: string): string {
+  return createHash("sha256").update(`acp-mcp:${id}`).digest("hex").slice(0, 16);
+}
+
+function safeHostname(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return undefined;
+  }
 }
 
 export function trackEnrichment(params: {
-  ip: string;
+  clientId: string;
   tool: string;
   depth: string;
   contentTokens: number;
@@ -39,12 +50,11 @@ export function trackEnrichment(params: {
   latencyMs: number;
   batchSize: number;
   sourceUrl?: string;
-}) {
+}): void {
   if (!client) return;
-  const distinctId = hashIp(params.ip);
   client.capture({
-    distinctId,
-    event: 'enrichment_completed',
+    distinctId: hashClient(params.clientId),
+    event: "enrichment_completed",
     properties: {
       tool: params.tool,
       depth: params.depth,
@@ -55,39 +65,43 @@ export function trackEnrichment(params: {
       rate_limit_percent_used: params.rateLimitPercentUsed,
       latency_ms: params.latencyMs,
       batch_size: params.batchSize,
-      source_domain: params.sourceUrl ? new URL(params.sourceUrl).hostname : undefined,
+      source_domain: safeHostname(params.sourceUrl),
     },
   });
 }
 
 export function trackEnrichmentFailed(params: {
-  ip: string;
+  clientId: string;
   tool: string;
   errorType: string;
   errorMessage: string;
-}) {
+}): void {
   if (!client) return;
   client.capture({
-    distinctId: hashIp(params.ip),
-    event: 'enrichment_failed',
+    distinctId: hashClient(params.clientId),
+    event: "enrichment_failed",
     properties: {
       tool: params.tool,
       error_type: params.errorType,
-      error_message: params.errorMessage,
+      error_message: params.errorMessage.slice(0, 500),
     },
   });
 }
 
-export function trackRateLimitHit(params: {
-  ip: string;
-  requestsInWindow: number;
-}) {
+export function trackRateLimitHit(params: { clientId: string; requestsInWindow: number }): void {
   if (!client) return;
   client.capture({
-    distinctId: hashIp(params.ip),
-    event: 'rate_limit_hit',
-    properties: {
-      requests_in_window: params.requestsInWindow,
-    },
+    distinctId: hashClient(params.clientId),
+    event: "rate_limit_hit",
+    properties: { requests_in_window: params.requestsInWindow },
+  });
+}
+
+export function trackBudgetExceeded(params: { clientId: string; spentToday: number; cap: number }): void {
+  if (!client) return;
+  client.capture({
+    distinctId: hashClient(params.clientId),
+    event: "budget_exceeded",
+    properties: { spent_today_usd: params.spentToday, cap_usd: params.cap },
   });
 }

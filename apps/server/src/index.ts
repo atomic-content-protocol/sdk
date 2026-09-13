@@ -1,43 +1,30 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import { mcpHandler } from './mcp-handler.js';
-import { healthHandler } from './health.js';
-import { initPostHog, shutdownPostHog } from './analytics.js';
+import "dotenv/config";
+import { loadConfig } from "./config.js";
+import { createApp } from "./app.js";
+import { initPostHog, shutdownPostHog } from "./analytics.js";
 
-// Initialize PostHog analytics
-initPostHog();
+const config = loadConfig();
+initPostHog(config.posthogApiKey, config.posthogHost);
 
-const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const app = createApp(config);
+const server = app.listen(config.port, () => {
+  console.log(`ACP MCP Server v${config.version} listening on port ${config.port}`);
+  console.log(`MCP endpoint: POST /mcp  |  Health: GET /health`);
+  console.log(`Quality tier: ${config.quality}  |  Rate limit: ${config.rateLimitPerHour} units/hour/client`);
+  console.log(`Auth: ${config.apiKeys.length > 0 ? `bearer (${config.apiKeys.length} keys)` : "none"}  |  Daily cap: ${Number.isFinite(config.dailyCostCapUsd) ? `$${config.dailyCostCapUsd}` : "off"}`);
+});
 
-// Security
-app.use(helmet());
-app.use(cors());
-
-// Health check (no auth)
-app.get('/health', healthHandler);
-
-// MCP endpoint
-app.post('/mcp', express.json(), mcpHandler);
-app.get('/mcp', (_req, res) => res.status(405).json({ error: 'SSE not supported in stateless mode' }));
-app.delete('/mcp', (_req, res) => res.status(200).json({ ok: true }));
-
-// Graceful shutdown
-function shutdown(signal: string) {
+let shuttingDown = false;
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
   console.log(`\n${signal} received. Shutting down gracefully...`);
-  shutdownPostHog();
+  const forceExit = setTimeout(() => process.exit(1), 10_000).unref();
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  await shutdownPostHog();
+  clearTimeout(forceExit);
   process.exit(0);
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-
-// Start
-app.listen(PORT, () => {
-  console.log(`ACP MCP Server listening on port ${PORT}`);
-  console.log(`MCP endpoint: POST /mcp`);
-  console.log(`Health: GET /health`);
-  console.log(`Rate limit: ${process.env.RATE_LIMIT_PER_HOUR || 50}/hour`);
-});
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));
