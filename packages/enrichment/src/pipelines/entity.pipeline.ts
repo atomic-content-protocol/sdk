@@ -1,9 +1,9 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type { EnrichmentOptions } from "./pipeline.interface.js";
-import { SingleFieldPipeline, extractJsonArray, type GeneratedField } from "./single-field.pipeline.js";
 import { buildEntityPrompt } from "../utils/prompts.js";
 import { completeWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { extractJsonArray, type GeneratedField, SingleFieldPipeline } from "./single-field.pipeline.js";
 
 export const ENTITY_TYPES = ["person", "organization", "technology", "concept", "location", "event"] as const;
 
@@ -21,9 +21,7 @@ function toKeyEntity(item: unknown): KeyEntity | null {
   const name = typeof obj["name"] === "string" ? obj["name"].trim().slice(0, 200) : "";
   if (!name) return null;
   const rawType = typeof obj["type"] === "string" ? obj["type"].trim().toLowerCase() : "";
-  const type = (ENTITY_TYPES as readonly string[]).includes(rawType)
-    ? (rawType as KeyEntity["type"])
-    : "concept";
+  const type = (ENTITY_TYPES as readonly string[]).includes(rawType) ? (rawType as KeyEntity["type"]) : "concept";
   const rawConf = typeof obj["confidence"] === "number" && Number.isFinite(obj["confidence"]) ? obj["confidence"] : 0.5;
   return { type, name, confidence: Math.min(1, Math.max(0, rawConf)) };
 }

@@ -101,10 +101,10 @@ await storage.putACO(enriched);
 
 | Package | Version | Description |
 |---|---|---|
-| [`@atomic-content-protocol/core`](packages/core) | 0.1.0 | Schema validation, parse/serialize, storage adapters |
-| [`@atomic-content-protocol/enrichment`](packages/enrichment) | 0.1.0 | LLM-powered enrichment pipelines |
-| [`@atomic-content-protocol/mcp`](packages/mcp) | 0.1.0 | MCP server for AI agent access |
-| [`@atomic-content-protocol/cli`](apps/cli) | 0.1.0 | Command-line tool |
+| [`@atomic-content-protocol/core`](packages/core) | 0.2.0 | Schema validation, parse/serialize, storage adapters |
+| [`@atomic-content-protocol/enrichment`](packages/enrichment) | 0.2.0 | LLM-powered enrichment pipelines |
+| [`@atomic-content-protocol/mcp`](packages/mcp) | 0.2.0 | MCP server for AI agent access |
+| [`@atomic-content-protocol/cli`](apps/cli) | 0.2.0 | Command-line tool |
 
 ### `@atomic-content-protocol/core`
 
@@ -429,7 +429,7 @@ apps/
   website/     # atomiccontentprotocol.org
 examples/
   demo-enrich-url.ts
-spec/          # Protocol specification
+spec/          # Pointer to the published specification
 ```
 
 ---
@@ -445,4 +445,4 @@ spec/          # Protocol specification
 - Website: [atomiccontentprotocol.org](https://atomiccontentprotocol.org)
 - Playground: [atomiccontentprotocol.org/playground](https://atomiccontentprotocol.org/playground)
 - GitHub: [github.com/atomic-content-protocol/sdk](https://github.com/atomic-content-protocol/sdk)
-- Spec: [`/spec`](spec/)
+- Spec: [atomiccontentprotocol.org/spec/aco](https://atomiccontentprotocol.org/spec/aco/) (sources in [`apps/website/src/content/docs/spec`](apps/website/src/content/docs/spec/))

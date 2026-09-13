@@ -47,9 +47,7 @@ function getEncoder(): Promise<Tiktoken | null> {
     // Variable specifier keeps bundlers from trying to resolve the optional
     // dependency at build time.
     const specifier = "tiktoken";
-    encoderPromise = import(specifier)
-      .then((mod: TiktokenModule) => mod.get_encoding("cl100k_base"))
-      .catch(() => null);
+    encoderPromise = import(specifier).then((mod: TiktokenModule) => mod.get_encoding("cl100k_base")).catch(() => null);
   }
   return encoderPromise;
 }

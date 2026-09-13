@@ -1,8 +1,9 @@
-import { z } from "zod";
+import type { ACO } from "@atomic-content-protocol/core";
 import { SOURCE_TYPES } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { z } from "zod";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import { sortACOs } from "../../utils/storage.js";
 
 const inputSchema = z.object({
@@ -11,9 +12,15 @@ const inputSchema = z.object({
   sortBy: z.enum(["created", "modified", "title"]).optional().default("created").describe("Field to sort by"),
   order: z.enum(["asc", "desc"]).optional().default("desc").describe("Sort direction"),
   tags: z.array(z.string()).optional().describe("Filter: return ACOs with at least one of these tags"),
-  status: z.array(z.enum(["draft", "final", "archived"])).optional().describe("Filter: return ACOs with one of these statuses"),
+  status: z
+    .array(z.enum(["draft", "final", "archived"]))
+    .optional()
+    .describe("Filter: return ACOs with one of these statuses"),
   source_type: z.array(z.enum(SOURCE_TYPES)).optional().describe("Filter: return ACOs with one of these source types"),
-  visibility: z.array(z.enum(["public", "private", "restricted"])).optional().describe("Filter: return ACOs with one of these visibility values"),
+  visibility: z
+    .array(z.enum(["public", "private", "restricted"]))
+    .optional()
+    .describe("Filter: return ACOs with one of these visibility values"),
 });
 
 const definition: ACPToolDefinition = {
@@ -31,9 +38,13 @@ export function createListACOsTool(ctx: ToolContext): ToolEntry {
       const hasFilters = Boolean(tags || status || source_type || visibility);
 
       let total: number;
-      let page;
+      let page: ACO[];
       if (hasFilters) {
-        const filtered = sortACOs(await ctx.storage.queryACOs({ tags, status, source_type, visibility }), sortBy, order);
+        const filtered = sortACOs(
+          await ctx.storage.queryACOs({ tags, status, source_type, visibility }),
+          sortBy,
+          order
+        );
         total = filtered.length;
         page = filtered.slice(offset, offset + limit);
       } else {

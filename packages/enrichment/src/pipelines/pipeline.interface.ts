@@ -58,9 +58,5 @@ export interface IEnrichmentPipeline {
   /** The frontmatter field this pipeline targets (e.g. "tags", "summary"). */
   readonly field: string;
 
-  enrich(
-    aco: ACO,
-    provider: IEnrichmentProvider,
-    options?: EnrichmentOptions
-  ): Promise<EnrichmentResult>;
+  enrich(aco: ACO, provider: IEnrichmentProvider, options?: EnrichmentOptions): Promise<EnrichmentResult>;
 }

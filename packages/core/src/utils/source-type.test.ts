@@ -1,10 +1,5 @@
-import { describe, it, expect } from "vitest";
-import {
-  SOURCE_TYPE_MODALITY,
-  MODALITY_ENRICHMENT,
-  MIN_BODY_LENGTH_FOR_ENRICHMENT,
-  getEnrichmentStrategy,
-} from "./source-type.js";
+import { describe, expect, it } from "vitest";
+import { getEnrichmentStrategy, MIN_BODY_LENGTH_FOR_ENRICHMENT, SOURCE_TYPE_MODALITY } from "./source-type.js";
 
 // A body long enough to trigger conditional enrichment
 const LONG_BODY = "a".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT);

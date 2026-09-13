@@ -14,7 +14,9 @@ import yaml from "js-yaml";
 export const yamlEngine = {
   parse: (str: string): Record<string, unknown> => {
     const value = yaml.load(str, { schema: yaml.JSON_SCHEMA });
-    return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+    return typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
   },
   stringify: (obj: object): string =>
     yaml.dump(obj as Record<string, unknown>, { schema: yaml.JSON_SCHEMA, lineWidth: -1 }),

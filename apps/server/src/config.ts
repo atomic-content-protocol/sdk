@@ -9,9 +9,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { QualityTier } from "@atomic-content-protocol/enrichment";
 
-const pkg = JSON.parse(
-  readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8")
-) as { name: string; version: string };
+const pkg = JSON.parse(readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8")) as {
+  name: string;
+  version: string;
+};
 
 function int(env: NodeJS.ProcessEnv, name: string, fallback: number): number {
   const raw = env[name];
@@ -83,7 +84,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     rateLimitPerHour: int(env, "RATE_LIMIT_PER_HOUR", 50),
     apiKeys: list(env, "MCP_API_KEYS"),
     corsOrigins: list(env, "CORS_ORIGINS"),
-    dailyCostCapUsd: capRaw === undefined || capRaw === "" ? Number.POSITIVE_INFINITY : num(env, "DAILY_COST_CAP_USD", 0),
+    dailyCostCapUsd:
+      capRaw === undefined || capRaw === "" ? Number.POSITIVE_INFINITY : num(env, "DAILY_COST_CAP_USD", 0),
     quality: qualityRaw as QualityTier,
     anthropicApiKey: env.ANTHROPIC_API_KEY || undefined,
     openaiApiKey: env.OPENAI_API_KEY || undefined,

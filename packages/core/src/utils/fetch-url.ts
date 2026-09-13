@@ -1,7 +1,7 @@
 import { promises as dns } from "node:dns";
 import { isIP } from "node:net";
 
-import { ValidationError, FetchError } from "./errors.js";
+import { FetchError, ValidationError } from "./errors.js";
 
 const DEFAULT_MAX_CHARS = 100_000;
 const MAX_RESPONSE_BYTES = 10_000_000; // 10 MB hard cap, enforced on the stream
@@ -9,12 +9,7 @@ const TIMEOUT_MS = 15_000;
 const DEFAULT_USER_AGENT = "ACP-SDK/0.1";
 
 // Hoisted to module scope — not recreated on every call.
-const BLOCKED_HOSTS = new Set([
-  "localhost",
-  "metadata.google.internal",
-  "metadata",
-  "instance-data",
-]);
+const BLOCKED_HOSTS = new Set(["localhost", "metadata.google.internal", "metadata", "instance-data"]);
 const BLOCKED_SUFFIXES = [".localhost", ".local", ".internal", ".localdomain", ".home.arpa"];
 const PERMANENT_NETWORK_CODES = new Set(["ENOTFOUND", "ECONNREFUSED", "EAI_AGAIN"]);
 
@@ -30,9 +25,7 @@ export interface FetchBodyOptions {
 
 /** Parse dotted-quad IPv4 into a 32-bit unsigned integer. */
 function ipv4ToInt(ip: string): number {
-  return ip
-    .split(".")
-    .reduce((acc, octet) => ((acc << 8) | Number.parseInt(octet, 10)) >>> 0, 0);
+  return ip.split(".").reduce((acc, octet) => ((acc << 8) | Number.parseInt(octet, 10)) >>> 0, 0);
 }
 
 /** [network, prefixLength] pairs that must never be fetched. */
@@ -79,9 +72,7 @@ function ipv6Groups(ip: string): number[] | null {
   const rest = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
   const missing = 8 - head.length - rest.length;
   if (missing < 0 || (halves.length === 1 && missing !== 0)) return null;
-  const groups = [...head, ...Array<string>(missing).fill("0"), ...rest].map((g) =>
-    Number.parseInt(g || "0", 16)
-  );
+  const groups = [...head, ...Array<string>(missing).fill("0"), ...rest].map((g) => Number.parseInt(g || "0", 16));
   return groups.every((g) => Number.isFinite(g) && g >= 0 && g <= 0xffff) ? groups : null;
 }
 
@@ -142,9 +133,7 @@ function validateUrl(url: string): string {
   }
 
   if (parsed.protocol !== "https:") {
-    throw new ValidationError(
-      `Only HTTPS URLs are allowed, got: ${parsed.protocol}`
-    );
+    throw new ValidationError(`Only HTTPS URLs are allowed, got: ${parsed.protocol}`);
   }
 
   if (parsed.username || parsed.password) {
@@ -198,9 +187,7 @@ async function assertResolvesPublic(host: string, url: string): Promise<void> {
   }
   for (const { address } of addresses) {
     if (isBlockedAddress(address)) {
-      throw new ValidationError(
-        `Blocked host: ${host} resolves to a private/link-local address (${address})`
-      );
+      throw new ValidationError(`Blocked host: ${host} resolves to a private/link-local address (${address})`);
     }
   }
 }
@@ -345,10 +332,7 @@ export interface FetchedPage {
  * HTTP redirects are refused (`redirect: "error"`) to prevent SSRF via open
  * redirectors. Node.js ≥ 20 is required (enforced in package.json engines).
  */
-export async function fetchPageForUrl(
-  url: string,
-  options?: FetchBodyOptions
-): Promise<FetchedPage> {
+export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): Promise<FetchedPage> {
   const maxChars = options?.maxChars ?? DEFAULT_MAX_CHARS;
   const userAgent = options?.userAgent ?? DEFAULT_USER_AGENT;
 
@@ -368,21 +352,12 @@ export async function fetchPageForUrl(
   } catch (err: unknown) {
     const code = errnoCode(err);
     const permanent = code !== undefined && PERMANENT_NETWORK_CODES.has(code);
-    throw new FetchError(
-      `Network error fetching ${url}: ${(err as Error).message}`,
-      permanent,
-      code,
-      { cause: err }
-    );
+    throw new FetchError(`Network error fetching ${url}: ${(err as Error).message}`, permanent, code, { cause: err });
   }
 
   if (!response.ok) {
     const permanent = response.status >= 400 && response.status < 500;
-    throw new FetchError(
-      `HTTP ${response.status} fetching ${url}`,
-      permanent,
-      `HTTP_${response.status}`
-    );
+    throw new FetchError(`HTTP ${response.status} fetching ${url}`, permanent, `HTTP_${response.status}`);
   }
 
   // Refuse unexpectedly large responses before loading into memory.
@@ -404,11 +379,7 @@ export async function fetchPageForUrl(
     !contentType.includes("text/plain") &&
     !contentType.includes("application/xhtml+xml")
   ) {
-    throw new FetchError(
-      `Non-HTML response from ${url} (Content-Type: ${contentType})`,
-      true,
-      "NON_HTML_CONTENT"
-    );
+    throw new FetchError(`Non-HTML response from ${url} (Content-Type: ${contentType})`, true, "NON_HTML_CONTENT");
   }
 
   // Read the body; stream failures after headers arrive are treated as transient.
@@ -429,7 +400,8 @@ export async function fetchPageForUrl(
   // maxChars * 8 gives headroom for the markup that extractText strips away.
   const rawHtml = html.length > maxChars * 8 ? html.slice(0, maxChars * 8) : html;
 
-  const title = metaContent(rawHtml, "property", "og:title") ?? /<title[^>]*>([^<]+)<\/title>/i.exec(rawHtml)?.[1]?.trim();
+  const title =
+    metaContent(rawHtml, "property", "og:title") ?? /<title[^>]*>([^<]+)<\/title>/i.exec(rawHtml)?.[1]?.trim();
   const ogImage = metaContent(rawHtml, "property", "og:image");
   const description = metaContent(rawHtml, "name", "description");
 
@@ -463,9 +435,6 @@ function decodeEntities(s: string): string {
  * Thin wrapper over `fetchPageForUrl` kept for API stability; see that
  * function for the full error contract.
  */
-export async function fetchBodyForUrl(
-  url: string,
-  options?: FetchBodyOptions
-): Promise<string> {
+export async function fetchBodyForUrl(url: string, options?: FetchBodyOptions): Promise<string> {
   return (await fetchPageForUrl(url, options)).text;
 }

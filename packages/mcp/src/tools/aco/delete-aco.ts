@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the ACO to delete"),
@@ -9,7 +9,9 @@ const inputSchema = z.object({
     .boolean()
     .optional()
     .default(false)
-    .describe("If true, permanently deletes the ACO. If false (default), soft-deletes by setting status to 'archived'."),
+    .describe(
+      "If true, permanently deletes the ACO. If false (default), soft-deletes by setting status to 'archived'."
+    ),
 });
 
 const definition: ACPToolDefinition = {

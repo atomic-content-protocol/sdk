@@ -1,5 +1,5 @@
-import { PostHog } from "posthog-node";
 import { createHash } from "node:crypto";
+import { PostHog } from "posthog-node";
 
 let client: PostHog | null = null;
 

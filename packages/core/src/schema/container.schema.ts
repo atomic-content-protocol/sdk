@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
-import { ProvenanceMapSchema } from "./provenance.schema.js";
 import { RelationshipEdgeSchema } from "./edge.schema.js";
-
-
+import { ProvenanceMapSchema } from "./provenance.schema.js";
 
 // ---------------------------------------------------------------------------
 // ContainerFrontmatterSchema

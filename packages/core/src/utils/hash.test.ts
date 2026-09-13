@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { normalizeBody, computeContentHash } from "./hash.js";
+import { describe, expect, it } from "vitest";
+import { computeContentHash, normalizeBody } from "./hash.js";
 
 describe("normalizeBody", () => {
   it("converts CRLF (\\r\\n) to LF (\\n)", () => {
@@ -30,7 +30,7 @@ describe("normalizeBody", () => {
   it("applies NFC Unicode normalization", () => {
     // 'é' can be represented as U+00E9 (NFC) or U+0065 U+0301 (NFD)
     const nfd = "\u0065\u0301"; // e + combining accent = é in NFD
-    const nfc = "\u00E9";       // é in NFC
+    const nfc = "\u00E9"; // é in NFC
     expect(normalizeBody(nfd)).toBe(nfc);
   });
 

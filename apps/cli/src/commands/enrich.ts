@@ -1,13 +1,13 @@
-import { Command } from "commander";
-import chalk from "chalk";
-import ora from "ora";
 import { estimateEnrichmentCost, formatCostEstimate } from "@atomic-content-protocol/enrichment";
+import chalk from "chalk";
+import { Command } from "commander";
+import ora from "ora";
 import { loadConfig } from "../utils/config.js";
-import { createStorage } from "../utils/storage.js";
-import { createRouter, parsePipelines, buildPipelines, estimateModel } from "../utils/enrichment.js";
-import { confirm } from "../utils/prompt.js";
+import { buildPipelines, createRouter, estimateModel, parsePipelines } from "../utils/enrichment.js";
 import { CliError, EXIT } from "../utils/errors.js";
 import { TOOL } from "../utils/pkg.js";
+import { confirm } from "../utils/prompt.js";
+import { createStorage } from "../utils/storage.js";
 
 interface EnrichOptions {
   pipelines: string;
@@ -20,7 +20,11 @@ interface EnrichOptions {
 export const enrichCommand = new Command("enrich")
   .argument("<id>", "ACO id")
   .description("Enrich an ACO with AI-generated metadata")
-  .option("-p, --pipelines <names>", "Comma-separated pipelines: tag, summary, entity, classification, unified, embed", "unified")
+  .option(
+    "-p, --pipelines <names>",
+    "Comma-separated pipelines: tag, summary, entity, classification, unified, embed",
+    "unified"
+  )
   .option("-f, --force", "Regenerate fields that already have values", false)
   .option("--dry-run", "Run the pipelines but do not write to the vault", false)
   .option("-y, --yes", "Skip the confirmation prompt", false)

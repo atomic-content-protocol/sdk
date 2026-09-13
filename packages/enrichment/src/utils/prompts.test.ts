@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { parseUnifiedOutput, buildUnifiedPrompt, UNIFIED_SCHEMA } from "./prompts.js";
+import { describe, expect, it } from "vitest";
+import { buildUnifiedPrompt, parseUnifiedOutput, UNIFIED_SCHEMA } from "./prompts.js";
 
 describe("parseUnifiedOutput", () => {
   const valid = {

@@ -1,13 +1,11 @@
 import { z } from "zod";
 import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
-import { ProvenanceMapSchema } from "./provenance.schema.js";
 import { RelationshipEdgeSchema } from "./edge.schema.js";
+import { ProvenanceMapSchema } from "./provenance.schema.js";
 
 // ---------------------------------------------------------------------------
 // Sub-schemas
 // ---------------------------------------------------------------------------
-
-
 
 /**
  * KeyEntitySchema — a single structured named entity (§3.8).
@@ -334,9 +332,8 @@ export const ACOEnvelopeSchema = z.object({
 export type ACOEnvelope = z.infer<typeof ACOEnvelopeSchema>;
 
 // Re-export sub-schema types for consumers that need them individually
-export type { Author } from "./common.schema.js";
 /** ACOTokenCounts — inferred type from TokenCountsSchema. Aliased to avoid collision with utils TokenCounts. */
-export type { TokenCounts as ACOTokenCounts } from "./common.schema.js";
+export type { Author, TokenCounts as ACOTokenCounts } from "./common.schema.js";
 export type KeyEntity = z.infer<typeof KeyEntitySchema>;
 export type SourceContext = z.infer<typeof SourceContextSchema>;
 export type Media = z.infer<typeof MediaSchema>;

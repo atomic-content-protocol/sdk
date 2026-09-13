@@ -1,13 +1,9 @@
-import { CircuitBreaker, CircuitOpenError } from "./circuit-breaker.js";
 import { AnthropicProvider } from "../providers/anthropic.provider.js";
-import { OpenAIProvider } from "../providers/openai.provider.js";
+import { DEFAULT_QUALITY, MODEL_PRESETS, type QualityTier } from "../providers/models.js";
 import { OllamaProvider } from "../providers/ollama.provider.js";
-import type {
-  IEnrichmentProvider,
-  CompletionOptions,
-  StructuredSchema,
-} from "../providers/provider.interface.js";
-import { MODEL_PRESETS, DEFAULT_QUALITY, type QualityTier } from "../providers/models.js";
+import { OpenAIProvider } from "../providers/openai.provider.js";
+import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "../providers/provider.interface.js";
+import { CircuitBreaker, CircuitOpenError } from "./circuit-breaker.js";
 
 // ---------------------------------------------------------------------------
 // Configuration types
@@ -102,7 +98,7 @@ export class ProviderRouter implements IEnrichmentProvider {
   /** Embedding model of the first provider that supports embeddings. */
   get embeddingModel(): string | undefined {
     const e = this.entries.find((x) => !!x.provider.embed);
-    return e ? e.provider.embeddingModel ?? e.provider.model : undefined;
+    return e ? (e.provider.embeddingModel ?? e.provider.model) : undefined;
   }
 
   /** Read-only view of the chain for diagnostics. */
@@ -133,24 +129,13 @@ export class ProviderRouter implements IEnrichmentProvider {
   // IEnrichmentProvider implementation (delegates to typed methods below)
   // ---------------------------------------------------------------------------
 
-  async complete(
-    prompt: string,
-    options?: CompletionOptions
-  ): Promise<string> {
+  async complete(prompt: string, options?: CompletionOptions): Promise<string> {
     const { result } = await this.completeWithMeta(prompt, options);
     return result;
   }
 
-  async structuredComplete<T>(
-    prompt: string,
-    schema: StructuredSchema,
-    options?: CompletionOptions
-  ): Promise<T> {
-    const { result } = await this.structuredCompleteWithMeta<T>(
-      prompt,
-      schema,
-      options
-    );
+  async structuredComplete<T>(prompt: string, schema: StructuredSchema, options?: CompletionOptions): Promise<T> {
+    const { result } = await this.structuredCompleteWithMeta<T>(prompt, schema, options);
     return result;
   }
 
@@ -163,10 +148,7 @@ export class ProviderRouter implements IEnrichmentProvider {
   // Typed methods that include provider metadata in the response
   // ---------------------------------------------------------------------------
 
-  async completeWithMeta(
-    prompt: string,
-    options?: CompletionOptions
-  ): Promise<CompletionResponse> {
+  async completeWithMeta(prompt: string, options?: CompletionOptions): Promise<CompletionResponse> {
     const { result, entry } = await this.withFallback("completion", (e, signal) =>
       e.provider.complete(prompt, { ...options, signal: mergeSignals(options?.signal, signal) })
     );
@@ -191,9 +173,7 @@ export class ProviderRouter implements IEnrichmentProvider {
     // Only try providers that have the embed capability
     const embeddable = this.entries.filter((e) => !!e.provider.embed);
     if (embeddable.length === 0) {
-      throw new Error(
-        "No providers in this router support embeddings. Add an OpenAI or Ollama provider."
-      );
+      throw new Error("No providers in this router support embeddings. Add an OpenAI or Ollama provider.");
     }
 
     const { result, entry } = await this.withFallback(
@@ -221,17 +201,12 @@ export class ProviderRouter implements IEnrichmentProvider {
    * Build a ProviderRouter from a declarative config object.
    * Providers are added in the order: Anthropic → OpenAI → Ollama.
    */
-  static fromConfig(
-    config: ProviderConfig,
-    options?: RouterOptions
-  ): ProviderRouter {
+  static fromConfig(config: ProviderConfig, options?: RouterOptions): ProviderRouter {
     const providers: IEnrichmentProvider[] = [];
     const preset = MODEL_PRESETS[config.quality ?? DEFAULT_QUALITY];
 
     if (config.anthropic) {
-      providers.push(
-        new AnthropicProvider(config.anthropic.apiKey, config.anthropic.model ?? preset.anthropic)
-      );
+      providers.push(new AnthropicProvider(config.anthropic.apiKey, config.anthropic.model ?? preset.anthropic));
     }
     if (config.openai) {
       providers.push(
@@ -249,9 +224,7 @@ export class ProviderRouter implements IEnrichmentProvider {
     }
 
     if (providers.length === 0) {
-      throw new Error(
-        "ProviderRouter.fromConfig: at least one provider must be configured."
-      );
+      throw new Error("ProviderRouter.fromConfig: at least one provider must be configured.");
     }
 
     return new ProviderRouter(providers, options);

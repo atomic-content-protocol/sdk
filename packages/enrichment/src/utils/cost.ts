@@ -31,7 +31,7 @@ const PROMPT_OVERHEAD_TOKENS = 350;
  * Cost per token of the model that will later *read* the ACO. Used only for
  * the break-even calculation. Sonnet-class input rate.
  */
-const READ_COST_PER_TOKEN = MODEL_PRICING["claude-sonnet-5"]!.input / 1_000_000;
+const READ_COST_PER_TOKEN = (MODEL_PRICING["claude-sonnet-5"]?.input ?? 2.0) / 1_000_000;
 
 /** Model whose price headlines the estimate. */
 export const DEFAULT_ESTIMATE_MODEL = MODEL_PRESETS.fast.anthropic;
@@ -85,10 +85,7 @@ export function estimateEnrichmentCost(
   const headline =
     options.model ?? (options.quality ? MODEL_PRESETS[options.quality].anthropic : DEFAULT_ESTIMATE_MODEL);
 
-  const models = new Set<string>([
-    ...Object.values(MODEL_PRESETS).flatMap((p) => [p.anthropic, p.openai]),
-    headline,
-  ]);
+  const models = new Set<string>([...Object.values(MODEL_PRESETS).flatMap((p) => [p.anthropic, p.openai]), headline]);
 
   const estimatedCost: Record<string, number> = {};
   for (const model of models) {
@@ -104,8 +101,7 @@ export function estimateEnrichmentCost(
 
   // Break-even: how many reads until the savings in read costs exceed the enrichment cost
   const savingsPerReadDollars = savingsPerRead * READ_COST_PER_TOKEN;
-  const breakEvenReads =
-    savingsPerReadDollars > 0 ? Math.ceil(cost / savingsPerReadDollars) : Infinity;
+  const breakEvenReads = savingsPerReadDollars > 0 ? Math.ceil(cost / savingsPerReadDollars) : Infinity;
 
   return {
     inputTokens,

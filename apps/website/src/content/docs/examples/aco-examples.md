@@ -81,17 +81,17 @@ summary: "Analysis of Pocket's shutdown in July 2025 and how it erased millions 
 confidence: 0.88
 provenance:
   summary:
-    model: "gpt-4o-mini"
+    model: "claude-haiku-4-5"
     version: "2024-07-18"
     timestamp: "2026-02-23T10:31:00Z"
     confidence: 0.93
   tags:
-    model: "gpt-4o-mini"
+    model: "claude-haiku-4-5"
     version: "2024-07-18"
     timestamp: "2026-02-23T10:31:00Z"
     confidence: 0.89
   key_entities:
-    model: "gpt-4o-mini"
+    model: "claude-haiku-4-5"
     version: "2024-07-18"
     timestamp: "2026-02-23T10:31:00Z"
     confidence: 0.95
@@ -101,7 +101,7 @@ relationships:
     target_id: "01952a3b-0000-0000-0000-acp-vision-001"
     confidence: 0.88
     provenance:
-      model: "gpt-4o-mini"
+      model: "claude-haiku-4-5"
       timestamp: "2026-02-23T10:31:00Z"
 
 visibility: "public"

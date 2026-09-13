@@ -1,9 +1,9 @@
-import { Command } from "commander";
 import { ACPMCPServer } from "@atomic-content-protocol/mcp";
+import { Command } from "commander";
 import { loadConfig } from "../utils/config.js";
-import { createStorage } from "../utils/storage.js";
 import { resolveProviderConfig } from "../utils/enrichment.js";
 import { PKG } from "../utils/pkg.js";
+import { createStorage } from "../utils/storage.js";
 
 export const serveCommand = new Command("serve")
   .description("Start the MCP server over the current vault (stdio transport)")

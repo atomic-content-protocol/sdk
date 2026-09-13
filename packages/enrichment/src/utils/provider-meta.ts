@@ -1,8 +1,4 @@
-import type {
-  IEnrichmentProvider,
-  CompletionOptions,
-  StructuredSchema,
-} from "../providers/provider.interface.js";
+import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "../providers/provider.interface.js";
 
 /**
  * Helpers that always tell the caller which model actually produced a

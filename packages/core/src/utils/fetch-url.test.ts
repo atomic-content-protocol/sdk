@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { fetchBodyForUrl, fetchPageForUrl, isBlockedAddress } from "./fetch-url.js";
-import { ValidationError, FetchError } from "./errors.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createACO } from "../index.js";
+import { FetchError, ValidationError } from "./errors.js";
+import { fetchBodyForUrl, fetchPageForUrl, isBlockedAddress } from "./fetch-url.js";
 
 const AUTHOR = { id: "test", name: "Test" };
 
@@ -50,17 +50,14 @@ function mockFetch(
 function mockNetworkError(code: string) {
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockRejectedValue(
-      new TypeError("fetch failed", { cause: Object.assign(new Error(`mock: ${code}`), { code }) })
-    )
+    vi
+      .fn()
+      .mockRejectedValue(new TypeError("fetch failed", { cause: Object.assign(new Error(`mock: ${code}`), { code }) }))
   );
 }
 
 function mockNetworkErrorTopLevel(code: string) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockRejectedValue(Object.assign(new Error(`mock: ${code}`), { code }))
-  );
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(Object.assign(new Error(`mock: ${code}`), { code })));
 }
 
 afterEach(() => {
@@ -73,69 +70,47 @@ afterEach(() => {
 
 describe("fetchBodyForUrl — SSRF validation", () => {
   it("throws ValidationError for http:// URL", async () => {
-    await expect(fetchBodyForUrl("http://example.com")).rejects.toBeInstanceOf(
-      ValidationError
-    );
+    await expect(fetchBodyForUrl("http://example.com")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for ftp:// URL", async () => {
-    await expect(fetchBodyForUrl("ftp://example.com/file")).rejects.toBeInstanceOf(
-      ValidationError
-    );
+    await expect(fetchBodyForUrl("ftp://example.com/file")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for a non-parseable string", async () => {
-    await expect(fetchBodyForUrl("not-a-url")).rejects.toBeInstanceOf(
-      ValidationError
-    );
+    await expect(fetchBodyForUrl("not-a-url")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for localhost", async () => {
-    await expect(
-      fetchBodyForUrl("https://localhost/anything")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://localhost/anything")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 127.0.0.1", async () => {
-    await expect(
-      fetchBodyForUrl("https://127.0.0.1/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://127.0.0.1/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for ::1 (IPv6 loopback)", async () => {
-    await expect(
-      fetchBodyForUrl("https://[::1]/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://[::1]/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 169.254.x.x (link-local)", async () => {
-    await expect(
-      fetchBodyForUrl("https://169.254.169.254/latest/meta-data")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://169.254.169.254/latest/meta-data")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 10.x.x.x (RFC 1918 class A)", async () => {
-    await expect(
-      fetchBodyForUrl("https://10.0.0.1/admin")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://10.0.0.1/admin")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 192.168.x.x (RFC 1918 class C)", async () => {
-    await expect(
-      fetchBodyForUrl("https://192.168.1.50/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://192.168.1.50/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 172.16.x.x (RFC 1918 class B)", async () => {
-    await expect(
-      fetchBodyForUrl("https://172.16.0.1/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://172.16.0.1/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for 172.31.x.x (RFC 1918 class B upper)", async () => {
-    await expect(
-      fetchBodyForUrl("https://172.31.255.255/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://172.31.255.255/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("does NOT block 172.15.x.x (just outside RFC 1918 range)", async () => {
@@ -146,21 +121,15 @@ describe("fetchBodyForUrl — SSRF validation", () => {
   });
 
   it("throws ValidationError for *.local domain", async () => {
-    await expect(
-      fetchBodyForUrl("https://my-service.local/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://my-service.local/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for *.internal domain", async () => {
-    await expect(
-      fetchBodyForUrl("https://api.server.internal/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://api.server.internal/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError for metadata.google.internal", async () => {
-    await expect(
-      fetchBodyForUrl("https://metadata.google.internal/")
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(fetchBodyForUrl("https://metadata.google.internal/")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it.each([
@@ -184,17 +153,13 @@ describe("fetchBodyForUrl — SSRF validation", () => {
   it("throws ValidationError when the hostname resolves to a private IP", async () => {
     mockDns(["10.1.2.3"]);
     mockFetch("<p>hi</p>");
-    await expect(fetchBodyForUrl("https://evil.example.com")).rejects.toBeInstanceOf(
-      ValidationError
-    );
+    await expect(fetchBodyForUrl("https://evil.example.com")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("throws ValidationError when ANY resolved address is private", async () => {
     mockDns(["93.184.216.34", "169.254.169.254"]);
     mockFetch("<p>hi</p>");
-    await expect(fetchBodyForUrl("https://mixed.example.com")).rejects.toBeInstanceOf(
-      ValidationError
-    );
+    await expect(fetchBodyForUrl("https://mixed.example.com")).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("maps a DNS failure to FetchError (permanent, ENOTFOUND)", async () => {
@@ -292,9 +257,7 @@ describe("fetchBodyForUrl — network error mapping", () => {
 
   it("redirect refusal → FetchError with permanent: false (no networkCode)", async () => {
     // Simulate what happens when redirect: "error" causes fetch to throw
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(
-      new TypeError("fetch failed")
-    ));
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).permanent).toBe(false);
@@ -486,7 +449,10 @@ describe("fetchBodyForUrl — response guards", () => {
     const stream = new ReadableStream<Uint8Array>({
       pull(controller) {
         if (sent >= 12) controller.close();
-        else { sent++; controller.enqueue(chunk); }
+        else {
+          sent++;
+          controller.enqueue(chunk);
+        }
       },
     });
     vi.stubGlobal(
@@ -496,7 +462,9 @@ describe("fetchBodyForUrl — response guards", () => {
         status: 200,
         headers: { get: (h: string) => (h === "content-type" ? "text/html" : null) },
         body: stream,
-        text: async () => { throw new Error("text() must not be used when body stream is present"); },
+        text: async () => {
+          throw new Error("text() must not be used when body stream is present");
+        },
       })
     );
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
@@ -507,7 +475,10 @@ describe("fetchBodyForUrl — response guards", () => {
   it("reads a streamed body under the cap", async () => {
     const bytes = new TextEncoder().encode("<html><body><p>streamed content</p></body></html>");
     const stream = new ReadableStream<Uint8Array>({
-      start(controller) { controller.enqueue(bytes); controller.close(); },
+      start(controller) {
+        controller.enqueue(bytes);
+        controller.close();
+      },
     });
     vi.stubGlobal(
       "fetch",
@@ -557,15 +528,15 @@ describe("fetchBodyForUrl — truncation", () => {
 
 describe("createACO — url integration", () => {
   it("throws ValidationError when both url and body are provided", async () => {
-    await expect(
-      createACO({ url: "https://example.com", body: "manual body", author: AUTHOR })
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(createACO({ url: "https://example.com", body: "manual body", author: AUTHOR })).rejects.toBeInstanceOf(
+      ValidationError
+    );
   });
 
   it("throws ValidationError (not degrades) for SSRF url", async () => {
-    await expect(
-      createACO({ url: "https://localhost/secret", author: AUTHOR })
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(createACO({ url: "https://localhost/secret", author: AUTHOR })).rejects.toBeInstanceOf(
+      ValidationError
+    );
   });
 
   it("sets source_type to 'link' and source_url when url fetch succeeds", async () => {
@@ -668,18 +639,48 @@ describe("createACO — url integration", () => {
 
 describe("isBlockedAddress", () => {
   it.each([
-    "0.0.0.0", "0.255.255.255", "10.0.0.1", "100.64.0.1", "100.127.255.255", "127.0.0.1",
-    "127.255.255.254", "169.254.169.254", "172.16.0.1", "172.31.255.255", "192.0.0.1",
-    "192.168.1.1", "198.18.0.1", "224.0.0.1", "255.255.255.255",
-    "::", "::1", "::ffff:127.0.0.1", "::ffff:192.168.0.1", "fc00::1", "fdff::1", "fe80::1",
-    "febf::1", "ff02::1", "2001:db8::1", "64:ff9b::a00:1",
+    "0.0.0.0",
+    "0.255.255.255",
+    "10.0.0.1",
+    "100.64.0.1",
+    "100.127.255.255",
+    "127.0.0.1",
+    "127.255.255.254",
+    "169.254.169.254",
+    "172.16.0.1",
+    "172.31.255.255",
+    "192.0.0.1",
+    "192.168.1.1",
+    "198.18.0.1",
+    "224.0.0.1",
+    "255.255.255.255",
+    "::",
+    "::1",
+    "::ffff:127.0.0.1",
+    "::ffff:192.168.0.1",
+    "fc00::1",
+    "fdff::1",
+    "fe80::1",
+    "febf::1",
+    "ff02::1",
+    "2001:db8::1",
+    "64:ff9b::a00:1",
   ])("blocks %s", (ip) => {
     expect(isBlockedAddress(ip)).toBe(true);
   });
 
   it.each([
-    "8.8.8.8", "93.184.216.34", "100.63.255.255", "100.128.0.0", "172.15.255.255", "172.32.0.0",
-    "1.1.1.1", "2606:4700:4700::1111", "2a00:1450:4001:80b::200e", "::ffff:8.8.8.8", "64:ff9b::808:808",
+    "8.8.8.8",
+    "93.184.216.34",
+    "100.63.255.255",
+    "100.128.0.0",
+    "172.15.255.255",
+    "172.32.0.0",
+    "1.1.1.1",
+    "2606:4700:4700::1111",
+    "2a00:1450:4001:80b::200e",
+    "::ffff:8.8.8.8",
+    "64:ff9b::808:808",
   ])("allows %s", (ip) => {
     expect(isBlockedAddress(ip)).toBe(false);
   });

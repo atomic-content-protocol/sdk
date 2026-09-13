@@ -1,17 +1,17 @@
-import {
-  ProviderRouter,
-  TagPipeline,
-  SummaryPipeline,
-  EntityPipeline,
-  ClassificationPipeline,
-  UnifiedPipeline,
-  EmbedPipeline,
-  MODEL_PRESETS,
-  DEFAULT_QUALITY,
-  estimateEnrichmentCost,
-} from "@atomic-content-protocol/enrichment";
-import type { IEnrichmentPipeline, ProviderConfig, QualityTier } from "@atomic-content-protocol/enrichment";
 import type { ACO } from "@atomic-content-protocol/core";
+import type { IEnrichmentPipeline, ProviderConfig, QualityTier } from "@atomic-content-protocol/enrichment";
+import {
+  ClassificationPipeline,
+  DEFAULT_QUALITY,
+  EmbedPipeline,
+  EntityPipeline,
+  estimateEnrichmentCost,
+  MODEL_PRESETS,
+  ProviderRouter,
+  SummaryPipeline,
+  TagPipeline,
+  UnifiedPipeline,
+} from "@atomic-content-protocol/enrichment";
 import type { ACPConfig } from "./config.js";
 import { CliError, EXIT } from "./errors.js";
 
@@ -29,11 +29,18 @@ const PIPELINES: Record<PipelineName, () => IEnrichmentPipeline> = {
 
 /** Parse `--pipelines a,b,c`, rejecting unknown names with a usage error. */
 export function parsePipelines(raw: string): PipelineName[] {
-  const names = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const names = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (names.length === 0) throw new CliError("No pipelines given", EXIT.USAGE);
   const bad = names.filter((n) => !(PIPELINE_NAMES as readonly string[]).includes(n));
   if (bad.length > 0) {
-    throw new CliError(`Unknown pipeline(s): ${bad.join(", ")}`, EXIT.USAGE, `Valid options: ${PIPELINE_NAMES.join(", ")}`);
+    throw new CliError(
+      `Unknown pipeline(s): ${bad.join(", ")}`,
+      EXIT.USAGE,
+      `Valid options: ${PIPELINE_NAMES.join(", ")}`
+    );
   }
   return [...new Set(names)] as PipelineName[];
 }
@@ -53,7 +60,8 @@ export function resolveProviderConfig(config: ACPConfig, env: NodeJS.ProcessEnv 
   if (anthropicKey) providers.anthropic = { apiKey: anthropicKey, model: e?.anthropic?.model };
 
   const openaiKey = e?.openai?.api_key || env["OPENAI_API_KEY"];
-  if (openaiKey) providers.openai = { apiKey: openaiKey, model: e?.openai?.model, embeddingModel: e?.openai?.embedding_model };
+  if (openaiKey)
+    providers.openai = { apiKey: openaiKey, model: e?.openai?.model, embeddingModel: e?.openai?.embedding_model };
 
   if (e?.ollama) {
     providers.ollama = { baseUrl: e.ollama.base_url, model: e.ollama.model, embeddingModel: e.ollama.embedding_model };
@@ -79,7 +87,12 @@ export function createRouter(config: ACPConfig): ProviderRouter {
 export function estimateModel(config: ACPConfig): string {
   const e = config.enrichment;
   const tier = e?.quality ?? DEFAULT_QUALITY;
-  return e?.anthropic?.model ?? (e?.anthropic || process.env["ANTHROPIC_API_KEY"] ? MODEL_PRESETS[tier].anthropic : e?.openai?.model ?? MODEL_PRESETS[tier].openai);
+  return (
+    e?.anthropic?.model ??
+    (e?.anthropic || process.env["ANTHROPIC_API_KEY"]
+      ? MODEL_PRESETS[tier].anthropic
+      : (e?.openai?.model ?? MODEL_PRESETS[tier].openai))
+  );
 }
 
 export interface BatchPlan {

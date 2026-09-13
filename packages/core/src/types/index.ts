@@ -5,4 +5,4 @@
  * consumers can import from `@atomic-content-protocol/core` or `@atomic-content-protocol/core/types` without
  * needing to know the internal file layout.
  */
-export type { ACO, Container, Collection } from "./aco.js";
+export type { ACO, Collection, Container } from "./aco.js";

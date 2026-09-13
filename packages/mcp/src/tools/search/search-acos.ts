@@ -1,36 +1,23 @@
-import { z } from "zod";
 import { SOURCE_TYPES } from "@atomic-content-protocol/core";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
+import { z } from "zod";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   query: z.string().min(1).describe("Full-text search query applied to title and body"),
-  tags: z
-    .array(z.string())
-    .optional()
-    .describe("Additionally filter by these tags (AND with query)"),
+  tags: z.array(z.string()).optional().describe("Additionally filter by these tags (AND with query)"),
   status: z
     .array(z.enum(["draft", "final", "archived"]))
     .optional()
     .describe("Filter by lifecycle status"),
-  source_type: z
-    .array(z.enum(SOURCE_TYPES))
-    .optional()
-    .describe("Filter by source type"),
-  limit: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .default(20)
-    .describe("Maximum number of results to return"),
+  source_type: z.array(z.enum(SOURCE_TYPES)).optional().describe("Filter by source type"),
+  limit: z.number().int().positive().optional().default(20).describe("Maximum number of results to return"),
 });
 
 const definition: ACPToolDefinition = {
   name: "search_acos",
-  description:
-    "Full-text search across ACOs in the vault. Returns frontmatter of matching ACOs (no body).",
+  description: "Full-text search across ACOs in the vault. Returns frontmatter of matching ACOs (no body).",
   inputSchema,
   annotations: { readOnlyHint: true },
 };

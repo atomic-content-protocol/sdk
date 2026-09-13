@@ -1,12 +1,8 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type {
-  IEnrichmentPipeline,
-  EnrichmentResult,
-  EnrichmentOptions,
-} from "./pipeline.interface.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
 import { embedWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions, EnrichmentResult, IEnrichmentPipeline } from "./pipeline.interface.js";
 import { readProvenance } from "./single-field.pipeline.js";
 
 /**
@@ -37,11 +33,7 @@ export class EmbedPipeline implements IEnrichmentPipeline {
   readonly name = "embed";
   readonly field = "embedding";
 
-  async enrich(
-    aco: ACO,
-    provider: IEnrichmentProvider,
-    options?: EnrichmentOptions
-  ): Promise<EnrichmentResult> {
+  async enrich(aco: ACO, provider: IEnrichmentProvider, options?: EnrichmentOptions): Promise<EnrichmentResult> {
     if (!provider.embed && !provider.embedWithMeta) {
       throw new Error(
         `Provider "${provider.name}" does not support embeddings. ` +

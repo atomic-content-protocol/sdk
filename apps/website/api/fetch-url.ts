@@ -17,10 +17,7 @@ export const config = { runtime: "edge" };
 const MAX_BYTES = 1_000_000;
 const TIMEOUT_MS = 15_000;
 
-const ALLOWED_ORIGINS = new Set([
-  "https://atomiccontentprotocol.org",
-  "https://www.atomiccontentprotocol.org",
-]);
+const ALLOWED_ORIGINS = new Set(["https://atomiccontentprotocol.org", "https://www.atomiccontentprotocol.org"]);
 
 const BLOCKED_HOSTS = new Set(["localhost", "metadata.google.internal", "metadata", "instance-data"]);
 const BLOCKED_SUFFIXES = [".localhost", ".local", ".internal", ".localdomain", ".home.arpa"];
@@ -30,7 +27,9 @@ function ipv4Blocked(ip: string): boolean {
   if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
   const [a, b] = parts as [number, number, number, number];
   return (
-    a === 0 || a === 10 || a === 127 ||
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
@@ -127,7 +126,11 @@ export default async function handler(request: Request): Promise<Response> {
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: { ...corsHeaders(request), "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Max-Age": "600" },
+      headers: {
+        ...corsHeaders(request),
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Max-Age": "600",
+      },
     });
   }
   if (request.method !== "GET") return json(request, 405, { error: "Method not allowed" });
@@ -178,6 +181,10 @@ export default async function handler(request: Request): Promise<Response> {
 
   return new Response(html, {
     status: 200,
-    headers: { "Content-Type": "text/html; charset=utf-8", "X-Content-Type-Options": "nosniff", ...corsHeaders(request) },
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+      ...corsHeaders(request),
+    },
   });
 }

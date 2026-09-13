@@ -1,17 +1,14 @@
-import { describe, it, expect, afterEach } from "vitest";
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 import { FilesystemAdapter } from "./filesystem.adapter.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-function makeAco(
-  id: string,
-  overrides: Record<string, unknown> = {}
-) {
+function makeAco(id: string, overrides: Record<string, unknown> = {}) {
   return {
     frontmatter: {
       id,
@@ -33,9 +30,7 @@ function makeAco(
 const tempDirs: string[] = [];
 
 async function makeTempDir(): Promise<string> {
-  const dir = await fs.mkdtemp(
-    path.join(os.tmpdir(), "acp-test-")
-  );
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "acp-test-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -282,26 +277,20 @@ describe("FilesystemAdapter", () => {
 // ---------------------------------------------------------------------------
 
 describe("FilesystemAdapter — id safety", () => {
-  it.each([
-    "../escaped",
-    "..",
-    "sub/dir",
-    "back\\slash",
-    ".containers/sneaky",
-    ".acp",
-    "",
-    "with space",
-  ])("rejects unsafe id %j on put/get/delete", async (id) => {
-    const dir = await makeTempDir();
-    const adapter = new FilesystemAdapter(dir);
-    await expect(adapter.putACO(makeAco(id))).rejects.toThrow();
-    await expect(adapter.getACO(id)).rejects.toThrow();
-    await expect(adapter.deleteACO(id)).rejects.toThrow();
-    await expect(adapter.putEmbedding(id, [1, 0], "m")).rejects.toThrow();
-    // Nothing escaped the vault.
-    const parentEntries = await fs.readdir(path.dirname(dir));
-    expect(parentEntries.some((e) => e.includes("escaped"))).toBe(false);
-  });
+  it.each(["../escaped", "..", "sub/dir", "back\\slash", ".containers/sneaky", ".acp", "", "with space"])(
+    "rejects unsafe id %j on put/get/delete",
+    async (id) => {
+      const dir = await makeTempDir();
+      const adapter = new FilesystemAdapter(dir);
+      await expect(adapter.putACO(makeAco(id))).rejects.toThrow();
+      await expect(adapter.getACO(id)).rejects.toThrow();
+      await expect(adapter.deleteACO(id)).rejects.toThrow();
+      await expect(adapter.putEmbedding(id, [1, 0], "m")).rejects.toThrow();
+      // Nothing escaped the vault.
+      const parentEntries = await fs.readdir(path.dirname(dir));
+      expect(parentEntries.some((e) => e.includes("escaped"))).toBe(false);
+    }
+  );
 
   it("accepts UUID v7 and simple slug ids", async () => {
     const dir = await makeTempDir();
@@ -365,11 +354,7 @@ describe("FilesystemAdapter — concurrency & durability", () => {
     const dir = await makeTempDir();
     const adapter = new FilesystemAdapter(dir);
     await adapter.putACO(makeAco("id-1"));
-    await fs.writeFile(
-      path.join(dir, ".acp", "index.json"),
-      JSON.stringify({ version: 99, entries: {} }),
-      "utf-8"
-    );
+    await fs.writeFile(path.join(dir, ".acp", "index.json"), JSON.stringify({ version: 99, entries: {} }), "utf-8");
     expect(await adapter.listACOs()).toHaveLength(1);
   });
 

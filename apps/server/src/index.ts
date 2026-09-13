@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { loadConfig } from "./config.js";
-import { createApp } from "./app.js";
 import { initPostHog, shutdownPostHog } from "./analytics.js";
+import { createApp } from "./app.js";
+import { loadConfig } from "./config.js";
 
 const config = loadConfig();
 initPostHog(config.posthogApiKey, config.posthogHost);
@@ -11,7 +11,9 @@ const server = app.listen(config.port, () => {
   console.log(`ACP MCP Server v${config.version} listening on port ${config.port}`);
   console.log(`MCP endpoint: POST /mcp  |  Health: GET /health`);
   console.log(`Quality tier: ${config.quality}  |  Rate limit: ${config.rateLimitPerHour} units/hour/client`);
-  console.log(`Auth: ${config.apiKeys.length > 0 ? `bearer (${config.apiKeys.length} keys)` : "none"}  |  Daily cap: ${Number.isFinite(config.dailyCostCapUsd) ? `$${config.dailyCostCapUsd}` : "off"}`);
+  console.log(
+    `Auth: ${config.apiKeys.length > 0 ? `bearer (${config.apiKeys.length} keys)` : "none"}  |  Daily cap: ${Number.isFinite(config.dailyCostCapUsd) ? `$${config.dailyCostCapUsd}` : "off"}`
+  );
 });
 
 let shuttingDown = false;

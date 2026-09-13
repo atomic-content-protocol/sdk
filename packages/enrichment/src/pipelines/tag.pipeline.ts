@@ -1,9 +1,9 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type { EnrichmentOptions } from "./pipeline.interface.js";
-import { SingleFieldPipeline, extractJsonArray, type GeneratedField } from "./single-field.pipeline.js";
 import { buildTagPrompt } from "../utils/prompts.js";
 import { completeWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { extractJsonArray, type GeneratedField, SingleFieldPipeline } from "./single-field.pipeline.js";
 
 const MAX_TAGS = 7;
 

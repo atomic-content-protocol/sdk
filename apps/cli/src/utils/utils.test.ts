@@ -1,11 +1,11 @@
-import { describe, it, expect, afterEach } from "vitest";
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { loadConfig, findVaultRoot } from "./config.js";
+import { afterEach, describe, expect, it } from "vitest";
+import { resolveAuthor } from "./author.js";
+import { findVaultRoot, loadConfig } from "./config.js";
 import { parsePipelines, planBatch, resolveProviderConfig } from "./enrichment.js";
 import { CliError } from "./errors.js";
-import { resolveAuthor } from "./author.js";
 
 const dirs: string[] = [];
 async function tmp(): Promise<string> {
@@ -93,10 +93,19 @@ describe("enrichment helpers", () => {
     const fromEnv = resolveProviderConfig({ vault_path: "." }, { ANTHROPIC_API_KEY: "k", ACP_QUALITY: "best" });
     expect(fromEnv).toMatchObject({ quality: "best", anthropic: { apiKey: "k" } });
     const fromFile = resolveProviderConfig(
-      { vault_path: ".", enrichment: { quality: "balanced", openai: { model: "gpt-5.6-terra", embedding_model: "text-embedding-3-large" } } },
+      {
+        vault_path: ".",
+        enrichment: {
+          quality: "balanced",
+          openai: { model: "gpt-5.6-terra", embedding_model: "text-embedding-3-large" },
+        },
+      },
       { OPENAI_API_KEY: "o" }
     );
-    expect(fromFile).toMatchObject({ quality: "balanced", openai: { apiKey: "o", model: "gpt-5.6-terra", embeddingModel: "text-embedding-3-large" } });
+    expect(fromFile).toMatchObject({
+      quality: "balanced",
+      openai: { apiKey: "o", model: "gpt-5.6-terra", embeddingModel: "text-embedding-3-large" },
+    });
   });
 });
 

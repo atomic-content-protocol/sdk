@@ -1,13 +1,13 @@
-import { Command, InvalidArgumentError } from "commander";
-import chalk from "chalk";
-import ora from "ora";
 import { BatchEnricher } from "@atomic-content-protocol/enrichment";
+import chalk from "chalk";
+import { Command, InvalidArgumentError } from "commander";
+import ora from "ora";
 import { loadConfig } from "../utils/config.js";
-import { createStorage } from "../utils/storage.js";
-import { createRouter, parsePipelines, buildPipelines, estimateModel, planBatch } from "../utils/enrichment.js";
-import { confirm } from "../utils/prompt.js";
-import { TOOL } from "../utils/pkg.js";
+import { buildPipelines, createRouter, estimateModel, parsePipelines, planBatch } from "../utils/enrichment.js";
 import { CliError, EXIT } from "../utils/errors.js";
+import { TOOL } from "../utils/pkg.js";
+import { confirm } from "../utils/prompt.js";
+import { createStorage } from "../utils/storage.js";
 
 function parseUsd(value: string): number {
   const n = Number(value);
@@ -34,12 +34,20 @@ interface BatchOptions {
 
 export const enrichBatchCommand = new Command("enrich-batch")
   .description("Enrich every ACO in the vault (or a filtered subset)")
-  .option("-p, --pipelines <names>", "Comma-separated pipelines: tag, summary, entity, classification, unified, embed", "unified")
+  .option(
+    "-p, --pipelines <names>",
+    "Comma-separated pipelines: tag, summary, entity, classification, unified, embed",
+    "unified"
+  )
   .option("-f, --force", "Regenerate fields that already have values", false)
   .option("--filter-tags <tags>", "Only ACOs with at least one of these tags (comma-separated)")
   .option("--filter-status <status>", "Only ACOs with this status (draft | final | archived)")
   .option("-y, --yes", "Skip the confirmation prompt", false)
-  .option("--max-cost <usd>", "Only enrich as many ACOs as fit within this estimated budget; nothing beyond it is sent to a provider", parseUsd)
+  .option(
+    "--max-cost <usd>",
+    "Only enrich as many ACOs as fit within this estimated budget; nothing beyond it is sent to a provider",
+    parseUsd
+  )
   .option("-c, --concurrency <n>", "ACOs to enrich in parallel (1-16)", parseConcurrency, 1)
   .option("--json", "Print a machine-readable summary", false)
   .action(async (options: BatchOptions, cmd: Command) => {
@@ -51,7 +59,11 @@ export const enrichBatchCommand = new Command("enrich-batch")
     const spinner = options.json ? null : ora("Scanning vault...").start();
 
     const query: { tags?: string[]; status?: string[] } = {};
-    if (options.filterTags) query.tags = options.filterTags.split(",").map((t) => t.trim()).filter(Boolean);
+    if (options.filterTags)
+      query.tags = options.filterTags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
     if (options.filterStatus) {
       const status = options.filterStatus.trim();
       if (!["draft", "final", "archived"].includes(status)) {
@@ -82,7 +94,11 @@ export const enrichBatchCommand = new Command("enrich-batch")
       if (options.maxCost !== undefined) {
         console.log(`  Budget:               $${options.maxCost.toFixed(4)}`);
         if (plan.deferred.length > 0) {
-          console.log(chalk.yellow(`  Deferred:             ${plan.deferred.length} ACO(s) do not fit the budget and will not be sent to a provider.`));
+          console.log(
+            chalk.yellow(
+              `  Deferred:             ${plan.deferred.length} ACO(s) do not fit the budget and will not be sent to a provider.`
+            )
+          );
         }
       }
       console.log();

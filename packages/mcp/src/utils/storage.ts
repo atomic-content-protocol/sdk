@@ -19,7 +19,11 @@ export async function listAllACOs(storage: IStorageAdapter): Promise<ACO[]> {
 }
 
 /** Sort ACOs by a frontmatter field, matching the adapter's `ListOptions` semantics. */
-export function sortACOs(acos: ACO[], sortBy: NonNullable<ListOptions["sortBy"]>, order: NonNullable<ListOptions["order"]>): ACO[] {
+export function sortACOs(
+  acos: ACO[],
+  sortBy: NonNullable<ListOptions["sortBy"]>,
+  order: NonNullable<ListOptions["order"]>
+): ACO[] {
   return [...acos].sort((a, b) => {
     const va = String(a.frontmatter[sortBy] ?? "");
     const vb = String(b.frontmatter[sortBy] ?? "");

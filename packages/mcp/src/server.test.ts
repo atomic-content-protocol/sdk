@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { FilesystemAdapter } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
+import { afterEach, describe, expect, it } from "vitest";
 import { ACPMCPServer } from "./server.js";
 import { ToolRegistry } from "./tool-registry.js";
 import { needsPipeline } from "./utils/pipelines.js";
@@ -21,7 +21,9 @@ const UNIFIED = {
 };
 
 /** Deterministic fake provider: structured output + a toy 3-d embedding derived from the text. */
-function fakeProvider(opts: { embed?: boolean } = { embed: true }): IEnrichmentProvider & { calls: { structured: number; embed: number } } {
+function fakeProvider(
+  opts: { embed?: boolean } = { embed: true }
+): IEnrichmentProvider & { calls: { structured: number; embed: number } } {
   const calls = { structured: 0, embed: 0 };
   const p: IEnrichmentProvider & { calls: typeof calls } = {
     name: "Fake/fake-model",
@@ -29,7 +31,7 @@ function fakeProvider(opts: { embed?: boolean } = { embed: true }): IEnrichmentP
     embeddingModel: "fake-embed",
     calls,
     complete: async () => "",
-    structuredComplete: async <T,>() => {
+    structuredComplete: async <T>() => {
       calls.structured++;
       return UNIFIED as unknown as T;
     },
@@ -87,8 +89,16 @@ describe("ToolRegistry", () => {
     expect(bOut.success).toBe(false);
     expect(bOut.error).toMatch(/requires enrichment/);
     const r = new ToolRegistry();
-    r.register("x", { definition: { name: "x", description: "", inputSchema: { parse: (v: unknown) => v } as never }, handler: async () => ({ success: true }) });
-    expect(() => r.register("x", { definition: { name: "x", description: "", inputSchema: {} as never }, handler: async () => ({ success: true }) })).toThrow(/already/);
+    r.register("x", {
+      definition: { name: "x", description: "", inputSchema: { parse: (v: unknown) => v } as never },
+      handler: async () => ({ success: true }),
+    });
+    expect(() =>
+      r.register("x", {
+        definition: { name: "x", description: "", inputSchema: {} as never },
+        handler: async () => ({ success: true }),
+      })
+    ).toThrow(/already/);
   });
 
   it("listTools emits MCP-shaped definitions without $schema", async () => {
@@ -168,7 +178,13 @@ describe("ACO CRUD tools", () => {
     expect((asc.data as any).items.map((i: any) => i.title)).toEqual(["Alpha", "Bravo", "Charlie"]);
     expect((asc.data as any).total).toBe(3);
 
-    const page = await server.callTool("list_acos", { tags: ["x"], sortBy: "title", order: "desc", limit: 1, offset: 1 });
+    const page = await server.callTool("list_acos", {
+      tags: ["x"],
+      sortBy: "title",
+      order: "desc",
+      limit: 1,
+      offset: 1,
+    });
     expect((page.data as any).items.map((i: any) => i.title)).toEqual(["Bravo"]);
   });
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { approximateTokenCount, computeTokenCounts } from "./token-count.js";
 
 describe("approximateTokenCount", () => {
@@ -68,9 +68,7 @@ describe("computeTokenCounts", () => {
 
   it("longer text produces more tokens than shorter text", async () => {
     const short = await computeTokenCounts("short");
-    const longer = await computeTokenCounts(
-      "This is a much longer sentence with many more tokens in it."
-    );
+    const longer = await computeTokenCounts("This is a much longer sentence with many more tokens in it.");
     expect(longer.approximate).toBeGreaterThan(short.approximate);
   });
 });

@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { RateLimiter, SpendGuard } from "./rate-limit.js";
 
 describe("RateLimiter", () => {
   it("consumes weighted units and refuses when the weight does not fit", () => {
-    let t = 0;
+    const t = 0;
     const rl = new RateLimiter({ limit: 5, now: () => t });
     expect(rl.consume("a", 3)).toMatchObject({ allowed: true, remaining: 2 });
     expect(rl.consume("a", 3)).toMatchObject({ allowed: false, remaining: 2 });
@@ -32,7 +32,12 @@ describe("RateLimiter", () => {
   it("bounds the number of tracked keys by evicting the oldest", () => {
     let t = 0;
     const rl = new RateLimiter({ limit: 10, maxKeys: 3, now: () => t });
-    rl.consume("k1"); t += 1; rl.consume("k2"); t += 1; rl.consume("k3"); t += 1;
+    rl.consume("k1");
+    t += 1;
+    rl.consume("k2");
+    t += 1;
+    rl.consume("k3");
+    t += 1;
     rl.consume("k4");
     expect(rl.size).toBe(3);
     // k1 (oldest) was evicted, so it starts fresh

@@ -1,9 +1,9 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type { EnrichmentOptions } from "./pipeline.interface.js";
-import { SingleFieldPipeline, type GeneratedField } from "./single-field.pipeline.js";
 import { buildSummaryPrompt } from "../utils/prompts.js";
 import { completeWithModel } from "../utils/provider-meta.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { type GeneratedField, SingleFieldPipeline } from "./single-field.pipeline.js";
 
 /** Spec limit for `summary` (ACP §3). */
 const MAX_SUMMARY_CHARS = 500;

@@ -1,11 +1,11 @@
-import express, { type Express } from "express";
 import cors from "cors";
+import express, { type Express } from "express";
 import helmet from "helmet";
 import type { ServerConfig } from "./config.js";
+import { createHealthHandler } from "./health.js";
+import { createMcpHandler } from "./mcp-handler.js";
 import { RateLimiter } from "./rate-limit.js";
 import { EnrichmentService, type EnrichmentServiceDeps } from "./tools.js";
-import { createMcpHandler } from "./mcp-handler.js";
-import { createHealthHandler } from "./health.js";
 
 /**
  * Build the Express app. Separated from `index.ts` so tests can mount it on

@@ -5,49 +5,56 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      id-token: write
-
+    environment: npm
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: npm
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Build publishable packages
+      - name: Verify tag matches package versions
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          for p in packages/core packages/enrichment packages/mcp apps/cli; do
+            V=$(node -p "require('./$p/package.json').version")
+            if [ "$V" != "$TAG" ]; then echo "::error::$p is $V but tag is $TAG"; exit 1; fi
+          done
+
+      - name: Build
         run: npx turbo build --filter='@atomic-content-protocol/*'
 
-      - name: Test publishable packages
+      - name: Test
         run: npx turbo test --filter='@atomic-content-protocol/*'
 
+      # Dependency order matters: each package's ^version range must resolve.
       - name: Publish @atomic-content-protocol/core
-        run: cd packages/core && npm publish --access public
+        run: cd packages/core && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @atomic-content-protocol/enrichment
-        run: cd packages/enrichment && npm publish --access public
+        run: cd packages/enrichment && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @atomic-content-protocol/mcp
-        run: cd packages/mcp && npm publish --access public
+        run: cd packages/mcp && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @atomic-content-protocol/cli
-        run: cd apps/cli && npm publish --access public
+        run: cd apps/cli && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

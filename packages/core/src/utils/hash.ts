@@ -14,11 +14,7 @@ import { createHash } from "node:crypto";
  * different platforms will produce the same hash.
  */
 export function normalizeBody(body: string): string {
-  return body
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .trim()
-    .normalize("NFC");
+  return body.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().normalize("NFC");
 }
 
 /**

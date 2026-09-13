@@ -38,21 +38,15 @@
  * untrusted document can never escape the vault or reach the dot-directories.
  */
 
+import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import { randomBytes } from "node:crypto";
 
 import { parseACO } from "../io/parse.js";
 import { serializeACO } from "../io/serialize.js";
-import type { ACO, Container, Collection } from "../types/aco.js";
+import type { ACO, Collection, Container } from "../types/aco.js";
 import { ValidationError } from "../utils/errors.js";
-import type {
-  IStorageAdapter,
-  ListOptions,
-  ACOQuery,
-  SimilarityOptions,
-  SearchResult,
-} from "./adapter.interface.js";
+import type { ACOQuery, IStorageAdapter, ListOptions, SearchResult, SimilarityOptions } from "./adapter.interface.js";
 
 // ---------------------------------------------------------------------------
 // Index types
@@ -162,10 +156,7 @@ function documentPath(dir: string, id: string, label: string): string {
 }
 
 /** Apply `ListOptions` pagination and sorting to an array. */
-function applyListOptions<T extends { frontmatter: Record<string, unknown> }>(
-  items: T[],
-  options?: ListOptions
-): T[] {
+function applyListOptions<T extends { frontmatter: Record<string, unknown> }>(items: T[], options?: ListOptions): T[] {
   const { limit, offset = 0, sortBy = "created", order = "asc" } = options ?? {};
 
   const sorted = [...items].sort((a, b) => {
@@ -297,15 +288,6 @@ export class FilesystemAdapter implements IStorageAdapter {
   /** Read the index (rebuilding if necessary), serialised behind the lock. */
   private readIndex(): Promise<VaultIndex> {
     return this.withLock(() => this.loadIndexUnlocked());
-  }
-
-  /** Atomically apply `mutate` to the index and persist it. */
-  private mutateIndex(mutate: (index: VaultIndex) => void): Promise<void> {
-    return this.withLock(async () => {
-      const index = await this.loadIndexUnlocked();
-      mutate(index);
-      await this.writeIndexUnlocked(index);
-    });
   }
 
   private async writeIndexUnlocked(index: VaultIndex): Promise<void> {
@@ -443,20 +425,12 @@ export class FilesystemAdapter implements IStorageAdapter {
 
     for (const [id, entry] of Object.entries(index.entries)) {
       // source_type filter (OR)
-      if (
-        query.source_type &&
-        query.source_type.length > 0 &&
-        !query.source_type.includes(entry.source_type)
-      ) {
+      if (query.source_type && query.source_type.length > 0 && !query.source_type.includes(entry.source_type)) {
         continue;
       }
 
       // status filter (OR)
-      if (
-        query.status &&
-        query.status.length > 0 &&
-        !query.status.includes(entry.status)
-      ) {
+      if (query.status && query.status.length > 0 && !query.status.includes(entry.status)) {
         continue;
       }
 
@@ -579,9 +553,7 @@ export class FilesystemAdapter implements IStorageAdapter {
   // Relationship traversal
   // -------------------------------------------------------------------------
 
-  async getEdgesFrom(
-    acoId: string
-  ): Promise<Array<{ rel_type: string; target_id: string; confidence?: number }>> {
+  async getEdgesFrom(acoId: string): Promise<Array<{ rel_type: string; target_id: string; confidence?: number }>> {
     const aco = await this.getACO(acoId);
     if (aco === null) return [];
 
@@ -589,22 +561,16 @@ export class FilesystemAdapter implements IStorageAdapter {
     if (!Array.isArray(relationships)) return [];
 
     return relationships
-      .filter(
-        (edge): edge is Record<string, unknown> =>
-          typeof edge === "object" && edge !== null
-      )
+      .filter((edge): edge is Record<string, unknown> => typeof edge === "object" && edge !== null)
       .map((edge) => ({
         rel_type: String(edge["rel_type"] ?? ""),
         target_id: String(edge["target_id"] ?? ""),
-        confidence:
-          typeof edge["confidence"] === "number" ? edge["confidence"] : undefined,
+        confidence: typeof edge["confidence"] === "number" ? edge["confidence"] : undefined,
       }))
       .filter((edge) => edge.rel_type && edge.target_id);
   }
 
-  async getEdgesTo(
-    acoId: string
-  ): Promise<Array<{ rel_type: string; source_id: string; confidence?: number }>> {
+  async getEdgesTo(acoId: string): Promise<Array<{ rel_type: string; source_id: string; confidence?: number }>> {
     // Basic scan: check every indexed ACO for outbound edges pointing to acoId.
     // Adapters with a reverse index (e.g. SQLite) can override this.
     const index = await this.readIndex();
@@ -686,10 +652,7 @@ export class FilesystemAdapter implements IStorageAdapter {
     });
   }
 
-  async findSimilar(
-    queryVector: number[],
-    options?: SimilarityOptions
-  ): Promise<SearchResult[]> {
+  async findSimilar(queryVector: number[], options?: SimilarityOptions): Promise<SearchResult[]> {
     const { limit = 10, threshold = 0.7 } = options ?? {};
 
     const [store, index] = await this.withLock(async () => [

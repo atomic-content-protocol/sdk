@@ -1,11 +1,11 @@
-import { Command } from "commander";
-import { mkdir, writeFile, stat } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { DEFAULT_QUALITY, MODEL_PRESETS } from "@atomic-content-protocol/enrichment";
 import chalk from "chalk";
-import { MODEL_PRESETS, DEFAULT_QUALITY } from "@atomic-content-protocol/enrichment";
-import { ask } from "../utils/prompt.js";
-import { CONFIG_DIR, CONFIG_FILE, type ACPConfig } from "../utils/config.js";
+import { Command } from "commander";
+import { type ACPConfig, CONFIG_DIR, CONFIG_FILE } from "../utils/config.js";
 import { CliError, EXIT } from "../utils/errors.js";
+import { ask } from "../utils/prompt.js";
 
 export const initCommand = new Command("init")
   .argument("[path]", "directory to create the vault in", ".")
@@ -19,9 +19,16 @@ export const initCommand = new Command("init")
     const acpDir = join(vaultPath, CONFIG_DIR);
     const configPath = join(acpDir, CONFIG_FILE);
 
-    const already = await stat(configPath).then(() => true, () => false);
+    const already = await stat(configPath).then(
+      () => true,
+      () => false
+    );
     if (already && !options.force) {
-      throw new CliError(`Vault already initialised at ${vaultPath}`, EXIT.USAGE, "Pass --force to overwrite .acp/config.json.");
+      throw new CliError(
+        `Vault already initialised at ${vaultPath}`,
+        EXIT.USAGE,
+        "Pass --force to overwrite .acp/config.json."
+      );
     }
 
     await mkdir(acpDir, { recursive: true });
@@ -57,5 +64,9 @@ export const initCommand = new Command("init")
     console.log(`  ${chalk.cyan("acp validate")}             Validate ACOs in this vault`);
     console.log(`  ${chalk.cyan("acp serve")}                Start the MCP server for Claude`);
     console.log();
-    console.log(chalk.dim("Set ANTHROPIC_API_KEY or OPENAI_API_KEY to enable enrichment. API keys belong in the environment, not in config.json."));
+    console.log(
+      chalk.dim(
+        "Set ANTHROPIC_API_KEY or OPENAI_API_KEY to enable enrichment. API keys belong in the environment, not in config.json."
+      )
+    );
   });

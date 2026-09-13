@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ContainerFrontmatterSchema } from "./container.schema.js";
 
 // ---------------------------------------------------------------------------
@@ -153,9 +153,7 @@ describe("ContainerFrontmatterSchema", () => {
     const result = ContainerFrontmatterSchema.safeParse(input);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect((result.data as Record<string, unknown>)["future_field"]).toBe(
-        "forward-compat-value"
-      );
+      expect((result.data as Record<string, unknown>)["future_field"]).toBe("forward-compat-value");
     }
   });
 

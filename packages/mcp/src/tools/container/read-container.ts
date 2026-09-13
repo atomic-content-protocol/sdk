@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
   id: z.string().min(1).describe("UUID of the container to retrieve"),
@@ -37,9 +37,7 @@ export function createReadContainerTool(ctx: ToolContext): ToolEntry {
           const aco = await ctx.storage.getACO(acoId);
           if (aco) {
             loadedCount++;
-            const tokenCounts = aco.frontmatter["token_counts"] as
-              | Record<string, number>
-              | undefined;
+            const tokenCounts = aco.frontmatter["token_counts"] as Record<string, number> | undefined;
             const approx = tokenCounts?.["approximate"];
             if (typeof approx === "number" && Number.isFinite(approx)) {
               totalApproximate += approx;

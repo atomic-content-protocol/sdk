@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { hasValue, extractJsonArray, resolveModality } from "./single-field.pipeline.js";
-import { SummaryPipeline } from "./summary.pipeline.js";
-import { EntityPipeline } from "./entity.pipeline.js";
-import { ClassificationPipeline } from "./classification.pipeline.js";
-import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 import type { ACO } from "@atomic-content-protocol/core";
+import { describe, expect, it } from "vitest";
+import type { IEnrichmentProvider } from "../providers/provider.interface.js";
+import { ClassificationPipeline } from "./classification.pipeline.js";
+import { EntityPipeline } from "./entity.pipeline.js";
+import { extractJsonArray, hasValue, resolveModality } from "./single-field.pipeline.js";
+import { SummaryPipeline } from "./summary.pipeline.js";
 
 function provider(response: string, model = "mock-model"): IEnrichmentProvider {
   return {
@@ -21,8 +21,17 @@ function aco(fm: Record<string, unknown> = {}): ACO {
 
 describe("hasValue", () => {
   it.each([
-    [undefined, false], [null, false], ["", false], ["  ", false], [[], false], [{}, false],
-    ["x", true], [["a"], true], [{ a: 1 }, true], [0, true], [false, true],
+    [undefined, false],
+    [null, false],
+    ["", false],
+    ["  ", false],
+    [[], false],
+    [{}, false],
+    ["x", true],
+    [["a"], true],
+    [{ a: 1 }, true],
+    [0, true],
+    [false, true],
   ])("hasValue(%j) → %s", (v, expected) => {
     expect(hasValue(v)).toBe(expected);
   });
@@ -90,7 +99,9 @@ describe("EntityPipeline", () => {
   it("sanitises entities: type fallback, confidence clamp, drops empty names", async () => {
     const r = await p.enrich(
       aco(),
-      provider('[{"type":"Technology","name":"ACP","confidence":1.7},{"type":"weird","name":"X","confidence":"n"},{"type":"person","name":"  "}]')
+      provider(
+        '[{"type":"Technology","name":"ACP","confidence":1.7},{"type":"weird","name":"X","confidence":"n"},{"type":"person","name":"  "}]'
+      )
     );
     expect(r.aco.frontmatter["key_entities"]).toEqual([
       { type: "technology", name: "ACP", confidence: 1 },
@@ -118,7 +129,13 @@ describe("ClassificationPipeline", () => {
   });
   it("classifies image/video ACOs deterministically without calling the model", async () => {
     let calls = 0;
-    const pr: IEnrichmentProvider = { ...provider(""), complete: async () => { calls++; return "notes"; } };
+    const pr: IEnrichmentProvider = {
+      ...provider(""),
+      complete: async () => {
+        calls++;
+        return "notes";
+      },
+    };
     const r = await p.enrich(aco({ source_type: "uploaded_image" }), pr);
     expect(r.aco.frontmatter["classification"]).toBe("image");
     expect(calls).toBe(0);

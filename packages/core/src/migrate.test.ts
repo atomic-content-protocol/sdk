@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { migrate, MigrationError } from "./migrate.js";
+import { describe, expect, it } from "vitest";
+import { MigrationError, migrate } from "./migrate.js";
 
 describe("migrate", () => {
   // ---- No-op migration (0.2 → 0.2) ----------------------------------------
@@ -25,7 +25,7 @@ describe("migrate", () => {
     };
     const result = migrate(frontmatter, "0.2", "0.2");
     expect(result).not.toBe(frontmatter); // different reference
-    expect(result).toEqual(frontmatter);  // same content
+    expect(result).toEqual(frontmatter); // same content
   });
 
   it("preserves all fields through the no-op 0.2 → 0.2 migration", () => {

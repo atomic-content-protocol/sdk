@@ -21,29 +21,25 @@
  * ```
  */
 
-export { ACPMCPServer } from "./server.js";
-export type { ACPMCPServerConfig, EnrichmentConfig } from "./server.js";
-
 export type { ToolContext } from "./context.js";
 export { EnrichmentNotConfiguredError } from "./context.js";
-
+export type { ACPMCPServerConfig, EnrichmentConfig } from "./server.js";
+export { ACPMCPServer } from "./server.js";
+export { adaptToolForMCP, zodSchemaToJsonSchema } from "./tool-adapter.js";
+export { PKG, TOOL } from "./tool-id.js";
+export {
+  clearRegistry,
+  getAllTools,
+  getToolHandler,
+  registerTool,
+  ToolRegistry,
+  toolExists,
+} from "./tool-registry.js";
 export type {
   ACPToolDefinition,
   ToolAnnotations,
-  ToolOutput,
-  ToolHandler,
   ToolEntry,
+  ToolHandler,
+  ToolOutput,
 } from "./types/tool.js";
-
-export {
-  ToolRegistry,
-  registerTool,
-  getAllTools,
-  getToolHandler,
-  toolExists,
-  clearRegistry,
-} from "./tool-registry.js";
-
-export { adaptToolForMCP, zodSchemaToJsonSchema } from "./tool-adapter.js";
-export { PIPELINE_NAMES, needsPipeline, runPipelines, type PipelineName } from "./utils/pipelines.js";
-export { TOOL, PKG } from "./tool-id.js";
+export { needsPipeline, PIPELINE_NAMES, type PipelineName, runPipelines } from "./utils/pipelines.js";

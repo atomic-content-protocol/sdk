@@ -1,16 +1,10 @@
 import { z } from "zod";
-import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 import type { ToolContext } from "../../context.js";
 import { toErrorMessage } from "../../context.js";
+import type { ACPToolDefinition, ToolEntry, ToolOutput } from "../../types/tool.js";
 
 const inputSchema = z.object({
-  limit: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .default(50)
-    .describe("Maximum number of containers to return"),
+  limit: z.number().int().positive().optional().default(50).describe("Maximum number of containers to return"),
   offset: z
     .number()
     .int()
@@ -22,8 +16,7 @@ const inputSchema = z.object({
 
 const definition: ACPToolDefinition = {
   name: "list_containers",
-  description:
-    "List all containers in the vault. Returns frontmatter only (no body).",
+  description: "List all containers in the vault. Returns frontmatter only (no body).",
   inputSchema,
   annotations: { readOnlyHint: true },
 };

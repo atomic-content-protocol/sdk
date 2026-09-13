@@ -82,7 +82,12 @@ export class RateLimiter {
 
     const units = Math.max(1, Math.floor(weight));
     if (entry.count + units > this.limit) {
-      return { allowed: false, limit: this.limit, remaining: Math.max(0, this.limit - entry.count), resetAt: entry.resetAt };
+      return {
+        allowed: false,
+        limit: this.limit,
+        remaining: Math.max(0, this.limit - entry.count),
+        resetAt: entry.resetAt,
+      };
     }
 
     entry.count += units;

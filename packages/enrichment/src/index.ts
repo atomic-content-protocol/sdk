@@ -16,92 +16,88 @@
  * ```
  */
 
+export type { BatchOptions, BatchResult } from "./batch/index.js";
+// Batch
+export { BatchEnricher } from "./batch/index.js";
+// Pipelines
+export type {
+  Classification,
+  EnrichmentOptions,
+  EnrichmentResult,
+  GeneratedField,
+  IEnrichmentPipeline,
+  KeyEntity,
+} from "./pipelines/index.js";
+export {
+  ClassificationPipeline,
+  EmbedPipeline,
+  ENTITY_TYPES,
+  EntityPipeline,
+  extractJsonArray,
+  hasValue,
+  SingleFieldPipeline,
+  SummaryPipeline,
+  TagPipeline,
+  UnifiedPipeline,
+  VALID_CLASSIFICATIONS,
+} from "./pipelines/index.js";
 // Providers
 export type {
-  IEnrichmentProvider,
+  AnthropicProviderOptions,
   CompletionOptions,
+  IEnrichmentProvider,
+  ModelPricing,
+  OllamaProviderOptions,
+  OpenAIProviderOptions,
+  QualityTier,
   StructuredSchema,
 } from "./providers/index.js";
-export { AnthropicProvider } from "./providers/index.js";
-export { OpenAIProvider } from "./providers/index.js";
-export { OllamaProvider } from "./providers/index.js";
-export type {
-  AnthropicProviderOptions,
-  OpenAIProviderOptions,
-  OllamaProviderOptions,
-} from "./providers/index.js";
-
 // Model catalogue
 export {
+  AnthropicProvider,
+  DEFAULT_EMBEDDING_MODELS,
+  DEFAULT_QUALITY,
   MODEL_PRESETS,
   MODEL_PRICING,
-  DEFAULT_QUALITY,
-  DEFAULT_EMBEDDING_MODELS,
-  QUALITY_TIERS,
+  OllamaProvider,
+  OpenAIProvider,
   pricingFor,
+  QUALITY_TIERS,
 } from "./providers/index.js";
-export type { QualityTier, ModelPricing } from "./providers/index.js";
-
-// Router
-export { CircuitBreaker, CircuitOpenError, CircuitTimeoutError, ProviderRouter } from "./router/index.js";
 export type {
   CircuitBreakerOptions,
   CircuitState,
+  CompletionResponse,
+  EmbedResponse,
   ProviderConfig,
   RouterOptions,
-  CompletionResponse,
   StructuredResponse,
-  EmbedResponse,
 } from "./router/index.js";
-
-// Pipelines
+// Router
+export { CircuitBreaker, CircuitOpenError, CircuitTimeoutError, ProviderRouter } from "./router/index.js";
 export type {
-  IEnrichmentPipeline,
-  EnrichmentResult,
-  EnrichmentOptions,
-} from "./pipelines/index.js";
-export {
-  SingleFieldPipeline,
-  TagPipeline,
-  SummaryPipeline,
-  EntityPipeline,
-  ClassificationPipeline,
-  UnifiedPipeline,
-  EmbedPipeline,
-  ENTITY_TYPES,
-  VALID_CLASSIFICATIONS,
-  hasValue,
-  extractJsonArray,
-} from "./pipelines/index.js";
-export type { KeyEntity, Classification, GeneratedField } from "./pipelines/index.js";
-
-// Batch
-export { BatchEnricher } from "./batch/index.js";
-export type { BatchOptions, BatchResult } from "./batch/index.js";
-
-// Utilities
-export {
-  completeWithModel,
-  structuredCompleteWithModel,
-  embedWithModel,
-} from "./utils/provider-meta.js";
-export {
-  createProvenanceRecord,
-  buildTagPrompt,
-  buildSummaryPrompt,
-  buildEntityPrompt,
-  buildClassificationPrompt,
-  buildUnifiedPrompt,
-  UNIFIED_SCHEMA,
-  UnifiedOutputSchema,
-  parseUnifiedOutput,
-  estimateEnrichmentCost,
-  formatCostEstimate,
-  DEFAULT_ESTIMATE_MODEL,
-} from "./utils/index.js";
-export type {
-  UnifiedEnrichmentOutput,
   CostEstimate,
   CostEstimateOptions,
   EnrichmentDepth,
+  UnifiedEnrichmentOutput,
 } from "./utils/index.js";
+export {
+  buildClassificationPrompt,
+  buildEntityPrompt,
+  buildSummaryPrompt,
+  buildTagPrompt,
+  buildUnifiedPrompt,
+  createProvenanceRecord,
+  DEFAULT_ESTIMATE_MODEL,
+  estimateEnrichmentCost,
+  formatCostEstimate,
+  parseUnifiedOutput,
+  UNIFIED_SCHEMA,
+  UnifiedOutputSchema,
+} from "./utils/index.js";
+// Utilities
+export {
+  completeWithModel,
+  embedWithModel,
+  structuredCompleteWithModel,
+} from "./utils/provider-meta.js";
