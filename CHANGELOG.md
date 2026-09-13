@@ -18,6 +18,7 @@ All four packages move to 0.2.0 together. Highlights: the storage layer and both
 - Known gaps carried to 0.3: browser-safe subpath export for core schemas; optional peer dependencies for the AI SDKs; spec-conditional field requirements as validation warnings.
 
 ### Security
+- **website:** The playground keeps the user's Anthropic key in `sessionStorage` (cleared when the tab closes) instead of `localStorage`, and says so in the UI.
 - **core:** `FilesystemAdapter` now validates every object id against a strict allowlist before building a path. Previously an id such as `../escaped` (which can arrive from untrusted frontmatter) wrote and read files outside the vault.
 - **core:** `fetchBodyForUrl` SSRF guard now covers the full set of non-public ranges (0/8, 100.64/10, 127/8, 169.254/16, RFC 1918, 192.0.0/24, TEST-NETs, 224/4, 240/4, `::`, `::1`, IPv4-mapped, NAT64, fc00::/7, fe80::/10, ff00::/8), refuses embedded credentials and single-label hostnames, and resolves hostnames before fetching so a public name pointing at a private IP is rejected. The 10 MB response cap is now enforced on the byte stream, not only on `Content-Length`.
 - **server:** `enrich_url` and batch URL items use core's SSRF-guarded `fetchPageForUrl` (HTTPS only, full private-range and DNS checks, no redirects, streamed 10 MB cap). The previous fetcher followed redirects to any address and buffered unbounded bodies.
@@ -38,6 +39,7 @@ All four packages move to 0.2.0 together. Highlights: the storage layer and both
 - **enrichment:** Claude Haiku 4.5 was priced at Claude 3 Haiku rates ($0.25 / $1.25 per MTok). Correct list price is $1.00 / $5.00, so every estimate and the README's "~$0.002 per object" were roughly 4x too low.
 
 ### Changed
+- **repo:** `vitest` 3 → 5 in every workspace (closes the remaining moderate audit findings).
 - **cli:** Every failure now prints one clean line and a meaningful exit code (1 runtime, 2 usage, 3 invalid ACOs, 4 no provider) instead of an unhandled-rejection stack trace; `ACP_DEBUG=1` shows the stack. Uses `parseAsync` with a top-level catch.
 - **cli:** `--max-cost` is enforced *before* spending: ACOs are estimated up front, only those that fit the budget are sent to a provider, the rest are reported as deferred. Previously every ACO was enriched and the flag only stopped *saving*.
 - **cli:** Vault resolution walks up from the current directory to the nearest `.acp/config.json` (like git) and every command accepts `--vault <path>`. `vault_path` in the config is relative to the config file, so vaults can be moved or committed. Config is validated (unknown keys, bad values) instead of silently falling back to defaults.
