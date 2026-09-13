@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **enrichment:** Quality tiers. `ProviderRouter.fromConfig({ quality: "fast" | "balanced" | "best", ... })` picks default models per provider (`fast` → Claude Haiku 4.5 / GPT-5.6 Luna, `balanced` → Claude Sonnet 5 / GPT-5.6 Terra, `best` → Claude Opus 5 / GPT-5.6 Sol). Default `fast`; an explicit `model` still wins. Exposed as `MODEL_PRESETS`, `MODEL_PRICING`, `pricingFor()`.
+- **enrichment:** `UnifiedOutputSchema` / `parseUnifiedOutput()` — Zod validation and normalisation of model output (tags lower-cased, de-duplicated, ≤ 20; summary ≤ 500 chars; entity types/confidence sanitised; language as ISO 639-1 or null). `UnifiedPipeline` runs every response through it before touching frontmatter.
+- **enrichment:** `CompletionOptions.signal` (AbortSignal) is forwarded to every provider request; `embeddingModel` is configurable and exposed on OpenAI and Ollama providers; providers accept an injected client/fetch for testing.
+- **enrichment:** `estimateEnrichmentCost(content, depth, { model | quality })` returns `cost` and `model` for the headline model and prices all six preset models in `estimatedCost`.
+
+### Changed
+- **enrichment:** OpenAI default model is now `gpt-5.6-luna` (was the two-generations-old `gpt-4o-mini`). Anthropic default stays `claude-haiku-4-5`.
+- **enrichment:** Anthropic structured output uses `output_config.format` (JSON-schema constrained decoding) instead of forced tool use, so it works uniformly across Haiku 4.5, Sonnet 5 and Opus 5. Sampling parameters are omitted for models that reject them (Claude 5 family, Claude 4.7+).
+- **enrichment:** OpenAI requests use `max_completion_tokens` and omit `temperature` for reasoning models (gpt-5.x, o-series), which reject it.
+- **enrichment:** Ollama structured output passes the JSON schema as `format` (constrained decoding) and every Ollama request has a 120 s timeout.
+- **enrichment:** Cost estimates count only the body actually sent to the model (≈4 000 chars) instead of the whole document.
+
+### Fixed
+- **enrichment:** Claude Haiku 4.5 was priced at Claude 3 Haiku rates ($0.25 / $1.25 per MTok). Correct list price is $1.00 / $5.00, so every estimate and the README's "~$0.002 per object" were roughly 4x too low.
+
 ### Security
 - **core:** `FilesystemAdapter` now validates every object id against a strict allowlist before building a path. Previously an id such as `../escaped` (which can arrive from untrusted frontmatter) wrote and read files outside the vault.
 - **core:** `fetchBodyForUrl` SSRF guard now covers the full set of non-public ranges (0/8, 100.64/10, 127/8, 169.254/16, RFC 1918, 192.0.0/24, TEST-NETs, 224/4, 240/4, `::`, `::1`, IPv4-mapped, NAT64, fc00::/7, fe80::/10, ff00::/8), refuses embedded credentials and single-label hostnames, and resolves hostnames before fetching so a public name pointing at a private IP is rejected. The 10 MB response cap is now enforced on the byte stream, not only on `Content-Length`.

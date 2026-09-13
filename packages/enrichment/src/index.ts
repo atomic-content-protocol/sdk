@@ -25,6 +25,22 @@ export type {
 export { AnthropicProvider } from "./providers/index.js";
 export { OpenAIProvider } from "./providers/index.js";
 export { OllamaProvider } from "./providers/index.js";
+export type {
+  AnthropicProviderOptions,
+  OpenAIProviderOptions,
+  OllamaProviderOptions,
+} from "./providers/index.js";
+
+// Model catalogue
+export {
+  MODEL_PRESETS,
+  MODEL_PRICING,
+  DEFAULT_QUALITY,
+  DEFAULT_EMBEDDING_MODELS,
+  QUALITY_TIERS,
+  pricingFor,
+} from "./providers/index.js";
+export type { QualityTier, ModelPricing } from "./providers/index.js";
 
 // Router
 export { CircuitBreaker, ProviderRouter } from "./router/index.js";
@@ -65,7 +81,15 @@ export {
   buildClassificationPrompt,
   buildUnifiedPrompt,
   UNIFIED_SCHEMA,
+  UnifiedOutputSchema,
+  parseUnifiedOutput,
   estimateEnrichmentCost,
   formatCostEstimate,
+  DEFAULT_ESTIMATE_MODEL,
 } from "./utils/index.js";
-export type { UnifiedEnrichmentOutput, CostEstimate } from "./utils/index.js";
+export type {
+  UnifiedEnrichmentOutput,
+  CostEstimate,
+  CostEstimateOptions,
+  EnrichmentDepth,
+} from "./utils/index.js";

@@ -8,8 +8,18 @@
 
 export interface CompletionOptions {
   maxTokens?: number;
+  /**
+   * Sampling temperature. Providers silently omit it for models that reject
+   * sampling parameters (Claude 5 family, OpenAI reasoning models).
+   */
   temperature?: number;
   systemPrompt?: string;
+  /**
+   * Abort signal for the underlying HTTP request. The `ProviderRouter` wires
+   * its circuit-breaker timeout to this so a timed-out request is actually
+   * cancelled instead of continuing to spend tokens in the background.
+   */
+  signal?: AbortSignal;
 }
 
 export interface StructuredSchema {
@@ -27,11 +37,17 @@ export interface StructuredSchema {
 export interface IEnrichmentProvider {
   readonly name: string;
   readonly model: string;
+  /** Model used by `embed()`, when the provider supports embeddings. */
+  readonly embeddingModel?: string;
 
   /** Generate free-form text completion. */
   complete(prompt: string, options?: CompletionOptions): Promise<string>;
 
-  /** Generate structured output matching the given JSON-Schema-like schema. */
+  /**
+   * Generate structured output matching the given JSON-Schema-like schema.
+   * Providers return the parsed JSON as-is; callers are responsible for
+   * validating it (see the Zod schemas in `utils/prompts.ts`).
+   */
   structuredComplete<T>(
     prompt: string,
     schema: StructuredSchema,
@@ -39,7 +55,7 @@ export interface IEnrichmentProvider {
   ): Promise<T>;
 
   /** Generate a vector embedding for the given text. Optional capability. */
-  embed?(text: string): Promise<number[]>;
+  embed?(text: string, options?: { signal?: AbortSignal }): Promise<number[]>;
 
   /** Count tokens in the given text using the provider's tokeniser. Optional. */
   countTokens?(text: string): Promise<number>;

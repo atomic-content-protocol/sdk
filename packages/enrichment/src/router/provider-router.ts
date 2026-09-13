@@ -7,15 +7,23 @@ import type {
   CompletionOptions,
   StructuredSchema,
 } from "../providers/provider.interface.js";
+import { MODEL_PRESETS, DEFAULT_QUALITY, type QualityTier } from "../providers/models.js";
 
 // ---------------------------------------------------------------------------
 // Configuration types
 // ---------------------------------------------------------------------------
 
 export interface ProviderConfig {
+  /**
+   * Quality tier that selects default models for every configured provider
+   * (`fast` → Haiku 4.5 / GPT-5.6 Luna, `balanced` → Sonnet 5 / GPT-5.6 Terra,
+   * `best` → Opus 5 / GPT-5.6 Sol). An explicit per-provider `model` wins.
+   * Default: `fast`.
+   */
+  quality?: QualityTier;
   anthropic?: { apiKey: string; model?: string };
-  openai?: { apiKey: string; model?: string };
-  ollama?: { baseUrl?: string; model?: string };
+  openai?: { apiKey: string; model?: string; embeddingModel?: string };
+  ollama?: { baseUrl?: string; model?: string; embeddingModel?: string };
 }
 
 export interface RouterOptions {
@@ -189,20 +197,25 @@ export class ProviderRouter implements IEnrichmentProvider {
     options?: RouterOptions
   ): ProviderRouter {
     const providers: IEnrichmentProvider[] = [];
+    const preset = MODEL_PRESETS[config.quality ?? DEFAULT_QUALITY];
 
     if (config.anthropic) {
       providers.push(
-        new AnthropicProvider(config.anthropic.apiKey, config.anthropic.model)
+        new AnthropicProvider(config.anthropic.apiKey, config.anthropic.model ?? preset.anthropic)
       );
     }
     if (config.openai) {
       providers.push(
-        new OpenAIProvider(config.openai.apiKey, config.openai.model)
+        new OpenAIProvider(config.openai.apiKey, config.openai.model ?? preset.openai, {
+          embeddingModel: config.openai.embeddingModel,
+        })
       );
     }
     if (config.ollama) {
       providers.push(
-        new OllamaProvider(config.ollama.baseUrl, config.ollama.model)
+        new OllamaProvider(config.ollama.baseUrl, config.ollama.model, {
+          embeddingModel: config.ollama.embeddingModel,
+        })
       );
     }
 
