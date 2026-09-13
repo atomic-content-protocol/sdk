@@ -276,3 +276,141 @@ describe("FilesystemAdapter", () => {
     expect(retrieved!.frontmatter["tags"]).toEqual(tags);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Security & durability
+// ---------------------------------------------------------------------------
+
+describe("FilesystemAdapter — id safety", () => {
+  it.each([
+    "../escaped",
+    "..",
+    "sub/dir",
+    "back\\slash",
+    ".containers/sneaky",
+    ".acp",
+    "",
+    "with space",
+  ])("rejects unsafe id %j on put/get/delete", async (id) => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await expect(adapter.putACO(makeAco(id))).rejects.toThrow();
+    await expect(adapter.getACO(id)).rejects.toThrow();
+    await expect(adapter.deleteACO(id)).rejects.toThrow();
+    await expect(adapter.putEmbedding(id, [1, 0], "m")).rejects.toThrow();
+    // Nothing escaped the vault.
+    const parentEntries = await fs.readdir(path.dirname(dir));
+    expect(parentEntries.some((e) => e.includes("escaped"))).toBe(false);
+  });
+
+  it("accepts UUID v7 and simple slug ids", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    for (const id of ["0193f5e6-0000-7000-8000-000000000009", "my.slug_id-1"]) {
+      await adapter.putACO(makeAco(id));
+      expect((await adapter.getACO(id))?.frontmatter["id"]).toBe(id);
+    }
+  });
+
+  it("rejects unsafe container and collection ids", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    const doc = { frontmatter: { id: "../x", object_type: "container" }, body: "" };
+    await expect(adapter.putContainer(doc)).rejects.toThrow();
+    await expect(adapter.putCollection(doc)).rejects.toThrow();
+    await expect(adapter.getContainer("../x")).rejects.toThrow();
+  });
+});
+
+describe("FilesystemAdapter — concurrency & durability", () => {
+  it("keeps the index consistent under concurrent putACO calls", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    const ids = Array.from({ length: 40 }, (_, i) => `0193f5e6-0000-7000-8000-${String(i).padStart(12, "0")}`);
+    await Promise.all(ids.map((id) => adapter.putACO(makeAco(id))));
+
+    const listed = await adapter.listACOs();
+    expect(listed).toHaveLength(40);
+    const raw = JSON.parse(await fs.readFile(path.join(dir, ".acp", "index.json"), "utf-8"));
+    expect(Object.keys(raw.entries).sort()).toEqual([...ids].sort());
+    // No temp files left behind.
+    const leftovers = (await fs.readdir(path.join(dir, ".acp"))).filter((f) => f.endsWith(".tmp"));
+    expect(leftovers).toEqual([]);
+  });
+
+  it("interleaved puts and deletes converge to the correct set", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    const ids = Array.from({ length: 20 }, (_, i) => `id-${i}`);
+    await Promise.all(ids.map((id) => adapter.putACO(makeAco(id))));
+    await Promise.all(ids.filter((_, i) => i % 2 === 0).map((id) => adapter.deleteACO(id)));
+    const remaining = (await adapter.listACOs()).map((a) => a.frontmatter["id"]).sort();
+    expect(remaining).toEqual(ids.filter((_, i) => i % 2 === 1).sort());
+  });
+
+  it("rebuilds a corrupt index transparently", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await adapter.putACO(makeAco("id-2"));
+    await fs.writeFile(path.join(dir, ".acp", "index.json"), "{ not json", "utf-8");
+
+    const listed = await adapter.listACOs();
+    expect(listed.map((a) => a.frontmatter["id"]).sort()).toEqual(["id-1", "id-2"]);
+    const raw = JSON.parse(await fs.readFile(path.join(dir, ".acp", "index.json"), "utf-8"));
+    expect(raw.version).toBe(1);
+  });
+
+  it("rebuilds an index with an unknown version", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await fs.writeFile(
+      path.join(dir, ".acp", "index.json"),
+      JSON.stringify({ version: 99, entries: {} }),
+      "utf-8"
+    );
+    expect(await adapter.listACOs()).toHaveLength(1);
+  });
+
+  it("indexes a missing status as draft so status filters match", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await adapter.putACO(makeAco("id-2", { status: "final" }));
+    const drafts = await adapter.queryACOs({ status: ["draft"] });
+    expect(drafts.map((a) => a.frontmatter["id"])).toEqual(["id-1"]);
+    // Returned frontmatter is untouched.
+    expect(drafts[0]?.frontmatter["status"]).toBeUndefined();
+  });
+});
+
+describe("FilesystemAdapter — embeddings", () => {
+  it("deleteACO removes the embedding entry", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await adapter.putEmbedding("id-1", [1, 0, 0], "test-model");
+    await adapter.deleteACO("id-1");
+    expect(await adapter.findSimilar([1, 0, 0], { threshold: 0 })).toEqual([]);
+  });
+
+  it("findSimilar ignores vectors with mismatched dimensions", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await adapter.putACO(makeAco("id-2"));
+    await adapter.putEmbedding("id-1", [1, 0, 0], "m");
+    await adapter.putEmbedding("id-2", [1, 0], "m");
+    const results = await adapter.findSimilar([1, 0, 0], { threshold: 0 });
+    expect(results.map((r) => r.id)).toEqual(["id-1"]);
+    expect(results.every((r) => Number.isFinite(r.score))).toBe(true);
+  });
+
+  it("putEmbedding rejects empty or non-finite vectors", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await expect(adapter.putEmbedding("id-1", [], "m")).rejects.toThrow();
+    await expect(adapter.putEmbedding("id-1", [1, Number.NaN], "m")).rejects.toThrow();
+  });
+});

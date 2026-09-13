@@ -9,6 +9,7 @@
  *     .collections/{id}.md     — Collection files
  *     .acp/
  *       index.json             — Fast id→metadata mapping (rebuilt on demand)
+ *       embeddings.json        — Optional flat vector store
  *
  * ACO files are YAML-frontmatter + Markdown documents parsed/serialised by
  * the `io/parse` and `io/serialize` modules.
@@ -24,15 +25,27 @@
  *
  * The index is used by `listACOs` and `queryACOs` to avoid reading every .md
  * file on each call. It is updated on every `putACO` / `deleteACO` and can
- * be fully rebuilt via `rebuildIndex()`.
+ * be fully rebuilt via `rebuildIndex()`. A corrupt or foreign index is
+ * rebuilt automatically on the next read.
+ *
+ * Concurrency: every write goes through an in-process mutex and every file is
+ * written atomically (temp file + rename), so concurrent `putACO` calls from
+ * the same process never tear the index or leave half-written documents.
+ * Multi-process coordination is out of scope, as documented on the interface.
+ *
+ * Security: object ids become file names. Ids are validated against a strict
+ * character allowlist before any path is built, so an id sourced from an
+ * untrusted document can never escape the vault or reach the dot-directories.
  */
 
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
+import { randomBytes } from "node:crypto";
 
 import { parseACO } from "../io/parse.js";
 import { serializeACO } from "../io/serialize.js";
 import type { ACO, Container, Collection } from "../types/aco.js";
+import { ValidationError } from "../utils/errors.js";
 import type {
   IStorageAdapter,
   ListOptions,
@@ -60,6 +73,8 @@ interface VaultIndex {
   updated_at: string;
 }
 
+const INDEX_VERSION = 1;
+
 // ---------------------------------------------------------------------------
 // Embeddings store types
 // ---------------------------------------------------------------------------
@@ -73,8 +88,41 @@ interface EmbeddingsStore {
 }
 
 // ---------------------------------------------------------------------------
+// Id validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Allowed id shape: starts with an alphanumeric character, then any mix of
+ * alphanumerics, `.`, `_` and `-`. No path separators, no leading dot (which
+ * would collide with `.acp`, `.containers`, `.collections`), no whitespace.
+ * Canonical ACP ids are UUID v7 and satisfy this trivially.
+ */
+const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/;
+
+/**
+ * Validate that `id` can be safely used as a file name inside the vault.
+ * Throws `ValidationError` otherwise. Exported for adapters that reuse the
+ * same on-disk conventions.
+ */
+export function assertSafeId(id: string, label = "id"): void {
+  if (typeof id !== "string" || !SAFE_ID.test(id) || id.includes("..")) {
+    throw new ValidationError(
+      `Invalid ${label} "${id}": ids may only contain letters, digits, ".", "_" and "-" and must not start with "."`
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+interface NodeErrnoException extends Error {
+  code?: string;
+}
+
+function isNodeError(err: unknown): err is NodeErrnoException {
+  return err instanceof Error && "code" in err;
+}
 
 /** Read and parse a file as UTF-8. Returns `null` if the file does not exist. */
 async function readFileSafe(filePath: string): Promise<string | null> {
@@ -86,12 +134,31 @@ async function readFileSafe(filePath: string): Promise<string | null> {
   }
 }
 
-interface NodeErrnoException extends Error {
-  code?: string;
+/**
+ * Write `data` to `filePath` atomically: write to a sibling temp file, then
+ * rename over the target. Readers therefore see either the old or the new
+ * content, never a partial file.
+ */
+async function writeFileAtomic(filePath: string, data: string): Promise<void> {
+  const tmp = `${filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
+  try {
+    await fs.writeFile(tmp, data, "utf-8");
+    await fs.rename(tmp, filePath);
+  } catch (err) {
+    await fs.rm(tmp, { force: true }).catch(() => undefined);
+    throw err;
+  }
 }
 
-function isNodeError(err: unknown): err is NodeErrnoException {
-  return err instanceof Error && "code" in err;
+/** Resolve `${dir}/${id}.md`, asserting the id is safe and the result stays inside `dir`. */
+function documentPath(dir: string, id: string, label: string): string {
+  assertSafeId(id, label);
+  const resolved = path.resolve(dir, `${id}.md`);
+  if (path.dirname(resolved) !== dir) {
+    // Defence in depth — unreachable when SAFE_ID holds, but cheap to keep.
+    throw new ValidationError(`Invalid ${label} "${id}": resolves outside the vault`);
+  }
+  return resolved;
 }
 
 /** Apply `ListOptions` pagination and sorting to an array. */
@@ -111,6 +178,42 @@ function applyListOptions<T extends { frontmatter: Record<string, unknown> }>(
   return limit !== undefined ? sliced.slice(0, limit) : sliced;
 }
 
+function isVaultIndex(value: unknown): value is VaultIndex {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as VaultIndex).version === INDEX_VERSION &&
+    typeof (value as VaultIndex).entries === "object" &&
+    (value as VaultIndex).entries !== null
+  );
+}
+
+function isEmbeddingsStore(value: unknown): value is EmbeddingsStore {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as EmbeddingsStore).version === 1 &&
+    typeof (value as EmbeddingsStore).entries === "object" &&
+    (value as EmbeddingsStore).entries !== null
+  );
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) return Number.NaN;
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i] as number;
+    const y = b[i] as number;
+    dot += x * y;
+    normA += x * x;
+    normB += y * y;
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
 // ---------------------------------------------------------------------------
 // FilesystemAdapter
 // ---------------------------------------------------------------------------
@@ -125,6 +228,12 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   /** Set to true after `ensureDirectories()` has run successfully. */
   private initialised = false;
+
+  /**
+   * Serialises every mutation of `.acp/*.json` (and the document write that
+   * precedes it) so read-modify-write cycles never interleave.
+   */
+  private writeLock: Promise<void> = Promise.resolve();
 
   constructor(vaultPath: string) {
     this.vaultPath = path.resolve(vaultPath);
@@ -152,22 +261,56 @@ export class FilesystemAdapter implements IStorageAdapter {
     this.initialised = true;
   }
 
+  /** Run `fn` exclusively with respect to every other write on this adapter. */
+  private withLock<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.writeLock.then(fn, fn);
+    // Keep the chain alive regardless of `fn`'s outcome.
+    this.writeLock = run.then(
+      () => undefined,
+      () => undefined
+    );
+    return run;
+  }
+
   // -------------------------------------------------------------------------
   // Index helpers
   // -------------------------------------------------------------------------
 
-  private async readIndex(): Promise<VaultIndex> {
+  /**
+   * Load the index from disk without taking the lock. A missing, corrupt or
+   * incompatible index is rebuilt from the `.md` files (and persisted).
+   */
+  private async loadIndexUnlocked(): Promise<VaultIndex> {
     await this.ensureDirectories();
     const raw = await readFileSafe(this.indexPath);
-    if (raw === null) {
-      return { version: 1, entries: {}, updated_at: new Date().toISOString() };
+    if (raw !== null) {
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (isVaultIndex(parsed)) return parsed;
+      } catch {
+        // fall through to rebuild
+      }
     }
-    return JSON.parse(raw) as VaultIndex;
+    return this.buildIndexFromDisk();
   }
 
-  private async writeIndex(index: VaultIndex): Promise<void> {
+  /** Read the index (rebuilding if necessary), serialised behind the lock. */
+  private readIndex(): Promise<VaultIndex> {
+    return this.withLock(() => this.loadIndexUnlocked());
+  }
+
+  /** Atomically apply `mutate` to the index and persist it. */
+  private mutateIndex(mutate: (index: VaultIndex) => void): Promise<void> {
+    return this.withLock(async () => {
+      const index = await this.loadIndexUnlocked();
+      mutate(index);
+      await this.writeIndexUnlocked(index);
+    });
+  }
+
+  private async writeIndexUnlocked(index: VaultIndex): Promise<void> {
     index.updated_at = new Date().toISOString();
-    await fs.writeFile(this.indexPath, JSON.stringify(index, null, 2), "utf-8");
+    await writeFileAtomic(this.indexPath, JSON.stringify(index, null, 2));
   }
 
   private indexEntryFromACO(aco: ACO): IndexEntry {
@@ -177,18 +320,15 @@ export class FilesystemAdapter implements IStorageAdapter {
       source_type: String(fm["source_type"] ?? ""),
       created: String(fm["created"] ?? ""),
       tags: Array.isArray(fm["tags"]) ? (fm["tags"] as string[]) : [],
-      status: String(fm["status"] ?? ""),
+      // The spec treats a missing status as "draft"; index it that way so
+      // `queryACOs({ status: ["draft"] })` matches unset documents.
+      status: String(fm["status"] ?? "draft"),
       modified: fm["modified"] !== undefined ? String(fm["modified"]) : undefined,
     };
   }
 
-  /**
-   * Rebuild `.acp/index.json` by scanning all ACO `.md` files in the vault root.
-   *
-   * This is a recovery / maintenance operation. Call it if the index gets out
-   * of sync with the filesystem (e.g. after manual file edits).
-   */
-  async rebuildIndex(): Promise<void> {
+  /** Scan every `.md` file in the vault root and persist a fresh index. */
+  private async buildIndexFromDisk(): Promise<VaultIndex> {
     await this.ensureDirectories();
     const files = await fs.readdir(this.vaultPath);
     const index: VaultIndex = {
@@ -198,17 +338,32 @@ export class FilesystemAdapter implements IStorageAdapter {
     };
 
     for (const file of files) {
-      if (!file.endsWith(".md")) continue;
-      const filePath = path.join(this.vaultPath, file);
-      const raw = await readFileSafe(filePath);
+      if (!file.endsWith(".md") || file.startsWith(".")) continue;
+      const raw = await readFileSafe(path.join(this.vaultPath, file));
       if (raw === null) continue;
-      const result = parseACO(raw);
+      let result: ReturnType<typeof parseACO>;
+      try {
+        result = parseACO(raw);
+      } catch {
+        continue; // skip unparseable files rather than poison the index
+      }
       const id = String(result.frontmatter["id"] ?? "");
-      if (!id) continue;
+      if (!id || !SAFE_ID.test(id)) continue;
       index.entries[id] = this.indexEntryFromACO(result);
     }
 
-    await this.writeIndex(index);
+    await this.writeIndexUnlocked(index);
+    return index;
+  }
+
+  /**
+   * Rebuild `.acp/index.json` by scanning all ACO `.md` files in the vault root.
+   *
+   * This is a recovery / maintenance operation. Call it if the index gets out
+   * of sync with the filesystem (e.g. after manual file edits).
+   */
+  async rebuildIndex(): Promise<void> {
+    await this.withLock(() => this.buildIndexFromDisk());
   }
 
   // -------------------------------------------------------------------------
@@ -217,7 +372,7 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getACO(id: string): Promise<ACO | null> {
     await this.ensureDirectories();
-    const filePath = path.join(this.vaultPath, `${id}.md`);
+    const filePath = documentPath(this.vaultPath, id, "ACO id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
     const result = parseACO(raw);
@@ -227,32 +382,45 @@ export class FilesystemAdapter implements IStorageAdapter {
   async putACO(aco: ACO): Promise<void> {
     await this.ensureDirectories();
     const id = String(aco.frontmatter["id"] ?? "");
-    if (!id) throw new Error("putACO: aco.frontmatter.id is required");
+    if (!id) throw new ValidationError("putACO: aco.frontmatter.id is required");
 
-    const filePath = path.join(this.vaultPath, `${id}.md`);
+    const filePath = documentPath(this.vaultPath, id, "ACO id");
     const serialised = serializeACO(aco.frontmatter, aco.body);
-    await fs.writeFile(filePath, serialised, "utf-8");
+    const entry = this.indexEntryFromACO(aco);
 
-    // Update index
-    const index = await this.readIndex();
-    index.entries[id] = this.indexEntryFromACO(aco);
-    await this.writeIndex(index);
+    await this.withLock(async () => {
+      await writeFileAtomic(filePath, serialised);
+      const index = await this.loadIndexUnlocked();
+      index.entries[id] = entry;
+      await this.writeIndexUnlocked(index);
+    });
   }
 
   async deleteACO(id: string): Promise<void> {
     await this.ensureDirectories();
-    const filePath = path.join(this.vaultPath, `${id}.md`);
-    try {
-      await fs.unlink(filePath);
-    } catch (err: unknown) {
-      if (isNodeError(err) && err.code === "ENOENT") return; // already gone
-      throw err;
-    }
+    const filePath = documentPath(this.vaultPath, id, "ACO id");
 
-    // Remove from index
-    const index = await this.readIndex();
-    delete index.entries[id];
-    await this.writeIndex(index);
+    await this.withLock(async () => {
+      let existed = true;
+      try {
+        await fs.unlink(filePath);
+      } catch (err: unknown) {
+        if (isNodeError(err) && err.code === "ENOENT") existed = false;
+        else throw err;
+      }
+
+      const index = await this.loadIndexUnlocked();
+      if (id in index.entries || existed) {
+        delete index.entries[id];
+        await this.writeIndexUnlocked(index);
+      }
+
+      const store = await this.loadEmbeddingsUnlocked();
+      if (id in store.entries) {
+        delete store.entries[id];
+        await this.writeEmbeddingsUnlocked(store);
+      }
+    });
   }
 
   async listACOs(options?: ListOptions): Promise<ACO[]> {
@@ -343,7 +511,7 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getContainer(id: string): Promise<Container | null> {
     await this.ensureDirectories();
-    const filePath = path.join(this.containersPath, `${id}.md`);
+    const filePath = documentPath(this.containersPath, id, "container id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
     const result = parseACO(raw);
@@ -353,28 +521,16 @@ export class FilesystemAdapter implements IStorageAdapter {
   async putContainer(container: Container): Promise<void> {
     await this.ensureDirectories();
     const id = String(container.frontmatter["id"] ?? "");
-    if (!id) throw new Error("putContainer: container.frontmatter.id is required");
+    if (!id) throw new ValidationError("putContainer: container.frontmatter.id is required");
 
-    const filePath = path.join(this.containersPath, `${id}.md`);
+    const filePath = documentPath(this.containersPath, id, "container id");
     const serialised = serializeACO(container.frontmatter, container.body);
-    await fs.writeFile(filePath, serialised, "utf-8");
+    await this.withLock(() => writeFileAtomic(filePath, serialised));
   }
 
   async listContainers(options?: ListOptions): Promise<Container[]> {
     await this.ensureDirectories();
-    const files = await fs.readdir(this.containersPath);
-    const containers: Container[] = [];
-
-    for (const file of files) {
-      if (!file.endsWith(".md")) continue;
-      const filePath = path.join(this.containersPath, file);
-      const raw = await readFileSafe(filePath);
-      if (raw === null) continue;
-      const result = parseACO(raw);
-      containers.push({ frontmatter: result.frontmatter, body: result.body });
-    }
-
-    return applyListOptions(containers, options);
+    return applyListOptions(await this.readDocumentsIn(this.containersPath), options);
   }
 
   // -------------------------------------------------------------------------
@@ -383,7 +539,7 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getCollection(id: string): Promise<Collection | null> {
     await this.ensureDirectories();
-    const filePath = path.join(this.collectionsPath, `${id}.md`);
+    const filePath = documentPath(this.collectionsPath, id, "collection id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
     const result = parseACO(raw);
@@ -393,28 +549,30 @@ export class FilesystemAdapter implements IStorageAdapter {
   async putCollection(collection: Collection): Promise<void> {
     await this.ensureDirectories();
     const id = String(collection.frontmatter["id"] ?? "");
-    if (!id) throw new Error("putCollection: collection.frontmatter.id is required");
+    if (!id) throw new ValidationError("putCollection: collection.frontmatter.id is required");
 
-    const filePath = path.join(this.collectionsPath, `${id}.md`);
+    const filePath = documentPath(this.collectionsPath, id, "collection id");
     const serialised = serializeACO(collection.frontmatter, collection.body);
-    await fs.writeFile(filePath, serialised, "utf-8");
+    await this.withLock(() => writeFileAtomic(filePath, serialised));
   }
 
   async listCollections(options?: ListOptions): Promise<Collection[]> {
     await this.ensureDirectories();
-    const files = await fs.readdir(this.collectionsPath);
-    const collections: Collection[] = [];
+    return applyListOptions(await this.readDocumentsIn(this.collectionsPath), options);
+  }
 
+  /** Read every `.md` document in `dir` (used for containers and collections). */
+  private async readDocumentsIn(dir: string): Promise<Array<{ frontmatter: Record<string, unknown>; body: string }>> {
+    const files = await fs.readdir(dir);
+    const docs: Array<{ frontmatter: Record<string, unknown>; body: string }> = [];
     for (const file of files) {
       if (!file.endsWith(".md")) continue;
-      const filePath = path.join(this.collectionsPath, file);
-      const raw = await readFileSafe(filePath);
+      const raw = await readFileSafe(path.join(dir, file));
       if (raw === null) continue;
       const result = parseACO(raw);
-      collections.push({ frontmatter: result.frontmatter, body: result.body });
+      docs.push({ frontmatter: result.frontmatter, body: result.body });
     }
-
-    return applyListOptions(collections, options);
+    return docs;
   }
 
   // -------------------------------------------------------------------------
@@ -479,59 +637,53 @@ export class FilesystemAdapter implements IStorageAdapter {
   // database-backed adapter with pgvector or sqlite-vec.
   // -------------------------------------------------------------------------
 
-  private async readEmbeddings(): Promise<EmbeddingsStore> {
+  private async loadEmbeddingsUnlocked(): Promise<EmbeddingsStore> {
     await this.ensureDirectories();
+    const empty: EmbeddingsStore = {
+      version: 1,
+      model: "",
+      dimensions: 0,
+      entries: {},
+      updated_at: new Date().toISOString(),
+    };
     const raw = await readFileSafe(this.embeddingsPath);
-    if (raw === null) {
-      return {
-        version: 1,
-        model: "",
-        dimensions: 0,
-        entries: {},
-        updated_at: new Date().toISOString(),
-      };
+    if (raw === null) return empty;
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      return isEmbeddingsStore(parsed) ? parsed : empty;
+    } catch {
+      return empty;
     }
-    return JSON.parse(raw) as EmbeddingsStore;
   }
 
-  private async writeEmbeddings(data: EmbeddingsStore): Promise<void> {
+  private async writeEmbeddingsUnlocked(data: EmbeddingsStore): Promise<void> {
     data.updated_at = new Date().toISOString();
-    await fs.writeFile(
-      this.embeddingsPath,
-      JSON.stringify(data, null, 2),
-      "utf-8"
-    );
-  }
-
-  private cosineSimilarity(a: number[], b: number[]): number {
-    let dot = 0,
-      normA = 0,
-      normB = 0;
-    for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    const denom = Math.sqrt(normA) * Math.sqrt(normB);
-    return denom === 0 ? 0 : dot / denom;
+    await writeFileAtomic(this.embeddingsPath, JSON.stringify(data, null, 2));
   }
 
   async putEmbedding(id: string, vector: number[], model: string): Promise<void> {
-    const store = await this.readEmbeddings();
-
-    if (store.model && store.model !== model) {
-      console.warn(
-        `[FilesystemAdapter] putEmbedding: model mismatch. ` +
-          `Store contains "${store.model}" embeddings but received "${model}". ` +
-          `Mixing embedding models will produce unreliable similarity results.`
-      );
+    assertSafeId(id, "ACO id");
+    if (!Array.isArray(vector) || vector.length === 0 || vector.some((v) => !Number.isFinite(v))) {
+      throw new ValidationError("putEmbedding: vector must be a non-empty array of finite numbers");
     }
 
-    store.entries[id] = vector;
-    store.model = model;
-    store.dimensions = vector.length;
+    await this.withLock(async () => {
+      const store = await this.loadEmbeddingsUnlocked();
 
-    await this.writeEmbeddings(store);
+      if (store.model && store.model !== model) {
+        console.warn(
+          `[FilesystemAdapter] putEmbedding: model mismatch. ` +
+            `Store contains "${store.model}" embeddings but received "${model}". ` +
+            `Mixing embedding models will produce unreliable similarity results.`
+        );
+      }
+
+      store.entries[id] = vector;
+      store.model = model;
+      store.dimensions = vector.length;
+
+      await this.writeEmbeddingsUnlocked(store);
+    });
   }
 
   async findSimilar(
@@ -540,14 +692,17 @@ export class FilesystemAdapter implements IStorageAdapter {
   ): Promise<SearchResult[]> {
     const { limit = 10, threshold = 0.7 } = options ?? {};
 
-    const store = await this.readEmbeddings();
-    const index = await this.readIndex();
+    const [store, index] = await this.withLock(async () => [
+      await this.loadEmbeddingsUnlocked(),
+      await this.loadIndexUnlocked(),
+    ]);
 
     const scored: SearchResult[] = [];
 
     for (const [id, vector] of Object.entries(store.entries)) {
-      const score = this.cosineSimilarity(queryVector, vector);
-      if (score < threshold) continue;
+      const score = cosineSimilarity(queryVector, vector);
+      // Dimension mismatches yield NaN; never let those through the filter.
+      if (!Number.isFinite(score) || score < threshold) continue;
 
       const entry = index.entries[id];
       const frontmatter: Record<string, unknown> = entry

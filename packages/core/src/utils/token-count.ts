@@ -18,7 +18,8 @@ export function approximateTokenCount(text: string): number {
  *
  * The `approximate` field is always present. `cl100k` is populated when
  * the optional `tiktoken` package is installed; it uses the cl100k_base
- * encoding (gpt-4o / gpt-4 / gpt-3.5-turbo / text-embedding-ada-002).
+ * encoding (GPT-4 / GPT-3.5-turbo / text-embedding-3-*). Note that GPT-4o
+ * and later use o200k_base, which is a different tokenizer.
  */
 export interface TokenCounts {
   approximate: number;
@@ -26,28 +27,52 @@ export interface TokenCounts {
   [key: string]: number | undefined;
 }
 
+interface Tiktoken {
+  encode(text: string): Uint32Array | number[];
+}
+
+interface TiktokenModule {
+  get_encoding(name: "cl100k_base"): Tiktoken;
+}
+
+/**
+ * Lazily-initialised cl100k_base encoder. tiktoken boots a WASM module and
+ * building an encoder costs tens of milliseconds, so we create it once per
+ * process and never free it. `null` means tiktoken is unavailable.
+ */
+let encoderPromise: Promise<Tiktoken | null> | undefined;
+
+function getEncoder(): Promise<Tiktoken | null> {
+  if (encoderPromise === undefined) {
+    // Variable specifier keeps bundlers from trying to resolve the optional
+    // dependency at build time.
+    const specifier = "tiktoken";
+    encoderPromise = import(specifier)
+      .then((mod: TiktokenModule) => mod.get_encoding("cl100k_base"))
+      .catch(() => null);
+  }
+  return encoderPromise;
+}
+
 /**
  * computeTokenCounts — returns token count estimates for the given text.
  *
  * Always returns the heuristic `approximate` count. If the optional
  * `tiktoken` package is installed, also populates `cl100k` using the
- * cl100k_base encoding (gpt-4o / gpt-4 family). Gracefully degrades if
- * tiktoken is absent or fails to load.
+ * cl100k_base encoding. Gracefully degrades if tiktoken is absent or fails
+ * to load.
  */
 export async function computeTokenCounts(text: string): Promise<TokenCounts> {
   const counts: TokenCounts = {
     approximate: approximateTokenCount(text),
   };
 
-  // Try to load tiktoken (optional dependency — 4 MB WASM, not always present).
-  const tiktoken = await import('tiktoken').catch(() => null);
-  if (tiktoken) {
+  const encoder = await getEncoder();
+  if (encoder) {
     try {
-      const enc = tiktoken.encoding_for_model('gpt-4o');
-      counts.cl100k = enc.encode(text).length;
-      enc.free();
+      counts.cl100k = encoder.encode(text).length;
     } catch {
-      // tiktoken loaded but encoding failed — skip cl100k, keep approximate.
+      // Encoding failed for this input — keep approximate only.
     }
   }
 
