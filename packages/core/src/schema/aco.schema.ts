@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AuthorSchema, TokenCountsSchema } from "./common.schema.js";
 import { ProvenanceMapSchema } from "./provenance.schema.js";
 import { RelationshipEdgeSchema } from "./edge.schema.js";
 
@@ -6,38 +7,7 @@ import { RelationshipEdgeSchema } from "./edge.schema.js";
 // Sub-schemas
 // ---------------------------------------------------------------------------
 
-/**
- * AuthorSchema — identity that created the ACO (§3.4).
- * Set at creation, immutable. Additional subfields are permitted (passthrough).
- */
-const AuthorSchema = z
-  .object({
-    /** Unique identifier for the author. Format is implementation-specific. */
-    id: z.string().min(1),
-    /** Human-readable display name. */
-    name: z.string().min(1),
-  })
-  .passthrough();
 
-/**
- * TokenCountsSchema — per-tokenizer token counts (§3.6).
- *
- * All keys are optional; implementations populate what they can compute.
- * `approximate` SHOULD always be provided as a fallback.
- * Additional tokenizer keys are permitted (passthrough).
- */
-const TokenCountsSchema = z
-  .object({
-    /** OpenAI cl100k_base tokenizer (GPT-4, GPT-4o). */
-    cl100k: z.number().int().nonnegative().optional(),
-    /** Anthropic Claude tokenizer (via SDK count_tokens()). */
-    claude: z.number().int().nonnegative().optional(),
-    /** Meta Llama 3/4 tokenizer (via HuggingFace AutoTokenizer). */
-    llama3: z.number().int().nonnegative().optional(),
-    /** Heuristic estimate (e.g. chars/4). For display purposes. */
-    approximate: z.number().int().nonnegative().optional(),
-  })
-  .passthrough();
 
 /**
  * KeyEntitySchema — a single structured named entity (§3.8).
@@ -364,9 +334,9 @@ export const ACOEnvelopeSchema = z.object({
 export type ACOEnvelope = z.infer<typeof ACOEnvelopeSchema>;
 
 // Re-export sub-schema types for consumers that need them individually
-export type Author = z.infer<typeof AuthorSchema>;
+export type { Author } from "./common.schema.js";
 /** ACOTokenCounts — inferred type from TokenCountsSchema. Aliased to avoid collision with utils TokenCounts. */
-export type ACOTokenCounts = z.infer<typeof TokenCountsSchema>;
+export type { TokenCounts as ACOTokenCounts } from "./common.schema.js";
 export type KeyEntity = z.infer<typeof KeyEntitySchema>;
 export type SourceContext = z.infer<typeof SourceContextSchema>;
 export type Media = z.infer<typeof MediaSchema>;

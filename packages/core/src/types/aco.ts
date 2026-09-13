@@ -1,13 +1,13 @@
 /**
  * Core runtime types for the Atomic Content Protocol (ACP).
  *
- * These interfaces represent parsed, in-memory representations of ACP objects.
- * They are distinct from the Zod schema validators: schemas validate structure,
- * these types carry the data through the SDK at runtime.
+ * These interfaces are the in-memory shape every storage adapter and pipeline
+ * passes around: a loosely-typed frontmatter record plus the Markdown body.
  *
- * When full Zod-backed ACOFrontmatter schemas are available, the `frontmatter`
- * field will be narrowed accordingly — for now it is typed as
- * `Record<string, unknown>` to remain forward-compatible.
+ * They are deliberately *not* the validated Zod types (`ACOFrontmatter`,
+ * `ContainerFrontmatter`, …). Files on disk may be partial, legacy, or carry
+ * extension fields, and the SDK must be able to read, index and repair them.
+ * Use `validateACO()` / `parseAndValidateACO()` to obtain the narrow types.
  */
 
 /**
@@ -19,7 +19,7 @@
  * unprocessed Markdown content.
  */
 export interface ACO {
-  /** Structured metadata. Will be narrowed to ACOFrontmatter once schemas stabilise. */
+  /** Structured metadata as read from disk. See `validateACO()` for the typed view. */
   frontmatter: Record<string, unknown>;
   /** Raw Markdown body of the object. */
   body: string;
@@ -52,24 +52,4 @@ export interface Collection {
   frontmatter: Record<string, unknown>;
   /** Raw Markdown body. */
   body: string;
-}
-
-/**
- * ACOParseResult — the return value of `parseACO`.
- *
- * `valid` is `true` when frontmatter passes schema validation.
- * `errors` is `null` when valid, or a list of structured error objects when not.
- */
-export interface ACOParseResult {
-  /** Parsed frontmatter (present even when `valid` is false). */
-  frontmatter: Record<string, unknown>;
-  /** Raw Markdown body. */
-  body: string;
-  /** Whether the frontmatter passed schema validation. */
-  valid: boolean;
-  /**
-   * Structured validation errors, or `null` when the object is valid.
-   * Each entry carries a dot-notation `path` and a human-readable `message`.
-   */
-  errors: Array<{ path: string; message: string }> | null;
 }

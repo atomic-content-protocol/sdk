@@ -36,42 +36,11 @@ export * from "./storage/index.js";
 // Graph traversal
 export * from "./graph/index.js";
 
-// Utilities
-// Note: `TokenCounts` is exported from schema (ACO frontmatter shape).
-// The utils TokenCounts (token-count.ts) is aliased to avoid a name clash.
-export { generateId } from "./utils/id.js";
-export { normalizeBody, computeContentHash } from "./utils/hash.js";
-export {
-  approximateTokenCount,
-  computeTokenCounts,
-  type TokenCounts as UtilTokenCounts,
-} from "./utils/token-count.js";
-export {
-  ACPError,
-  ValidationError,
-  StorageError,
-  ParseError,
-  FetchError,
-  type FetchStatus,
-} from "./utils/errors.js";
-export {
-  fetchBodyForUrl,
-  fetchPageForUrl,
-  isBlockedAddress,
-  type FetchBodyOptions,
-  type FetchedPage,
-} from "./utils/fetch-url.js";
-export {
-  SOURCE_TYPE_MODALITY,
-  MODALITY_ENRICHMENT,
-  MIN_BODY_LENGTH_FOR_ENRICHMENT,
-  getEnrichmentStrategy,
-  type ContentModality,
-  type EnrichmentStrategy,
-} from "./utils/source-type.js";
+// Utilities (ids, hashing, token counting, errors, URL fetching, source-type strategy)
+export * from "./utils/index.js";
 
 // Migration
-export { migrate, MigrationError } from "./migrate.js";
+export { migrate } from "./migrate.js";
 
 // ---------------------------------------------------------------------------
 // Convenience imports (used by createACO / validateACO below)

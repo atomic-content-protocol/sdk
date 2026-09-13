@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **core:** `AuthorSchema` and `TokenCountsSchema` live once in `schema/common.schema.ts` (exported) instead of being copy-pasted into the ACO, Container and Collection schemas.
+- **core:** `parseACO` / `serializeACO` share one YAML engine. Files always end with exactly one newline and `parseACO` strips exactly that one, so `parseACO(serializeACO(fm, body)).body === body` (previously bodies gained a trailing `\n` per cycle). `content_hash` is unaffected (it already trimmed).
+- **core:** `ValidatedParseResult` is a discriminated union: `valid: true` narrows `frontmatter` to `ACOFrontmatter`.
+- **core:** One export surface — `index.ts` re-exports `utils/index.ts` instead of hand-picking (which had drifted). Removed the unused `ACOParseResult` type and stale generation-era comments.
+- **core:** `sideEffects: false` for bundlers; `@types/uuid` dropped (uuid ships types); `npm run lint` now type-checks the test files too.
+- **docs:** Core README quick start compiles (`createACO` is async, `serializeACO(frontmatter, body)`); the root README no longer claims core runs in browsers — it uses `node:fs`/`node:crypto`/`node:dns`.
+
+### Added
+- **core:** Tests for `serializeACO` round-trip fidelity, the shared YAML engine, `getRelatedACOs` graph traversal (depth, cycles, rel-type filter, external targets, ordering) and the shared schema fragments.
+
 ### Security
 - **server (hosted MCP):** `trust proxy` is now set (configurable via `TRUST_PROXY`, default 1 hop). Behind Railway every client previously shared the proxy's IP and therefore one global rate-limit bucket.
 - **server:** `enrich_url` and batch URL items use core's SSRF-guarded `fetchPageForUrl` (HTTPS only, full private-range and DNS checks, no redirects, streamed 10 MB cap). The previous fetcher followed redirects to any address and buffered unbounded bodies.
