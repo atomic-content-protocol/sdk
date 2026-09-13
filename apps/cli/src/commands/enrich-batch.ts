@@ -1,203 +1,144 @@
-import { Command } from 'commander';
-import { FilesystemAdapter } from '@atomic-content-protocol/core';
-import {
-  UnifiedPipeline,
-  TagPipeline,
-  SummaryPipeline,
-  EntityPipeline,
-  ClassificationPipeline,
-  BatchEnricher,
-  estimateEnrichmentCost,
-  formatCostEstimate,
-} from '@atomic-content-protocol/enrichment';
-import type { IEnrichmentPipeline } from '@atomic-content-protocol/enrichment';
-import { loadConfig } from '../utils/config.js';
-import { createRouter } from '../utils/enrichment.js';
-import chalk from 'chalk';
-import ora from 'ora';
-import { createInterface } from 'node:readline';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { Command, InvalidArgumentError } from "commander";
+import chalk from "chalk";
+import ora from "ora";
+import { BatchEnricher } from "@atomic-content-protocol/enrichment";
+import { loadConfig } from "../utils/config.js";
+import { createStorage } from "../utils/storage.js";
+import { createRouter, parsePipelines, buildPipelines, estimateModel, planBatch } from "../utils/enrichment.js";
+import { confirm } from "../utils/prompt.js";
+import { TOOL } from "../utils/pkg.js";
+import { CliError, EXIT } from "../utils/errors.js";
 
-// ACP §3.13 `tool` identifier — read from our own package.json so this
-// string is always in lockstep with the published version. No manual upkeep.
-const pkg = JSON.parse(
-  readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'),
-) as { name: string; version: string };
-const TOOL = `${pkg.name}@${pkg.version}`;
-
-async function confirm(message: string): Promise<boolean> {
-  if (!process.stdin.isTTY) return true;
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise(resolve => {
-    rl.question(message + ' [Y/n] ', answer => {
-      rl.close();
-      resolve(!answer || answer.toLowerCase() === 'y');
-    });
-  });
+function parseUsd(value: string): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) throw new InvalidArgumentError("Expected a non-negative USD amount.");
+  return n;
 }
 
-const PIPELINE_MAP: Record<string, new () => IEnrichmentPipeline> = {
-  tag: TagPipeline,
-  summary: SummaryPipeline,
-  entity: EntityPipeline,
-  classification: ClassificationPipeline,
-  unified: UnifiedPipeline,
-};
+function parseConcurrency(value: string): number {
+  const n = Number.parseInt(value, 10);
+  if (!Number.isInteger(n) || n < 1 || n > 16) throw new InvalidArgumentError("Expected an integer between 1 and 16.");
+  return n;
+}
 
-export const enrichBatchCommand = new Command('enrich-batch')
-  .description('Batch enrich all ACOs in a vault')
-  .option('-p, --pipelines <names>', 'Comma-separated pipeline names', 'unified')
-  .option('-f, --force', 'Overwrite existing enrichment', false)
-  .option('--filter-tags <tags>', 'Only enrich ACOs with these tags (comma-separated)')
-  .option('--filter-status <status>', 'Only enrich ACOs with this status')
-  .option('-y, --yes', 'Skip confirmation prompt', false)
-  .option('--max-cost <amount>', 'Stop batch if cumulative cost exceeds this amount (USD)', parseFloat)
-  .action(async (options) => {
-    const config = await loadConfig();
-    const storage = new FilesystemAdapter(config.vault_path);
+interface BatchOptions {
+  pipelines: string;
+  force: boolean;
+  filterTags?: string;
+  filterStatus?: string;
+  yes: boolean;
+  maxCost?: number;
+  concurrency: number;
+  json: boolean;
+}
+
+export const enrichBatchCommand = new Command("enrich-batch")
+  .description("Enrich every ACO in the vault (or a filtered subset)")
+  .option("-p, --pipelines <names>", "Comma-separated pipelines: tag, summary, entity, classification, unified, embed", "unified")
+  .option("-f, --force", "Regenerate fields that already have values", false)
+  .option("--filter-tags <tags>", "Only ACOs with at least one of these tags (comma-separated)")
+  .option("--filter-status <status>", "Only ACOs with this status (draft | final | archived)")
+  .option("-y, --yes", "Skip the confirmation prompt", false)
+  .option("--max-cost <usd>", "Only enrich as many ACOs as fit within this estimated budget; nothing beyond it is sent to a provider", parseUsd)
+  .option("-c, --concurrency <n>", "ACOs to enrich in parallel (1-16)", parseConcurrency, 1)
+  .option("--json", "Print a machine-readable summary", false)
+  .action(async (options: BatchOptions, cmd: Command) => {
+    const pipelineNames = parsePipelines(options.pipelines);
+    const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
+    const storage = createStorage(config);
     const router = createRouter(config);
 
-    if (!router) {
-      console.error(chalk.red('No enrichment providers configured.'));
-      console.error(chalk.dim('Set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable.'));
-      process.exit(1);
-    }
+    const spinner = options.json ? null : ora("Scanning vault...").start();
 
-    const spinner = ora('Scanning vault...').start();
-
-    // Build query from filter options
     const query: { tags?: string[]; status?: string[] } = {};
-    if (options.filterTags) {
-      query.tags = (options.filterTags as string).split(',').map((t: string) => t.trim());
-    }
+    if (options.filterTags) query.tags = options.filterTags.split(",").map((t) => t.trim()).filter(Boolean);
     if (options.filterStatus) {
-      query.status = [(options.filterStatus as string).trim()];
+      const status = options.filterStatus.trim();
+      if (!["draft", "final", "archived"].includes(status)) {
+        spinner?.stop();
+        throw new CliError(`Invalid --filter-status "${status}"`, EXIT.USAGE, "Valid values: draft, final, archived");
+      }
+      query.status = [status];
     }
 
-    const acos =
-      Object.keys(query).length > 0
-        ? await storage.queryACOs(query)
-        : await storage.listACOs();
-
-    spinner.succeed(`Found ${acos.length} ACOs to enrich`);
+    const acos = Object.keys(query).length > 0 ? await storage.queryACOs(query) : await storage.listACOs();
+    spinner?.succeed(`Found ${acos.length} ACOs`);
 
     if (acos.length === 0) {
-      console.log(chalk.dim('Nothing to enrich.'));
+      if (options.json) console.log(JSON.stringify({ found: 0, enriched: 0, deferred: 0, failed: 0 }));
+      else console.log(chalk.dim("Nothing to enrich."));
       return;
     }
 
-    // Aggregate cost estimate across all ACOs
-    const aggregateEstimate = acos.reduce(
-      (acc, aco) => {
-        const est = estimateEnrichmentCost(aco.body);
-        return {
-          totalCost: acc.totalCost + est.estimatedCost['claude-haiku-4-5'],
-          totalSavingsPerRead: acc.totalSavingsPerRead + est.savingsPerRead,
-          totalContentTokens: acc.totalContentTokens + est.contentTokens,
-        };
-      },
-      { totalCost: 0, totalSavingsPerRead: 0, totalContentTokens: 0 }
-    );
+    const model = estimateModel(config);
+    const plan = planBatch(acos, model, options.maxCost);
 
-    console.log();
-    console.log(chalk.bold('Batch cost estimate:'));
-    console.log(`  ACOs to enrich:       ${acos.length}`);
-    console.log(`  Total content:        ${aggregateEstimate.totalContentTokens.toLocaleString()} tokens`);
-    console.log(`  Estimated total cost: ~$${aggregateEstimate.totalCost.toFixed(4)} (Claude Haiku)`);
-    console.log(`  Total savings/read:   ${aggregateEstimate.totalSavingsPerRead.toLocaleString()} tokens`);
-    if (options.maxCost !== undefined) {
-      const maxCost = options.maxCost as number;
-      console.log(`  Max cost limit:       $${maxCost.toFixed(4)}`);
-      if (aggregateEstimate.totalCost > maxCost) {
-        console.log(chalk.yellow(`  Warning: estimated cost exceeds --max-cost limit; batch will stop early.`));
+    if (!options.json) {
+      console.log();
+      console.log(chalk.bold("Batch cost estimate:"));
+      console.log(`  ACOs found:           ${acos.length}`);
+      console.log(`  Will enrich:          ${plan.selected.length}`);
+      console.log(`  Estimated total cost: ~$${plan.totalCost.toFixed(4)} (${model})`);
+      if (options.maxCost !== undefined) {
+        console.log(`  Budget:               $${options.maxCost.toFixed(4)}`);
+        if (plan.deferred.length > 0) {
+          console.log(chalk.yellow(`  Deferred:             ${plan.deferred.length} ACO(s) do not fit the budget and will not be sent to a provider.`));
+        }
       }
-    }
-    console.log();
-
-    if (!(options.yes as boolean)) {
-      const ok = await confirm('Continue?');
-      if (!ok) {
-        console.log(chalk.dim('Aborted.'));
-        process.exit(0);
-      }
+      console.log();
     }
 
-    // Build pipeline instances
-    const pipelineNames = (options.pipelines as string).split(',').map((s: string) => s.trim());
-    const pipelines: IEnrichmentPipeline[] = [];
-    for (const name of pipelineNames) {
-      const PipelineClass = PIPELINE_MAP[name];
-      if (!PipelineClass) {
-        console.error(chalk.red(`Unknown pipeline: ${name}. Valid options: ${Object.keys(PIPELINE_MAP).join(', ')}`));
-        process.exit(1);
-      }
-      pipelines.push(new PipelineClass());
+    if (plan.selected.length === 0) {
+      throw new CliError("Budget too small for even one ACO", EXIT.USAGE, "Raise --max-cost or omit it.");
     }
 
-    const enricher = new BatchEnricher(router, pipelines);
-    const maxCost = options.maxCost as number | undefined;
+    if (!options.yes && !(await confirm("Continue?"))) {
+      console.log(chalk.dim("Aborted."));
+      return;
+    }
 
-    // Pre-compute per-ACO cost estimates so we can accumulate as progress fires
-    const perACOCosts = acos.map(aco =>
-      estimateEnrichmentCost(aco.body).estimatedCost['claude-haiku-4-5']
-    );
+    const enricher = new BatchEnricher(router, buildPipelines(pipelineNames));
+    const progress = options.json ? null : ora(`Enriching 0/${plan.selected.length}...`).start();
+    let spent = 0;
 
-    let completed = 0;
-    let cumulativeCost = 0;
-    let stoppedEarly = false;
-    const progressSpinner = ora(`Enriching 0/${acos.length}...`).start();
-
-    const { results, errors } = await enricher.enrichMany(acos, {
-      force: options.force as boolean,
+    const { results, errors } = await enricher.enrichMany(plan.selected, {
+      force: options.force,
       tool: TOOL,
+      concurrency: options.concurrency,
       onProgress: (done, total) => {
-        // Add the cost of the ACO that just completed (done is 1-indexed)
-        cumulativeCost += perACOCosts[done - 1] ?? 0;
-        completed = done;
-        progressSpinner.text = `Enriching ${done}/${total}... ($${cumulativeCost.toFixed(4)} so far)`;
+        spent += plan.perACOCost[done - 1] ?? 0;
+        if (progress) progress.text = `Enriching ${done}/${total}... (~$${spent.toFixed(4)} so far)`;
       },
     });
 
-    // Check max-cost during save phase — stop persisting if over budget
-    progressSpinner.text = 'Saving results...';
-    let saved = 0;
-    let saveCumulativeCost = 0;
-    for (let i = 0; i < results.length; i++) {
-      saveCumulativeCost += perACOCosts[i] ?? 0;
-      if (maxCost !== undefined && saveCumulativeCost > maxCost) {
-        stoppedEarly = true;
-        break;
-      }
-      await storage.putACO(results[i]!);
-      saved++;
-    }
+    if (progress) progress.text = "Saving results...";
+    for (const aco of results) await storage.putACO(aco);
+    progress?.succeed(`Enriched ${results.length}/${plan.selected.length} ACOs`);
 
-    if (stoppedEarly) {
-      progressSpinner.warn(
-        `Stopped early: cost limit $${maxCost!.toFixed(4)} reached. Saved ${saved}/${acos.length} ACOs.`
+    if (options.json) {
+      console.log(
+        JSON.stringify({
+          found: acos.length,
+          enriched: results.length,
+          deferred: plan.deferred.length,
+          failed: errors.length,
+          estimated_cost_usd: Number(plan.totalCost.toFixed(4)),
+          model,
+          errors,
+        })
       );
     } else {
-      progressSpinner.succeed(`Enriched ${results.length}/${acos.length} ACOs`);
-    }
-
-    if (errors.length > 0) {
-      console.log();
-      console.log(chalk.red(`  ${errors.length} failed:`));
-      for (const err of errors) {
-        console.log(chalk.dim(`    ${err.id}: ${err.error}`));
+      if (errors.length > 0) {
+        console.log();
+        console.log(chalk.red(`  ${errors.length} failed:`));
+        for (const err of errors) console.log(chalk.dim(`    ${err.id}: ${err.error}`));
       }
+      console.log();
+      console.log(chalk.green(`  Succeeded: ${results.length}`));
+      if (errors.length > 0) console.log(chalk.red(`  Failed:    ${errors.length}`));
+      if (plan.deferred.length > 0) console.log(chalk.yellow(`  Deferred:  ${plan.deferred.length} (over --max-cost)`));
+      console.log(chalk.cyan(`  Est. cost: $${plan.totalCost.toFixed(4)}`));
     }
 
-    console.log();
-    console.log(chalk.green(`  Completed: ${completed}`));
-    console.log(chalk.green(`  Succeeded: ${results.length}`));
-    console.log(chalk.cyan(`  Saved:     ${saved}`));
-    console.log(chalk.cyan(`  Est. cost: $${cumulativeCost.toFixed(4)}`));
-    if (errors.length > 0) {
-      console.log(chalk.red(`  Failed:    ${errors.length}`));
-    }
-    if (stoppedEarly) {
-      console.log(chalk.yellow(`  Remaining: ${acos.length - saved} (cost limit reached)`));
-    }
+    if (errors.length > 0) throw new CliError(`${errors.length} ACO(s) failed to enrich`, EXIT.ERROR);
   });

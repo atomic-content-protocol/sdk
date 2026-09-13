@@ -1,115 +1,92 @@
-import { Command } from 'commander';
-import { FilesystemAdapter } from '@atomic-content-protocol/core';
-import {
-  UnifiedPipeline,
-  TagPipeline,
-  SummaryPipeline,
-  EntityPipeline,
-  ClassificationPipeline,
-  estimateEnrichmentCost,
-  formatCostEstimate,
-} from '@atomic-content-protocol/enrichment';
-import type { IEnrichmentPipeline } from '@atomic-content-protocol/enrichment';
-import { loadConfig } from '../utils/config.js';
-import { createRouter } from '../utils/enrichment.js';
-import chalk from 'chalk';
-import ora from 'ora';
-import { createInterface } from 'node:readline';
+import { Command } from "commander";
+import chalk from "chalk";
+import ora from "ora";
+import { estimateEnrichmentCost, formatCostEstimate } from "@atomic-content-protocol/enrichment";
+import { loadConfig } from "../utils/config.js";
+import { createStorage } from "../utils/storage.js";
+import { createRouter, parsePipelines, buildPipelines, estimateModel } from "../utils/enrichment.js";
+import { confirm } from "../utils/prompt.js";
+import { CliError, EXIT } from "../utils/errors.js";
+import { TOOL } from "../utils/pkg.js";
 
-async function confirm(message: string): Promise<boolean> {
-  if (!process.stdin.isTTY) return true;
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise(resolve => {
-    rl.question(message + ' [Y/n] ', answer => {
-      rl.close();
-      resolve(!answer || answer.toLowerCase() === 'y');
-    });
-  });
+interface EnrichOptions {
+  pipelines: string;
+  force: boolean;
+  dryRun: boolean;
+  yes: boolean;
+  json: boolean;
 }
 
-const PIPELINE_MAP: Record<string, new () => IEnrichmentPipeline> = {
-  tag: TagPipeline,
-  summary: SummaryPipeline,
-  entity: EntityPipeline,
-  classification: ClassificationPipeline,
-  unified: UnifiedPipeline,
-};
-
-export const enrichCommand = new Command('enrich')
-  .argument('<target>', 'ACO id or file path')
-  .description('Enrich an ACO with AI-generated metadata')
-  .option('-p, --pipelines <names>', 'Comma-separated pipeline names', 'unified')
-  .option('-f, --force', 'Overwrite existing enrichment', false)
-  .option('--dry-run', 'Preview without writing', false)
-  .option('-y, --yes', 'Skip confirmation prompt', false)
-  .action(async (target: string, options) => {
-    const config = await loadConfig();
-    const storage = new FilesystemAdapter(config.vault_path);
+export const enrichCommand = new Command("enrich")
+  .argument("<id>", "ACO id")
+  .description("Enrich an ACO with AI-generated metadata")
+  .option("-p, --pipelines <names>", "Comma-separated pipelines: tag, summary, entity, classification, unified, embed", "unified")
+  .option("-f, --force", "Regenerate fields that already have values", false)
+  .option("--dry-run", "Run the pipelines but do not write to the vault", false)
+  .option("-y, --yes", "Skip the confirmation prompt", false)
+  .option("--json", "Print the resulting frontmatter as JSON", false)
+  .action(async (id: string, options: EnrichOptions, cmd: Command) => {
+    const pipelineNames = parsePipelines(options.pipelines);
+    const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
+    const storage = createStorage(config);
     const router = createRouter(config);
 
-    if (!router) {
-      console.error(chalk.red('No enrichment providers configured.'));
-      console.error(chalk.dim('Set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable.'));
-      process.exit(1);
+    const aco = await storage.getACO(id);
+    if (!aco) throw new CliError(`ACO not found: ${id}`, EXIT.ERROR);
+
+    const estimate = estimateEnrichmentCost(aco.body, "standard", { model: estimateModel(config) });
+    if (!options.json) {
+      console.log();
+      console.log(chalk.bold("Cost estimate:"));
+      console.log(formatCostEstimate(estimate));
+      console.log();
     }
 
-    const spinner = ora('Reading ACO...').start();
-
-    const aco = await storage.getACO(target);
-    if (!aco) {
-      spinner.fail(`ACO not found: ${target}`);
-      process.exit(1);
+    if (!options.yes && !(await confirm("Continue?"))) {
+      console.log(chalk.dim("Aborted."));
+      return;
     }
 
-    spinner.stop();
-
-    // Cost preview
-    const estimate = estimateEnrichmentCost(aco.body);
-    console.log();
-    console.log(chalk.bold('Cost estimate:'));
-    console.log(formatCostEstimate(estimate));
-    console.log();
-
-    if (!(options.yes as boolean)) {
-      const ok = await confirm('Continue?');
-      if (!ok) {
-        console.log(chalk.dim('Aborted.'));
-        process.exit(0);
-      }
-    }
-
-    spinner.start('Running pipelines...');
-
-    const pipelineNames = (options.pipelines as string).split(',').map((s: string) => s.trim());
-
+    const spinner = options.json ? null : ora("Running pipelines...").start();
     let current = aco;
-    for (const name of pipelineNames) {
-      const PipelineClass = PIPELINE_MAP[name];
-      if (!PipelineClass) {
-        spinner.fail(`Unknown pipeline: ${name}. Valid options: ${Object.keys(PIPELINE_MAP).join(', ')}`);
-        process.exit(1);
+    const ran: string[] = [];
+    let embedded = false;
+    try {
+      for (const pipeline of buildPipelines(pipelineNames)) {
+        if (spinner) spinner.text = `Running ${pipeline.name} pipeline...`;
+        const result = await pipeline.enrich(current, router, { force: options.force, tool: TOOL });
+        if (result.model !== "skipped") ran.push(pipeline.name);
+        current = result.aco;
+        if (result.embedding && !options.dryRun && typeof storage.putEmbedding === "function") {
+          await storage.putEmbedding(id, result.embedding, result.model);
+          embedded = true;
+        }
       }
-
-      spinner.text = `Running ${name} pipeline...`;
-      const pipeline = new PipelineClass();
-      const result = await pipeline.enrich(current, router, { force: options.force as boolean });
-      current = result.aco;
+    } catch (err) {
+      spinner?.fail("Enrichment failed");
+      throw err;
     }
 
-    if (!(options.dryRun as boolean)) {
-      await storage.putACO(current);
-      spinner.succeed('ACO enriched and saved');
+    if (options.dryRun) {
+      spinner?.succeed(`Dry run complete (no changes written). Ran: ${ran.join(", ") || "nothing"}`);
+    } else if (ran.length === 0) {
+      spinner?.succeed("Nothing to do — all requested fields already have values (use --force to regenerate)");
     } else {
-      spinner.succeed('Dry run complete (no changes written)');
+      await storage.putACO(current);
+      spinner?.succeed(`ACO enriched and saved (${ran.join(", ")}${embedded ? ", embedding stored" : ""})`);
     }
 
-    // Show what was updated
-    const fm = current.frontmatter as Record<string, unknown>;
-    if (fm['tags']) console.log(chalk.cyan('  Tags:'), (fm['tags'] as string[]).join(', '));
-    if (fm['summary']) console.log(chalk.cyan('  Summary:'), fm['summary']);
-    if (fm['classification']) console.log(chalk.cyan('  Classification:'), fm['classification']);
-    if (fm['key_entities']) {
-      const entities = fm['key_entities'] as Array<{ name: string; type: string }>;
-      console.log(chalk.cyan('  Entities:'), entities.map(e => `${e.name} (${e.type})`).join(', '));
+    const fm = current.frontmatter;
+    if (options.json) {
+      console.log(JSON.stringify(fm, null, 2));
+      return;
+    }
+    if (Array.isArray(fm["tags"])) console.log(chalk.cyan("  Tags:"), (fm["tags"] as string[]).join(", "));
+    if (fm["summary"]) console.log(chalk.cyan("  Summary:"), fm["summary"]);
+    if (fm["classification"]) console.log(chalk.cyan("  Classification:"), fm["classification"]);
+    if (fm["language"]) console.log(chalk.cyan("  Language:"), fm["language"]);
+    if (Array.isArray(fm["key_entities"])) {
+      const entities = fm["key_entities"] as Array<{ name: string; type: string }>;
+      console.log(chalk.cyan("  Entities:"), entities.map((e) => `${e.name} (${e.type})`).join(", "));
     }
   });

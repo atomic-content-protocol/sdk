@@ -1,36 +1,27 @@
-import { Command } from 'commander';
-import { FilesystemAdapter } from '@atomic-content-protocol/core';
-import { ACPMCPServer } from '@atomic-content-protocol/mcp';
-import { loadConfig } from '../utils/config.js';
+import { Command } from "commander";
+import { ACPMCPServer } from "@atomic-content-protocol/mcp";
+import { loadConfig } from "../utils/config.js";
+import { createStorage } from "../utils/storage.js";
+import { resolveProviderConfig } from "../utils/enrichment.js";
+import { PKG } from "../utils/pkg.js";
 
-export const serveCommand = new Command('serve')
-  .description('Start MCP server for AI agent access')
-  .action(async () => {
-    const config = await loadConfig();
-    const storage = new FilesystemAdapter(config.vault_path);
-
-    // Build provider config from env/config
-    const providerConfig: Record<string, unknown> = {};
-    const anthropicKey = config.enrichment?.anthropic?.api_key || process.env['ANTHROPIC_API_KEY'];
-    if (anthropicKey) providerConfig['anthropic'] = { apiKey: anthropicKey };
-    const openaiKey = config.enrichment?.openai?.api_key || process.env['OPENAI_API_KEY'];
-    if (openaiKey) providerConfig['openai'] = { apiKey: openaiKey };
+export const serveCommand = new Command("serve")
+  .description("Start the MCP server over the current vault (stdio transport)")
+  .action(async (_options: Record<string, never>, cmd: Command) => {
+    const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
+    const storage = createStorage(config);
+    const providers = resolveProviderConfig(config);
 
     const server = new ACPMCPServer({
       storage,
-      enrichment:
-        Object.keys(providerConfig).length > 0
-          ? { providers: providerConfig as import('@atomic-content-protocol/enrichment').ProviderConfig }
-          : undefined,
-      server: { name: 'acp-server', version: '0.1.0' },
+      enrichment: providers ? { providers } : undefined,
+      server: { name: "acp-server", version: PKG.version },
     });
 
-    // All output must go to stderr — stdout is JSON-RPC
-    process.stderr.write('ACP MCP Server starting...\n');
+    // All output must go to stderr — stdout is JSON-RPC.
+    process.stderr.write(`ACP MCP Server v${PKG.version} starting...\n`);
     process.stderr.write(`Vault: ${config.vault_path}\n`);
-    process.stderr.write(
-      `Enrichment: ${Object.keys(providerConfig).length > 0 ? 'enabled' : 'disabled'}\n`
-    );
+    process.stderr.write(`Enrichment: ${providers ? `enabled (${providers.quality ?? "fast"} tier)` : "disabled"}\n`);
 
     await server.start();
   });

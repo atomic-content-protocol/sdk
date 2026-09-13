@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { FilesystemAdapter } from '@atomic-content-protocol/core';
 import { loadConfig } from '../utils/config.js';
+import { createStorage } from '../utils/storage.js';
 import chalk from 'chalk';
 import ora from 'ora';
 
@@ -10,9 +10,9 @@ export const searchCommand = new Command('search')
   .option('--tags <tags>', 'Filter by tags (comma-separated)')
   .option('--status <status>', 'Filter by status')
   .option('-l, --limit <n>', 'Max results to show', '20')
-  .action(async (query: string, options) => {
-    const config = await loadConfig();
-    const storage = new FilesystemAdapter(config.vault_path);
+  .action(async (query: string, options, cmd: Command) => {
+    const { config } = await loadConfig(cmd.optsWithGlobals()['vault'] as string | undefined);
+    const storage = createStorage(config);
 
     const spinner = ora('Searching...').start();
 
