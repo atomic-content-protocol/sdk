@@ -10,11 +10,7 @@ import type {
   EnrichmentResult,
   EnrichmentOptions,
 } from "./pipeline.interface.js";
-import {
-  buildUnifiedPrompt,
-  UNIFIED_SCHEMA,
-  type UnifiedEnrichmentOutput,
-} from "../utils/prompts.js";
+import { buildUnifiedPrompt, UNIFIED_SCHEMA, parseUnifiedOutput } from "../utils/prompts.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
 
 /**
@@ -112,11 +108,12 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
 
     if (needsLLM) {
       const prompt = buildUnifiedPrompt(title, body, modality);
-      const output = await provider.structuredComplete<UnifiedEnrichmentOutput>(
-        prompt,
-        UNIFIED_SCHEMA,
-        { maxTokens: 1_024, temperature: 0.3 }
-      );
+      const raw = await provider.structuredComplete<unknown>(prompt, UNIFIED_SCHEMA, {
+        maxTokens: 1_024,
+        temperature: 0.3,
+      });
+      // Model output is untrusted: validate + normalise before it touches frontmatter.
+      const output = parseUnifiedOutput(raw);
       model = provider.model;
 
       if (llmNeededForTags) {

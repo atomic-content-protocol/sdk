@@ -171,7 +171,7 @@ acp --help
 
 ## Enrichment
 
-One LLM call adds five fields to any ACO. Cost: ~$0.002 per object using claude-haiku or gpt-4o-mini. Latency: 0.8–2.2s.
+One LLM call adds five fields to any ACO. Cost: ~$0.003 per object on the default `fast` tier (Claude Haiku 4.5 or GPT-5.6 Luna). Latency: 0.8–2.2s.
 
 **Before:**
 
@@ -331,11 +331,26 @@ This separation means you can use just `@atomic-content-protocol/core` to build 
 The `ProviderRouter` automatically handles provider failures with circuit breakers:
 
 ```
-Claude Haiku ($0.25/1M input)     ← primary
-    ↓ circuit trips after 3 failures
-GPT-4o-mini ($0.15/1M input)      ← automatic fallback  
+Claude Haiku 4.5 ($1.00/1M input)   ← primary
     ↓ circuit trips after 5 failures
-Ollama (local, free)               ← self-hosted fallback
+GPT-5.6 Luna ($0.20/1M input)       ← automatic fallback
+    ↓ circuit trips after 5 failures
+Ollama (local, free)                 ← self-hosted fallback
+```
+
+Pick a quality tier instead of hardcoding model ids. `fast` is the default and the right choice for tag/summary/entity extraction; flip to `best` for high-value content:
+
+| Tier | Anthropic | OpenAI | Input / Output per 1M tokens |
+|---|---|---|---|
+| `fast` (default) | `claude-haiku-4-5` | `gpt-5.6-luna` | $1 / $5 · $0.20 / $1.20 |
+| `balanced` | `claude-sonnet-5` | `gpt-5.6-terra` | $2 / $10 · $2 / $12 |
+| `best` | `claude-opus-5` | `gpt-5.6-sol` | $5 / $25 · $4 / $20 |
+
+```typescript
+const router = ProviderRouter.fromConfig({
+  quality: 'best',
+  anthropic: { apiKey: process.env.ANTHROPIC_API_KEY! },
+});
 ```
 
 Each provider is wrapped in a `CircuitBreaker` that:
@@ -368,12 +383,13 @@ ACP enrichment creates a ~200 token frontmatter layer that agents use for triage
 | Deep read 5 selected | — | 25,000 tokens |
 | **Total** | **250,000 tokens** | **35,000 tokens (86% less)** |
 
-Enrichment cost: ~$0.002/document. Savings compound on every subsequent read.
+Enrichment cost: ~$0.003/document on the `fast` tier. Savings compound on every subsequent read.
 
 ```typescript
 import { estimateEnrichmentCost } from '@atomic-content-protocol/enrichment';
 
-const estimate = estimateEnrichmentCost(content, 'standard');
+const estimate = estimateEnrichmentCost(content, 'standard', { quality: 'fast' });
+console.log(estimate.cost);            // 0.0031  (USD, for estimate.model)
 console.log(estimate.savingsPercent);  // 84
 console.log(estimate.breakEvenReads);  // 2
 ```

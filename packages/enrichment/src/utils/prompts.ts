@@ -5,6 +5,7 @@
  * without touching pipeline logic.
  */
 
+import { z } from "zod";
 import { MIN_BODY_LENGTH_FOR_ENRICHMENT, type ContentModality } from "@atomic-content-protocol/core";
 
 const truncate = (s: string, max: number): string =>
@@ -226,15 +227,95 @@ export const UNIFIED_SCHEMA = {
   },
 } as const;
 
-/** TypeScript type for the structured output returned by the unified prompt. */
-export interface UnifiedEnrichmentOutput {
-  tags: string[];
-  summary: string;
-  classification: string;
-  key_entities: Array<{
-    type: string;
-    name: string;
-    confidence: number;
-  }>;
-  language: string | null;
+// ---------------------------------------------------------------------------
+// Output validation
+// ---------------------------------------------------------------------------
+
+const CLASSIFICATIONS = UNIFIED_SCHEMA.parameters.properties.classification.enum;
+const ENTITY_TYPES = UNIFIED_SCHEMA.parameters.properties.key_entities.items.properties.type.enum;
+
+/** Spec limits (ACP §3): tags ≤ 20, summary ≤ 500 chars, language is ISO 639-1. */
+const MAX_TAGS = 20;
+const MAX_SUMMARY_CHARS = 500;
+
+const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
+
+/**
+ * Zod schema that validates AND normalises raw model output so it satisfies
+ * the core ACO schema: lower-cased, de-duplicated tags capped at 20; summary
+ * trimmed to 500 characters; entities with empty names dropped and
+ * confidence clamped to [0, 1]; language lower-cased or null.
+ *
+ * Model output is untrusted (prompt injection can steer it), so nothing
+ * from the model reaches frontmatter without passing through here.
+ */
+export const UnifiedOutputSchema = z.object({
+  tags: z
+    .array(z.string())
+    .transform((tags) => {
+      const seen = new Set<string>();
+      const out: string[] = [];
+      for (const raw of tags) {
+        const tag = raw.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 64);
+        if (tag && !seen.has(tag)) {
+          seen.add(tag);
+          out.push(tag);
+        }
+        if (out.length >= MAX_TAGS) break;
+      }
+      return out;
+    }),
+  summary: z
+    .string()
+    .transform((s) => s.trim().replace(/\s+/g, " ").slice(0, MAX_SUMMARY_CHARS)),
+  classification: z.string().transform((c) => {
+    const v = c.trim().toLowerCase();
+    return (CLASSIFICATIONS as readonly string[]).includes(v) ? v : "other";
+  }),
+  key_entities: z
+    .array(
+      z.object({
+        type: z.string(),
+        name: z.string(),
+        confidence: z.number().catch(0.5),
+      })
+    )
+    .catch([])
+    .transform((entities) =>
+      entities
+        .map((e) => ({
+          type: (ENTITY_TYPES as readonly string[]).includes(e.type.trim().toLowerCase())
+            ? e.type.trim().toLowerCase()
+            : "concept",
+          name: e.name.trim().slice(0, 200),
+          confidence: clamp01(Number.isFinite(e.confidence) ? e.confidence : 0.5),
+        }))
+        .filter((e) => e.name.length > 0)
+        .slice(0, 50)
+    ),
+  language: z
+    .union([z.string(), z.null()])
+    .catch(null)
+    .transform((lang) => {
+      if (!lang) return null;
+      const code = lang.trim().toLowerCase();
+      return /^[a-z]{2}(-[a-z]{2})?$/.test(code) ? code.slice(0, 2) : null;
+    }),
+});
+
+/** TypeScript type for the validated, normalised unified output. */
+export type UnifiedEnrichmentOutput = z.output<typeof UnifiedOutputSchema>;
+
+/**
+ * Validate and normalise raw structured output. Throws a descriptive error
+ * when the payload is not even shaped like the schema (e.g. the model
+ * returned a string), so the router / caller can treat it as a failure.
+ */
+export function parseUnifiedOutput(raw: unknown): UnifiedEnrichmentOutput {
+  const result = UnifiedOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`);
+    throw new Error(`Structured enrichment output failed validation: ${issues.join("; ")}`);
+  }
+  return result.data;
 }

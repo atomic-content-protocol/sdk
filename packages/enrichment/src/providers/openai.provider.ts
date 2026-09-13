@@ -4,39 +4,76 @@ import type {
   CompletionOptions,
   StructuredSchema,
 } from "./provider.interface.js";
+import {
+  MODEL_PRESETS,
+  DEFAULT_QUALITY,
+  DEFAULT_EMBEDDING_MODELS,
+  openaiIsReasoningModel,
+} from "./models.js";
+
+export interface OpenAIProviderOptions {
+  /** Embedding model used by `embed()`. Default `text-embedding-3-small`. */
+  embeddingModel?: string;
+  /** Injected client — used by tests. Defaults to a real `OpenAI` client. */
+  client?: Pick<OpenAI, "chat" | "embeddings">;
+  /** Per-request timeout in ms. Default 60 000. */
+  timeoutMs?: number;
+}
 
 /**
  * OpenAIProvider — wraps the OpenAI Chat Completions + Embeddings APIs.
  *
- * Also supports function calling for structured output and
- * `text-embedding-3-small` for vector embeddings.
+ * Structured output uses function calling with a forced tool choice, which
+ * every current chat model supports. Reasoning models (gpt-5.x, o-series)
+ * reject `temperature`, so it is only sent to non-reasoning models.
  */
 export class OpenAIProvider implements IEnrichmentProvider {
   readonly name: string;
   readonly model: string;
+  readonly embeddingModel: string;
 
   private readonly apiKey: string;
-  private client: OpenAI | null = null;
+  private readonly timeoutMs: number;
+  private client: Pick<OpenAI, "chat" | "embeddings"> | null;
 
-  constructor(apiKey: string, model = "gpt-4o-mini") {
+  constructor(
+    apiKey: string,
+    model: string = MODEL_PRESETS[DEFAULT_QUALITY].openai,
+    options: OpenAIProviderOptions = {}
+  ) {
     this.apiKey = apiKey;
     this.model = model;
     this.name = `OpenAI/${model}`;
+    this.embeddingModel = options.embeddingModel ?? DEFAULT_EMBEDDING_MODELS.openai;
+    this.timeoutMs = options.timeoutMs ?? 60_000;
+    this.client = options.client ?? null;
   }
 
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private getClient(): OpenAI {
+  private getClient(): Pick<OpenAI, "chat" | "embeddings"> {
     if (!this.client) {
       this.client = new OpenAI({
         apiKey: this.apiKey,
         maxRetries: 0, // ProviderRouter owns retry / fallback logic
-        timeout: 60_000,
+        timeout: this.timeoutMs,
       });
     }
     return this.client;
+  }
+
+  private sampling(options?: CompletionOptions): { temperature?: number } {
+    if (options?.temperature === undefined) return {};
+    return openaiIsReasoningModel(this.model) ? {} : { temperature: options.temperature };
+  }
+
+  private messages(prompt: string, options?: CompletionOptions): OpenAI.Chat.ChatCompletionMessageParam[] {
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+    if (options?.systemPrompt) messages.push({ role: "system", content: options.systemPrompt });
+    messages.push({ role: "user", content: prompt });
+    return messages;
   }
 
   // ---------------------------------------------------------------------------
@@ -46,19 +83,15 @@ export class OpenAIProvider implements IEnrichmentProvider {
   async complete(prompt: string, options?: CompletionOptions): Promise<string> {
     const client = this.getClient();
 
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-
-    if (options?.systemPrompt) {
-      messages.push({ role: "system", content: options.systemPrompt });
-    }
-    messages.push({ role: "user", content: prompt });
-
-    const response = await client.chat.completions.create({
-      model: this.model,
-      max_tokens: options?.maxTokens ?? 1_000,
-      temperature: options?.temperature ?? 0.7,
-      messages,
-    });
+    const response = await client.chat.completions.create(
+      {
+        model: this.model,
+        max_completion_tokens: options?.maxTokens ?? 1_000,
+        messages: this.messages(prompt, options),
+        ...this.sampling(options),
+      },
+      { signal: options?.signal }
+    );
 
     const text = response.choices[0]?.message?.content;
     if (!text) {
@@ -75,29 +108,26 @@ export class OpenAIProvider implements IEnrichmentProvider {
   ): Promise<T> {
     const client = this.getClient();
 
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-
-    if (options?.systemPrompt) {
-      messages.push({ role: "system", content: options.systemPrompt });
-    }
-    messages.push({ role: "user", content: prompt });
-
-    const response = await client.chat.completions.create({
-      model: this.model,
-      temperature: options?.temperature ?? 0.7,
-      messages,
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: schema.name,
-            description: schema.description,
-            parameters: schema.parameters,
+    const response = await client.chat.completions.create(
+      {
+        model: this.model,
+        max_completion_tokens: options?.maxTokens ?? 4_096,
+        messages: this.messages(prompt, options),
+        ...this.sampling(options),
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: schema.name,
+              description: schema.description,
+              parameters: schema.parameters,
+            },
           },
-        },
-      ],
-      tool_choice: { type: "function", function: { name: schema.name } },
-    });
+        ],
+        tool_choice: { type: "function", function: { name: schema.name } },
+      },
+      { signal: options?.signal }
+    );
 
     const toolCall = response.choices[0]?.message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== schema.name) {
@@ -108,22 +138,22 @@ export class OpenAIProvider implements IEnrichmentProvider {
       return JSON.parse(toolCall.function.arguments) as T;
     } catch {
       throw new Error(
-        `Failed to parse structured output from ${this.model}: ${toolCall.function.arguments}`
+        `Failed to parse structured output from ${this.model}: ${toolCall.function.arguments.slice(0, 200)}`
       );
     }
   }
 
-  async embed(text: string): Promise<number[]> {
+  async embed(text: string, options?: { signal?: AbortSignal }): Promise<number[]> {
     const client = this.getClient();
 
-    const response = await client.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text,
-    });
+    const response = await client.embeddings.create(
+      { model: this.embeddingModel, input: text },
+      { signal: options?.signal }
+    );
 
     const embedding = response.data[0]?.embedding;
     if (!embedding) {
-      throw new Error(`No embedding returned from OpenAI`);
+      throw new Error(`No embedding returned from ${this.embeddingModel}`);
     }
 
     return embedding;
