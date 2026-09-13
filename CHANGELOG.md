@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **server (hosted MCP):** `trust proxy` is now set (configurable via `TRUST_PROXY`, default 1 hop). Behind Railway every client previously shared the proxy's IP and therefore one global rate-limit bucket.
+- **server:** `enrich_url` and batch URL items use core's SSRF-guarded `fetchPageForUrl` (HTTPS only, full private-range and DNS checks, no redirects, streamed 10 MB cap). The previous fetcher followed redirects to any address and buffered unbounded bodies.
+- **server:** Optional bearer auth (`MCP_API_KEYS`), optional daily spend cap (`DAILY_COST_CAP_USD`, returns `BUDGET_EXCEEDED`), CORS restricted to `CORS_ORIGINS` (non-browser MCP clients unaffected), upstream provider error text no longer echoed to clients.
+- **server:** Rate limit is weighted (a batch of N items costs N units), the MCP handshake is free, the key store is bounded (oldest-evicted), and a `Retry-After` header accompanies 429s.
+- **website:** `/api/fetch-url` is no longer an open proxy: HTTPS only, private/loopback/link-local/NAT64 literals refused, no redirects, text-only, 1 MB streamed cap, same-origin or allow-listed `Origin` required, `Cache-Control: private, no-store`, upstream status preserved. The playground no longer falls back to third-party CORS proxies (which received every URL and page body).
+
+### Changed
+- **server:** Refactored into `config.ts` (validated env), `app.ts` (Express factory with injectable router), `EnrichmentService` (tool dispatch), `RateLimiter` / `SpendGuard`. Fresh MCP server/transport per request are now closed when the response ends. Tool failures set `isError: true`; unknown tools return a JSON-RPC method-not-found error; `$schema` is stripped from `inputSchema`. `express.json` limit sized for a full batch (previously 100 KB, smaller than one legal batch). Health reports version from `package.json`, provider flags, tier, auth and cap. PostHog shutdown is awaited on SIGTERM so buffered events are not lost; batch analytics record total cost, not the first item's. `ENRICHMENT_QUALITY` selects the model tier. Enrichment timeout is enforced by the router's circuit breaker (which aborts the HTTP request) instead of a race that left the call running.
+- **core:** New `fetchPageForUrl()` returns text plus `title`, `ogImage`, `description`; `fetchBodyForUrl()` is a thin wrapper.
+
+### Added
+- **server:** First test suite (rate limiter, spend guard, config, HTTP integration against a fake provider: weights, CORS, auth, 413/400, SSRF refusals, batch errors, budget cap).
 ### Changed
 - **enrichment:** Idempotency now follows the spec's authorship rule. A field that already holds a non-empty value is left alone unless `force` is set — a value without a provenance record is treated as human-authored and is never overwritten implicitly. Empty values (`""`, `[]`, missing) are (re)generated. Applies to every pipeline. Previously human-written tags/summaries without provenance were silently replaced.
 - **enrichment:** When a pipeline cannot extract a usable value it now returns the ACO unchanged and writes **no** provenance record, so the next run retries. Previously tag/entity pipelines wrote `[]` plus provenance, which made the field skip forever.

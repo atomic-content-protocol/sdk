@@ -54,7 +54,13 @@ export {
   FetchError,
   type FetchStatus,
 } from "./utils/errors.js";
-export { fetchBodyForUrl, isBlockedAddress, type FetchBodyOptions } from "./utils/fetch-url.js";
+export {
+  fetchBodyForUrl,
+  fetchPageForUrl,
+  isBlockedAddress,
+  type FetchBodyOptions,
+  type FetchedPage,
+} from "./utils/fetch-url.js";
 export {
   SOURCE_TYPE_MODALITY,
   MODALITY_ENRICHMENT,

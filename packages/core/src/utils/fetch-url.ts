@@ -317,8 +317,23 @@ async function readBodyCapped(response: Response, url: string): Promise<string> 
 // Public API
 // ---------------------------------------------------------------------------
 
+/** Result of `fetchPageForUrl`: extracted text plus lightweight page metadata. */
+export interface FetchedPage {
+  /** Main text content, truncated to `maxChars`. */
+  text: string;
+  /** `og:title` or `<title>`, when present. */
+  title?: string;
+  /** `og:image` URL, when present. */
+  ogImage?: string;
+  /** Meta description, when present. */
+  description?: string;
+  /** Final URL requested (redirects are refused, so identical to the input). */
+  url: string;
+}
+
 /**
- * fetchBodyForUrl — fetch a URL and extract its main text content.
+ * fetchPageForUrl — fetch a URL, extract its main text content and basic
+ * metadata (title, og:image, description).
  *
  * Throws `ValidationError` for SSRF-unsafe URLs (non-HTTPS, private IPs,
  * hostnames that resolve to private IPs, embedded credentials, etc.).
@@ -330,10 +345,10 @@ async function readBodyCapped(response: Response, url: string): Promise<string> 
  * HTTP redirects are refused (`redirect: "error"`) to prevent SSRF via open
  * redirectors. Node.js ≥ 20 is required (enforced in package.json engines).
  */
-export async function fetchBodyForUrl(
+export async function fetchPageForUrl(
   url: string,
   options?: FetchBodyOptions
-): Promise<string> {
+): Promise<FetchedPage> {
   const maxChars = options?.maxChars ?? DEFAULT_MAX_CHARS;
   const userAgent = options?.userAgent ?? DEFAULT_USER_AGENT;
 
@@ -414,10 +429,43 @@ export async function fetchBodyForUrl(
   // maxChars * 8 gives headroom for the markup that extractText strips away.
   const rawHtml = html.length > maxChars * 8 ? html.slice(0, maxChars * 8) : html;
 
+  const title = metaContent(rawHtml, "property", "og:title") ?? /<title[^>]*>([^<]+)<\/title>/i.exec(rawHtml)?.[1]?.trim();
+  const ogImage = metaContent(rawHtml, "property", "og:image");
+  const description = metaContent(rawHtml, "name", "description");
+
   let text = extractText(rawHtml);
   if (!text) {
     text = spaFallback(rawHtml, url);
   }
 
-  return text.slice(0, maxChars);
+  return {
+    text: text.slice(0, maxChars),
+    ...(title ? { title: decodeEntities(title) } : {}),
+    ...(ogImage ? { ogImage } : {}),
+    ...(description ? { description: decodeEntities(description) } : {}),
+    url,
+  };
+}
+
+/** Minimal HTML entity decoding for title/description strings. */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+/**
+ * fetchBodyForUrl — fetch a URL and extract its main text content.
+ * Thin wrapper over `fetchPageForUrl` kept for API stability; see that
+ * function for the full error contract.
+ */
+export async function fetchBodyForUrl(
+  url: string,
+  options?: FetchBodyOptions
+): Promise<string> {
+  return (await fetchPageForUrl(url, options)).text;
 }
