@@ -1025,7 +1025,7 @@ provenance:
     <div class="pg-section-title">Try it yourself</div>
 
     <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem">
-      Paste a URL or text content below. Provide your Anthropic API key and click <strong>Enrich</strong> to get a live ACO back. Everything runs directly in your browser &#8212; your key is never sent to our servers.
+      Paste a URL or text content below. Provide your Anthropic API key and click <strong>Enrich</strong> to get a live ACO back. Everything runs directly in your browser &#8212; your key is never sent to our servers, and is forgotten when you close the tab.
     </p>
 
     <div class="pg-form">
@@ -1071,7 +1071,7 @@ provenance:
           <button class="pg-btn" id="pg-enrich-btn" onclick="runEnrichment()">Enrich</button>
         </div>
         <p class="pg-key-note">
-          &#128274; Your key is stored only in your browser (localStorage) and never transmitted to our servers. It is sent directly to <code>api.anthropic.com</code>.
+          &#128274; Your key is held only in this browser tab (sessionStorage), cleared when the tab closes, and never transmitted to our servers. It is sent directly to <code>api.anthropic.com</code>. Prefer a key with a low spend limit.
         </p>
       </div>
 
@@ -1202,13 +1202,13 @@ provenance:
     // ===================================================================
     (function() {
       try {
-        var stored = localStorage.getItem('acp_pg_apikey');
+        var stored = sessionStorage.getItem('acp_pg_apikey');
         if (stored) document.getElementById('pg-apikey').value = stored;
       } catch(e) {}
     })();
 
     document.getElementById('pg-apikey').addEventListener('change', function() {
-      try { localStorage.setItem('acp_pg_apikey', this.value); } catch(e) {}
+      try { sessionStorage.setItem('acp_pg_apikey', this.value); } catch(e) {}
     });
 
     // ===================================================================
@@ -1222,7 +1222,7 @@ provenance:
       var ogImage = null;
 
       if (apiKey) {
-        try { localStorage.setItem('acp_pg_apikey', apiKey); } catch(e) {}
+        try { sessionStorage.setItem('acp_pg_apikey', apiKey); } catch(e) {}
       }
 
       if (!apiKey || !apiKey.startsWith('sk-ant-')) {
