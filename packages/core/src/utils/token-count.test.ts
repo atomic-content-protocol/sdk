@@ -74,3 +74,32 @@ describe("computeTokenCounts", () => {
     expect(longer.approximate).toBeGreaterThan(short.approximate);
   });
 });
+
+describe("computeTokenCounts — cl100k_base (tiktoken installed)", () => {
+  it("populates cl100k with a real cl100k_base count", async () => {
+    // "hello world" is two tokens in cl100k_base ("hello", " world").
+    const counts = await computeTokenCounts("hello world");
+    expect(counts.cl100k).toBe(2);
+  });
+
+  it("uses cl100k_base rather than o200k_base", async () => {
+    const { get_encoding } = await import("tiktoken");
+    const text = "The quick brown fox jumps over the lazy dog. Zażółć gęślą jaźń.";
+    const cl100k = get_encoding("cl100k_base");
+    const o200k = get_encoding("o200k_base");
+    const expected = cl100k.encode(text).length;
+    const wrong = o200k.encode(text).length;
+    cl100k.free();
+    o200k.free();
+    // Sanity: the two encodings disagree on this string, so the assertion is meaningful.
+    expect(expected).not.toBe(wrong);
+    const counts = await computeTokenCounts(text);
+    expect(counts.cl100k).toBe(expected);
+  });
+
+  it("is stable across repeated calls (encoder is cached)", async () => {
+    const a = await computeTokenCounts("cache me");
+    const b = await computeTokenCounts("cache me");
+    expect(a.cl100k).toBe(b.cl100k);
+  });
+});

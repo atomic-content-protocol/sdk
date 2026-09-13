@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+- **core:** `FilesystemAdapter` now validates every object id against a strict allowlist before building a path. Previously an id such as `../escaped` (which can arrive from untrusted frontmatter) wrote and read files outside the vault.
+- **core:** `fetchBodyForUrl` SSRF guard now covers the full set of non-public ranges (0/8, 100.64/10, 127/8, 169.254/16, RFC 1918, 192.0.0/24, TEST-NETs, 224/4, 240/4, `::`, `::1`, IPv4-mapped, NAT64, fc00::/7, fe80::/10, ff00::/8), refuses embedded credentials and single-label hostnames, and resolves hostnames before fetching so a public name pointing at a private IP is rejected. The 10 MB response cap is now enforced on the byte stream, not only on `Content-Length`.
+- New export `isBlockedAddress()` so other layers can reuse the same range checks.
+
+### Fixed
+- **core:** Concurrent `putACO` / `deleteACO` calls no longer corrupt `.acp/index.json`. All writes are atomic (temp file + rename) and serialised behind a per-adapter lock. A corrupt or foreign index is rebuilt automatically instead of throwing.
+- **core:** `token_counts.cl100k` was actually computed with the `o200k_base` encoding (GPT-4o). It now uses `cl100k_base` as documented, and the encoder is created once per process instead of per call.
+- **core:** Network errors from Node's `fetch` carry their errno on `error.cause`; the SDK read the top-level `code` and therefore marked every DNS failure as retryable. `FetchError.networkCode` and `permanent` are now populated correctly.
+- **core:** `deleteACO` removes the object's embedding; `findSimilar` skips vectors whose dimensions do not match the query instead of returning `NaN` scores; `putEmbedding` rejects empty or non-finite vectors.
+- **core:** ACOs without a `status` are indexed as `draft` (the spec default) so `queryACOs({ status: ["draft"] })` matches them.
+
 ## [0.1.0] - 2026-04-16
 
 ### Added

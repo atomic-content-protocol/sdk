@@ -13,4 +13,4 @@ export type {
   SearchResult,
 } from "./adapter.interface.js";
 
-export { FilesystemAdapter } from "./filesystem.adapter.js";
+export { FilesystemAdapter, assertSafeId } from "./filesystem.adapter.js";

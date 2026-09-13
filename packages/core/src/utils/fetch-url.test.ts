@@ -1,9 +1,27 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { fetchBodyForUrl } from "./fetch-url.js";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { fetchBodyForUrl, isBlockedAddress } from "./fetch-url.js";
 import { ValidationError, FetchError } from "./errors.js";
 import { createACO } from "../index.js";
 
 const AUTHOR = { id: "test", name: "Test" };
+
+// ---------------------------------------------------------------------------
+// DNS mock — fetchBodyForUrl resolves hostnames before fetching so hostnames
+// pointing at private IPs are refused. Default every lookup to a public IP;
+// individual tests override via `mockDns`.
+// ---------------------------------------------------------------------------
+
+const dnsLookup = vi.hoisted(() => vi.fn());
+vi.mock("node:dns", () => ({ promises: { lookup: dnsLookup } }));
+
+function mockDns(addresses: string[]) {
+  dnsLookup.mockResolvedValue(addresses.map((address) => ({ address, family: address.includes(":") ? 6 : 4 })));
+}
+
+beforeEach(() => {
+  dnsLookup.mockReset();
+  mockDns(["93.184.216.34"]);
+});
 
 // ---------------------------------------------------------------------------
 // Mock helpers
@@ -25,7 +43,20 @@ function mockFetch(
   );
 }
 
+/**
+ * Mirror Node's real failure shape: `fetch` rejects with a TypeError whose
+ * `cause` carries the errno. A second helper keeps the legacy top-level shape.
+ */
 function mockNetworkError(code: string) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockRejectedValue(
+      new TypeError("fetch failed", { cause: Object.assign(new Error(`mock: ${code}`), { code }) })
+    )
+  );
+}
+
+function mockNetworkErrorTopLevel(code: string) {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockRejectedValue(Object.assign(new Error(`mock: ${code}`), { code }))
@@ -132,6 +163,54 @@ describe("fetchBodyForUrl — SSRF validation", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
+  it.each([
+    ["https://127.0.0.2/", "loopback /8 beyond .1"],
+    ["https://0.0.0.0/", "unspecified"],
+    ["https://100.100.100.200/", "shared address space 100.64/10"],
+    ["https://[::ffff:127.0.0.1]/", "IPv4-mapped loopback"],
+    ["https://[::ffff:10.0.0.1]/", "IPv4-mapped RFC 1918"],
+    ["https://[fe80::1]/", "IPv6 link-local"],
+    ["https://[fd00::1]/", "IPv6 unique local"],
+    ["https://[64:ff9b::7f00:1]/", "NAT64-wrapped loopback"],
+    ["https://localhost./", "trailing-dot localhost"],
+    ["https://LOCALHOST/", "uppercase localhost"],
+    ["https://intranet/", "single-label hostname"],
+    ["https://user:pw@example.com/", "embedded credentials"],
+    ["https://foo.localhost/", ".localhost suffix"],
+  ])("throws ValidationError for %s (%s)", async (url) => {
+    await expect(fetchBodyForUrl(url)).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("throws ValidationError when the hostname resolves to a private IP", async () => {
+    mockDns(["10.1.2.3"]);
+    mockFetch("<p>hi</p>");
+    await expect(fetchBodyForUrl("https://evil.example.com")).rejects.toBeInstanceOf(
+      ValidationError
+    );
+  });
+
+  it("throws ValidationError when ANY resolved address is private", async () => {
+    mockDns(["93.184.216.34", "169.254.169.254"]);
+    mockFetch("<p>hi</p>");
+    await expect(fetchBodyForUrl("https://mixed.example.com")).rejects.toBeInstanceOf(
+      ValidationError
+    );
+  });
+
+  it("maps a DNS failure to FetchError (permanent, ENOTFOUND)", async () => {
+    dnsLookup.mockRejectedValue(Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" }));
+    const err = await fetchBodyForUrl("https://nope.example.com").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).permanent).toBe(true);
+    expect((err as FetchError).networkCode).toBe("ENOTFOUND");
+  });
+
+  it("does not consult DNS for literal public IPs", async () => {
+    mockFetch("<p>hi</p>");
+    await fetchBodyForUrl("https://93.184.216.34/");
+    expect(dnsLookup).not.toHaveBeenCalled();
+  });
+
   it("does not throw for a valid HTTPS URL", async () => {
     mockFetch("<html><body>Hello</body></html>");
     await expect(fetchBodyForUrl("https://example.com")).resolves.toBeDefined();
@@ -202,6 +281,14 @@ describe("fetchBodyForUrl — network error mapping", () => {
       expect((err as FetchError).networkCode).toBe(code);
     }
   );
+
+  it("also reads a top-level errno code (non-Node fetch implementations)", async () => {
+    mockNetworkErrorTopLevel("ECONNREFUSED");
+    const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).permanent).toBe(true);
+    expect((err as FetchError).networkCode).toBe("ECONNREFUSED");
+  });
 
   it("redirect refusal → FetchError with permanent: false (no networkCode)", async () => {
     // Simulate what happens when redirect: "error" causes fetch to throw
@@ -393,6 +480,48 @@ describe("fetchBodyForUrl — response guards", () => {
     expect((err as FetchError).networkCode).toBe("RESPONSE_TOO_LARGE");
   });
 
+  it("throws FetchError (RESPONSE_TOO_LARGE) when a chunked body exceeds 10 MB without Content-Length", async () => {
+    const chunk = new Uint8Array(1_000_000);
+    let sent = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (sent >= 12) controller.close();
+        else { sent++; controller.enqueue(chunk); }
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: { get: (h: string) => (h === "content-type" ? "text/html" : null) },
+        body: stream,
+        text: async () => { throw new Error("text() must not be used when body stream is present"); },
+      })
+    );
+    const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).networkCode).toBe("RESPONSE_TOO_LARGE");
+  });
+
+  it("reads a streamed body under the cap", async () => {
+    const bytes = new TextEncoder().encode("<html><body><p>streamed content</p></body></html>");
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) { controller.enqueue(bytes); controller.close(); },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: { get: (h: string) => (h === "content-type" ? "text/html" : null) },
+        body: stream,
+        text: async () => "unused",
+      })
+    );
+    expect(await fetchBodyForUrl("https://example.com")).toBe("streamed content");
+  });
+
   it("does not throw when Content-Length is exactly at the limit (10 MB)", async () => {
     mockFetch("<html><body>ok</body></html>", 200, {
       "content-type": "text/html",
@@ -530,5 +659,32 @@ describe("createACO — url integration", () => {
     const aco = await createACO({ body: "hello", author: AUTHOR });
     expect(aco.body).toBe("hello");
     expect(aco.frontmatter["source_type"]).toBe("manual");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isBlockedAddress — range table
+// ---------------------------------------------------------------------------
+
+describe("isBlockedAddress", () => {
+  it.each([
+    "0.0.0.0", "0.255.255.255", "10.0.0.1", "100.64.0.1", "100.127.255.255", "127.0.0.1",
+    "127.255.255.254", "169.254.169.254", "172.16.0.1", "172.31.255.255", "192.0.0.1",
+    "192.168.1.1", "198.18.0.1", "224.0.0.1", "255.255.255.255",
+    "::", "::1", "::ffff:127.0.0.1", "::ffff:192.168.0.1", "fc00::1", "fdff::1", "fe80::1",
+    "febf::1", "ff02::1", "2001:db8::1", "64:ff9b::a00:1",
+  ])("blocks %s", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(true);
+  });
+
+  it.each([
+    "8.8.8.8", "93.184.216.34", "100.63.255.255", "100.128.0.0", "172.15.255.255", "172.32.0.0",
+    "1.1.1.1", "2606:4700:4700::1111", "2a00:1450:4001:80b::200e", "::ffff:8.8.8.8", "64:ff9b::808:808",
+  ])("allows %s", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(false);
+  });
+
+  it("treats non-IP strings as blocked", () => {
+    expect(isBlockedAddress("not-an-ip")).toBe(true);
   });
 });
