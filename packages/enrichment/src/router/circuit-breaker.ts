@@ -2,18 +2,18 @@
  * CircuitBreaker — protects downstream LLM calls from cascading failures.
  *
  * States:
- *   CLOSED   — normal operation; all requests pass through.
- *   OPEN     — too many failures; requests are rejected immediately.
- *   HALF_OPEN — after resetTimeout, one probe request is allowed.
+ *   CLOSED    — normal operation; all requests pass through.
+ *   OPEN      — too many failures; requests are rejected immediately.
+ *   HALF_OPEN — after resetTimeout, exactly one probe request is allowed.
+ *               Concurrent callers are rejected until the probe settles.
+ *               Probe success → CLOSED; probe failure → OPEN again.
  *
- * Differences from Stacklist's original:
- *   - No Sentry / captureError dependency — uses optional `onTrip` callback.
- *   - No logger dependency — uses optional `onStateChange` callback.
- *   - No ExternalServiceError — throws plain `Error` with descriptive messages.
- *   - No getRequestId() — not needed outside of HTTP middleware contexts.
+ * Every call runs under a per-request timeout. The wrapped function receives
+ * an `AbortSignal` that fires on timeout so the underlying HTTP request is
+ * actually cancelled rather than left running (and billing) in the background.
  */
 
-type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
+export type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
 export interface CircuitBreakerOptions {
   /** Number of consecutive failures before tripping OPEN. Default: 5. */
@@ -23,32 +23,56 @@ export interface CircuitBreakerOptions {
   /** Per-request timeout in milliseconds. Default: 30 000. */
   requestTimeoutMs?: number;
   /**
-   * Called once when the circuit trips from CLOSED/HALF_OPEN → OPEN.
-   * Useful for metrics, structured logging, or alerting.
+   * Called every time the circuit trips to OPEN — from CLOSED after
+   * `failureThreshold` consecutive failures, or from HALF_OPEN after a failed
+   * probe. Useful for metrics, structured logging, or alerting.
    */
   onTrip?: (name: string, failures: number) => void;
   /**
    * Called on every state transition.
    * Provides the breaker name, previous state, and new state.
    */
-  onStateChange?: (name: string, from: string, to: string) => void;
+  onStateChange?: (name: string, from: CircuitState, to: CircuitState) => void;
+}
+
+/** Error thrown when the breaker refuses a call without executing it. */
+export class CircuitOpenError extends Error {
+  readonly breaker: string;
+  readonly state: CircuitState;
+
+  constructor(breaker: string, state: CircuitState, message: string) {
+    super(message);
+    this.name = "CircuitOpenError";
+    this.breaker = breaker;
+    this.state = state;
+  }
+}
+
+/** Error thrown when a call exceeds `requestTimeoutMs`. */
+export class CircuitTimeoutError extends Error {
+  readonly breaker: string;
+  readonly timeoutMs: number;
+
+  constructor(breaker: string, timeoutMs: number) {
+    super(`Circuit breaker "${breaker}" request timed out after ${timeoutMs}ms`);
+    this.name = "CircuitTimeoutError";
+    this.breaker = breaker;
+    this.timeoutMs = timeoutMs;
+  }
 }
 
 export class CircuitBreaker {
   private state: CircuitState = "CLOSED";
   private failures = 0;
   private lastFailureTime = 0;
+  private probeInFlight = false;
 
   private readonly name: string;
   private readonly failureThreshold: number;
   private readonly resetTimeoutMs: number;
   private readonly requestTimeoutMs: number;
   private readonly onTrip?: (name: string, failures: number) => void;
-  private readonly onStateChange?: (
-    name: string,
-    from: string,
-    to: string
-  ) => void;
+  private readonly onStateChange?: (name: string, from: CircuitState, to: CircuitState) => void;
 
   constructor(name: string, options: CircuitBreakerOptions = {}) {
     this.name = name;
@@ -61,27 +85,25 @@ export class CircuitBreaker {
 
   /**
    * Execute an async function through the circuit breaker.
-   * Applies a per-request timeout and tracks failures to trip the circuit.
+   *
+   * `fn` receives an AbortSignal that is aborted when the per-request timeout
+   * fires; pass it to the HTTP client so the request is cancelled.
    */
-  async execute<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.state === "OPEN") {
-      const elapsed = Date.now() - this.lastFailureTime;
-      if (elapsed < this.resetTimeoutMs) {
-        const remaining = Math.ceil((this.resetTimeoutMs - elapsed) / 1_000);
-        throw new Error(
-          `Circuit breaker "${this.name}" is OPEN (${this.failures} failures, resets in ${remaining}s)`
-        );
-      }
-      this.transitionTo("HALF_OPEN");
-    }
+  async execute<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
+    this.admit();
+
+    const isProbe = this.state === "HALF_OPEN";
+    if (isProbe) this.probeInFlight = true;
 
     try {
       const result = await this.executeWithTimeout(fn);
       this.onSuccess();
       return result;
     } catch (error) {
-      this.onFailure(error);
+      this.onFailure();
       throw error;
+    } finally {
+      if (isProbe) this.probeInFlight = false;
     }
   }
 
@@ -89,63 +111,81 @@ export class CircuitBreaker {
     return this.state;
   }
 
+  /** Consecutive failures since the last success. */
+  getFailureCount(): number {
+    return this.failures;
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private async executeWithTimeout<T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      let settled = false;
+  /** Decide whether a call may proceed; transitions OPEN → HALF_OPEN when due. */
+  private admit(): void {
+    if (this.state === "OPEN") {
+      const elapsed = Date.now() - this.lastFailureTime;
+      if (elapsed < this.resetTimeoutMs) {
+        const remaining = Math.ceil((this.resetTimeoutMs - elapsed) / 1_000);
+        throw new CircuitOpenError(
+          this.name,
+          "OPEN",
+          `Circuit breaker "${this.name}" is OPEN (${this.failures} failures, resets in ${remaining}s)`
+        );
+      }
+      this.transitionTo("HALF_OPEN");
+    }
 
-      const timer = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          reject(
-            new Error(
-              `Circuit breaker "${this.name}" request timed out after ${this.requestTimeoutMs}ms`
-            )
-          );
-        }
-      }, this.requestTimeoutMs);
-
-      fn().then(
-        (value) => {
-          if (!settled) {
-            settled = true;
-            clearTimeout(timer);
-            resolve(value);
-          }
-        },
-        (err) => {
-          if (!settled) {
-            settled = true;
-            clearTimeout(timer);
-            reject(err);
-          }
-        }
+    if (this.state === "HALF_OPEN" && this.probeInFlight) {
+      throw new CircuitOpenError(
+        this.name,
+        "HALF_OPEN",
+        `Circuit breaker "${this.name}" is HALF_OPEN and a probe is already in flight`
       );
+    }
+  }
+
+  private async executeWithTimeout<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        const err = new CircuitTimeoutError(this.name, this.requestTimeoutMs);
+        controller.abort(err);
+        reject(err);
+      }, this.requestTimeoutMs);
     });
+
+    try {
+      return await Promise.race([fn(controller.signal), timeout]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
   }
 
   private onSuccess(): void {
+    this.failures = 0;
     if (this.state !== "CLOSED") {
       this.transitionTo("CLOSED");
     }
-    this.failures = 0;
   }
 
-  private onFailure(error?: unknown): void {
+  private onFailure(): void {
     this.failures += 1;
     this.lastFailureTime = Date.now();
 
-    if (this.failures >= this.failureThreshold) {
-      this.transitionTo("OPEN");
-      this.onTrip?.(this.name, this.failures);
+    // A failed probe re-opens immediately; otherwise trip at the threshold.
+    if (this.state === "HALF_OPEN" || this.failures >= this.failureThreshold) {
+      if (this.state !== "OPEN") {
+        this.transitionTo("OPEN");
+        this.onTrip?.(this.name, this.failures);
+      }
     }
   }
 
   private transitionTo(newState: CircuitState): void {
     const prev = this.state;
+    if (prev === newState) return;
     this.state = newState;
     this.onStateChange?.(this.name, prev, newState);
   }

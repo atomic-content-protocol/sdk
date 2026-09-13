@@ -1,14 +1,11 @@
 import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
-import type {
-  IEnrichmentPipeline,
-  EnrichmentResult,
-  EnrichmentOptions,
-} from "./pipeline.interface.js";
+import type { EnrichmentOptions } from "./pipeline.interface.js";
+import { SingleFieldPipeline, resolveModality, type GeneratedField } from "./single-field.pipeline.js";
 import { buildClassificationPrompt } from "../utils/prompts.js";
-import { createProvenanceRecord } from "../utils/provenance.js";
+import { completeWithModel } from "../utils/provider-meta.js";
 
-const VALID_CLASSIFICATIONS = [
+export const VALID_CLASSIFICATIONS = [
   "reference",
   "framework",
   "memo",
@@ -19,10 +16,13 @@ const VALID_CLASSIFICATIONS = [
   "code",
   "tutorial",
   "analysis",
+  "image",
+  "video",
+  "audio",
   "other",
 ] as const;
 
-type Classification = (typeof VALID_CLASSIFICATIONS)[number];
+export type Classification = (typeof VALID_CLASSIFICATIONS)[number];
 
 function isValidClassification(value: string): value is Classification {
   return (VALID_CLASSIFICATIONS as readonly string[]).includes(value);
@@ -31,71 +31,39 @@ function isValidClassification(value: string): value is Classification {
 /**
  * ClassificationPipeline — classifies ACO content into a fixed taxonomy.
  *
- * Idempotent: skips enrichment if `frontmatter.classification` and a provenance
- * record for "classification" already exist, unless `options.force` is true.
+ * Media ACOs (image / video source types) are classified deterministically
+ * from their modality without an LLM call. Idempotent: leaves an existing
+ * `classification` alone unless `force` is set.
  */
-export class ClassificationPipeline implements IEnrichmentPipeline {
+export class ClassificationPipeline extends SingleFieldPipeline<Classification> {
   readonly name = "classification";
   readonly field = "classification";
 
-  async enrich(
+  protected async generate(
     aco: ACO,
     provider: IEnrichmentProvider,
-    options?: EnrichmentOptions
-  ): Promise<EnrichmentResult> {
-    const { frontmatter, body } = aco;
-
-    // Idempotency check
-    const existing = frontmatter["classification"];
-    const existingProvenance = (
-      frontmatter["provenance"] as Record<string, unknown> | undefined
-    )?.["classification"];
-    if (existing && existingProvenance && !options?.force) {
-      return {
-        aco,
-        fieldUpdated: this.field,
-        confidence: 0,
-        model: "skipped",
-      };
+    _options?: EnrichmentOptions
+  ): Promise<GeneratedField<Classification> | null> {
+    const modality = resolveModality(aco.frontmatter);
+    if (modality === "image" || modality === "video") {
+      return { value: modality, confidence: 1.0, model: "system" };
     }
 
-    const title = String(frontmatter["title"] ?? "");
-    const prompt = buildClassificationPrompt(title, body);
+    const title = String(aco.frontmatter["title"] ?? "");
+    const { result, model } = await completeWithModel(
+      provider,
+      buildClassificationPrompt(title, aco.body, modality),
+      { maxTokens: 20, temperature: 0.1 } // low temperature: deterministic classification
+    );
 
-    const response = await provider.complete(prompt, {
-      maxTokens: 20,
-      temperature: 0.1, // Low temperature: deterministic classification
-    });
-
-    // Extract just the classification word from the response
-    const raw = response.trim().toLowerCase();
-    // Try the whole response first, then the first word
+    const raw = result.trim().toLowerCase().replace(/[^a-z\s]/g, "");
+    const firstWord = raw.split(/\s+/)[0] ?? "";
     const classification: Classification = isValidClassification(raw)
       ? raw
-      : isValidClassification(raw.split(/\s+/)[0] ?? "")
-        ? (raw.split(/\s+/)[0] as Classification)
+      : isValidClassification(firstWord)
+        ? firstWord
         : "other";
 
-    const confidence = classification !== "other" ? 0.85 : 0.5;
-    const provRecord = createProvenanceRecord(provider.model, confidence, {
-      pipeline: this.name,
-      tool: options?.tool,
-    });
-
-    const updatedFrontmatter: Record<string, unknown> = {
-      ...frontmatter,
-      classification,
-      provenance: {
-        ...(frontmatter["provenance"] as Record<string, unknown> | undefined),
-        classification: provRecord,
-      },
-    };
-
-    return {
-      aco: { frontmatter: updatedFrontmatter, body },
-      fieldUpdated: this.field,
-      confidence,
-      model: provider.model,
-    };
+    return { value: classification, confidence: classification !== "other" ? 0.85 : 0.5, model };
   }
 }

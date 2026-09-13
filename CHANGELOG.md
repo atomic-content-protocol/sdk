@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **enrichment:** Idempotency now follows the spec's authorship rule. A field that already holds a non-empty value is left alone unless `force` is set — a value without a provenance record is treated as human-authored and is never overwritten implicitly. Empty values (`""`, `[]`, missing) are (re)generated. Applies to every pipeline. Previously human-written tags/summaries without provenance were silently replaced.
+- **enrichment:** When a pipeline cannot extract a usable value it now returns the ACO unchanged and writes **no** provenance record, so the next run retries. Previously tag/entity pipelines wrote `[]` plus provenance, which made the field skip forever.
+- **enrichment:** `CircuitBreaker` HALF_OPEN admits exactly one probe; concurrent callers get a `CircuitOpenError` without executing. A failed probe re-opens immediately. The request timeout now aborts the underlying HTTP call via `AbortSignal` (`CircuitTimeoutError`) instead of leaving it running. `execute(fn)` passes the signal to `fn`.
+- **enrichment:** `ProviderRouter` forwards the breaker signal to providers, reports bypassed providers via `onProviderSkipped`, exposes `providers` (name/model/state) and `embeddingModel`, and `embedWithMeta` returns the embedding model rather than the chat model.
+- **enrichment:** `ClassificationPipeline` classifies image/video ACOs deterministically from their source type without an LLM call.
+- **enrichment:** Single-field pipelines share a `SingleFieldPipeline` base class (exported) and a fence/prose-tolerant `extractJsonArray()`.
+
+### Added
+- **enrichment:** `BatchEnricher.enrichMany(acos, { concurrency })` — bounded parallelism (default 1, unchanged behaviour). Results keep input order; `errors[]` now carries the input `index`.
+- **enrichment:** `completeWithModel` / `structuredCompleteWithModel` / `embedWithModel` helpers and optional `*WithMeta` provider methods.
+
+### Fixed
+- **enrichment:** Provenance recorded the router's *primary* model even when a fallback provider answered (e.g. said `claude-haiku-4-5` after falling back to OpenAI). Every pipeline now records the model that actually produced the field.
+- **enrichment:** `EmbedPipeline` provenance recorded the chat model instead of the embedding model.
+
 ### Added
 - **enrichment:** Quality tiers. `ProviderRouter.fromConfig({ quality: "fast" | "balanced" | "best", ... })` picks default models per provider (`fast` → Claude Haiku 4.5 / GPT-5.6 Luna, `balanced` → Claude Sonnet 5 / GPT-5.6 Terra, `best` → Claude Opus 5 / GPT-5.6 Sol). Default `fast`; an explicit `model` still wins. Exposed as `MODEL_PRESETS`, `MODEL_PRICING`, `pricingFor()`.
 - **enrichment:** `UnifiedOutputSchema` / `parseUnifiedOutput()` — Zod validation and normalisation of model output (tags lower-cased, de-duplicated, ≤ 20; summary ≤ 500 chars; entity types/confidence sanitised; language as ISO 639-1 or null). `UnifiedPipeline` runs every response through it before touching frontmatter.

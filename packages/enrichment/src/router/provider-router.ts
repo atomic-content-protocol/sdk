@@ -1,4 +1,4 @@
-import { CircuitBreaker } from "./circuit-breaker.js";
+import { CircuitBreaker, CircuitOpenError } from "./circuit-breaker.js";
 import { AnthropicProvider } from "../providers/anthropic.provider.js";
 import { OpenAIProvider } from "../providers/openai.provider.js";
 import { OllamaProvider } from "../providers/ollama.provider.js";
@@ -32,6 +32,11 @@ export interface RouterOptions {
   requestTimeoutMs?: number;
   /** Called when a provider attempt fails. Useful for structured logging. */
   onProviderFailure?: (provider: string, error: Error) => void;
+  /**
+   * Called when a provider is bypassed without being tried because its
+   * circuit is OPEN (or a HALF_OPEN probe is already in flight).
+   */
+  onProviderSkipped?: (provider: string, reason: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,21 +79,39 @@ interface ProviderEntry {
  * automatic fallback.
  *
  * The router itself implements `IEnrichmentProvider` so it can be passed
- * directly wherever a provider is expected. When used as a provider, it
- * delegates to the first healthy entry in the chain and returns only the
- * string/structured result (no provider metadata).
+ * directly wherever a provider is expected. `name` / `model` describe the
+ * *primary* (first configured) provider; they cannot know which entry will
+ * answer a given call. Pipelines therefore use the `*WithMeta` methods (via
+ * `utils/provider-meta.ts`) so provenance records the model that actually
+ * produced each field.
  *
- * Use the typed `complete`/`structuredComplete`/`embed` methods directly when
- * you need to know which provider handled the request.
+ * Every attempt runs through that provider's `CircuitBreaker`, whose timeout
+ * signal is forwarded to the provider so a timed-out request is cancelled.
  */
 export class ProviderRouter implements IEnrichmentProvider {
-  // IEnrichmentProvider identity fields: reflect the first healthy provider
+  /** Name of the primary (first configured) provider. */
   get name(): string {
     return this.entries[0]?.provider.name ?? "ProviderRouter";
   }
 
+  /** Model of the primary (first configured) provider. See class docs. */
   get model(): string {
     return this.entries[0]?.provider.model ?? "unknown";
+  }
+
+  /** Embedding model of the first provider that supports embeddings. */
+  get embeddingModel(): string | undefined {
+    const e = this.entries.find((x) => !!x.provider.embed);
+    return e ? e.provider.embeddingModel ?? e.provider.model : undefined;
+  }
+
+  /** Read-only view of the chain for diagnostics. */
+  get providers(): ReadonlyArray<{ name: string; model: string; state: string }> {
+    return this.entries.map((e) => ({
+      name: e.provider.name,
+      model: e.provider.model,
+      state: e.circuitBreaker.getState(),
+    }));
   }
 
   private readonly entries: ProviderEntry[];
@@ -131,8 +154,8 @@ export class ProviderRouter implements IEnrichmentProvider {
     return result;
   }
 
-  async embed(text: string): Promise<number[]> {
-    const { result } = await this.embedWithMeta(text);
+  async embed(text: string, options?: { signal?: AbortSignal }): Promise<number[]> {
+    const { result } = await this.embedWithMeta(text, options);
     return result;
   }
 
@@ -144,8 +167,8 @@ export class ProviderRouter implements IEnrichmentProvider {
     prompt: string,
     options?: CompletionOptions
   ): Promise<CompletionResponse> {
-    const { result, entry } = await this.withFallback("completion", (e) =>
-      e.provider.complete(prompt, options)
+    const { result, entry } = await this.withFallback("completion", (e, signal) =>
+      e.provider.complete(prompt, { ...options, signal: mergeSignals(options?.signal, signal) })
     );
     return { result, provider: entry.provider.name, model: entry.provider.model };
   }
@@ -155,14 +178,16 @@ export class ProviderRouter implements IEnrichmentProvider {
     schema: StructuredSchema,
     options?: CompletionOptions
   ): Promise<StructuredResponse<T>> {
-    const { result, entry } = await this.withFallback(
-      "structured completion",
-      (e) => e.provider.structuredComplete<T>(prompt, schema, options)
+    const { result, entry } = await this.withFallback("structured completion", (e, signal) =>
+      e.provider.structuredComplete<T>(prompt, schema, {
+        ...options,
+        signal: mergeSignals(options?.signal, signal),
+      })
     );
     return { result, provider: entry.provider.name, model: entry.provider.model };
   }
 
-  async embedWithMeta(text: string): Promise<EmbedResponse> {
+  async embedWithMeta(text: string, options?: { signal?: AbortSignal }): Promise<EmbedResponse> {
     // Only try providers that have the embed capability
     const embeddable = this.entries.filter((e) => !!e.provider.embed);
     if (embeddable.length === 0) {
@@ -173,15 +198,19 @@ export class ProviderRouter implements IEnrichmentProvider {
 
     const { result, entry } = await this.withFallback(
       "embed",
-      (e) => {
+      (e, signal) => {
         if (!e.provider.embed) {
           throw new Error(`Provider "${e.provider.name}" does not support embed`);
         }
-        return e.provider.embed(text);
+        return e.provider.embed(text, { signal: mergeSignals(options?.signal, signal) });
       },
       embeddable
     );
-    return { result, provider: entry.provider.name, model: entry.provider.model };
+    return {
+      result,
+      provider: entry.provider.name,
+      model: entry.provider.embeddingModel ?? entry.provider.model,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -234,24 +263,27 @@ export class ProviderRouter implements IEnrichmentProvider {
 
   private async withFallback<T>(
     operationName: string,
-    invoke: (entry: ProviderEntry) => Promise<T>,
+    invoke: (entry: ProviderEntry, signal: AbortSignal) => Promise<T>,
     entries: ProviderEntry[] = this.entries
   ): Promise<{ result: T; entry: ProviderEntry }> {
     const errors: Array<{ provider: string; error: string }> = [];
+    let skipped = 0;
 
     for (const entry of entries) {
       const { circuitBreaker, provider } = entry;
 
-      // Skip providers whose circuit is OPEN
-      if (circuitBreaker.getState() === "OPEN") {
-        continue;
-      }
-
       try {
-        const result = await circuitBreaker.execute(() => invoke(entry));
+        const result = await circuitBreaker.execute((signal) => invoke(entry, signal));
         return { result, entry };
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
+        if (err instanceof CircuitOpenError) {
+          // Not a provider failure: the breaker refused the call. Report it
+          // separately so operators can see a provider being bypassed.
+          skipped += 1;
+          this.options.onProviderSkipped?.(provider.name, err.message);
+          continue;
+        }
         errors.push({ provider: provider.name, error: err.message });
         this.options.onProviderFailure?.(provider.name, err);
       }
@@ -259,7 +291,21 @@ export class ProviderRouter implements IEnrichmentProvider {
 
     const tried = errors.map((e) => e.provider).join(" → ");
     throw new Error(
-      `All providers exhausted for "${operationName}". Tried: ${tried || "(none available — all circuits OPEN)"}. Errors: ${JSON.stringify(errors)}`
+      `All providers exhausted for "${operationName}". Tried: ${
+        tried || "(none available — all circuits OPEN)"
+      }${skipped ? ` (${skipped} skipped, circuit open)` : ""}. Errors: ${JSON.stringify(errors)}`
     );
   }
+}
+
+/** Combine the caller's signal with the breaker's timeout signal. */
+function mergeSignals(a: AbortSignal | undefined, b: AbortSignal): AbortSignal {
+  if (!a) return b;
+  if (a.aborted) return a;
+  if (b.aborted) return b;
+  const controller = new AbortController();
+  const onAbort = (s: AbortSignal) => () => controller.abort(s.reason);
+  a.addEventListener("abort", onAbort(a), { once: true });
+  b.addEventListener("abort", onAbort(b), { once: true });
+  return controller.signal;
 }

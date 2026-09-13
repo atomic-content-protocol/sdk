@@ -64,12 +64,31 @@ describe('TagPipeline', () => {
       expect(result.aco.frontmatter['tags']).toEqual(['acp', 'open-standard', 'llm']);
     });
 
-    it('returns empty tags array when response has no valid JSON array', async () => {
+    it('leaves the ACO untouched (no tags, no provenance) when the response has no JSON array', async () => {
       const aco = makeACO();
       const provider = makeMockProvider('no json here');
 
       const result = await pipeline.enrich(aco, provider);
-      expect(result.aco.frontmatter['tags']).toEqual([]);
+      expect(result.aco.frontmatter['tags']).toBeUndefined();
+      expect(result.aco.frontmatter['provenance']).toBeUndefined();
+      expect(result.confidence).toBe(0);
+    });
+
+    it('does not poison idempotency: a failed run is retried on the next call', async () => {
+      const aco = makeACO();
+      const failed = await pipeline.enrich(aco, makeMockProvider('garbage'));
+      const retried = await pipeline.enrich(failed.aco, makeMockProvider('["ai"]'));
+      expect(retried.aco.frontmatter['tags']).toEqual(['ai']);
+    });
+
+    it('parses arrays inside fenced code blocks', async () => {
+      const result = await pipeline.enrich(makeACO(), makeMockProvider('```json\n["a", "b"]\n```'));
+      expect(result.aco.frontmatter['tags']).toEqual(['a', 'b']);
+    });
+
+    it('normalises tags to lowercase hyphenated and de-duplicates', async () => {
+      const result = await pipeline.enrich(makeACO(), makeMockProvider('["AI", "ai", "Machine Learning"]'));
+      expect(result.aco.frontmatter['tags']).toEqual(['ai', 'machine-learning']);
     });
 
     it('truncates tags to a maximum of 7', async () => {
@@ -114,22 +133,26 @@ describe('TagPipeline', () => {
   });
 
   describe('never overwrites human tags', () => {
-    it('runs enrichment when tags exist but there is no provenance entry (human-authored tags are overwritten)', async () => {
-      // The idempotency guard requires BOTH tags AND provenance.tags.
-      // If a human set tags without provenance, the pipeline will proceed and
-      // overwrite them — this is the current code behaviour.
-      // NOTE: a future version may add a separate "human-authored" guard.
-      const aco = makeACO({
-        tags: ['human-tag'],
-        // No provenance field at all
-      });
+    it('skips when tags exist without a provenance entry (human-authored)', async () => {
+      const aco = makeACO({ tags: ['human-tag'] });
       const provider = makeMockProvider('["ai-tag"]');
 
       const result = await pipeline.enrich(aco, provider);
 
-      // Pipeline ran and produced new tags
+      expect(result.aco.frontmatter['tags']).toEqual(['human-tag']);
+      expect(result.model).toBe('skipped');
+    });
+
+    it('overwrites human tags only with force', async () => {
+      const aco = makeACO({ tags: ['human-tag'] });
+      const result = await pipeline.enrich(aco, makeMockProvider('["ai-tag"]'), { force: true });
       expect(result.aco.frontmatter['tags']).toEqual(['ai-tag']);
-      expect(result.model).toBe('mock-model');
+    });
+
+    it('re-enriches when tags is an empty array', async () => {
+      const aco = makeACO({ tags: [] });
+      const result = await pipeline.enrich(aco, makeMockProvider('["ai-tag"]'));
+      expect(result.aco.frontmatter['tags']).toEqual(['ai-tag']);
     });
   });
 });

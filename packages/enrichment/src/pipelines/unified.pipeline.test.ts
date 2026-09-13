@@ -118,7 +118,7 @@ describe('UnifiedPipeline', () => {
         tags: ['existing'],
         summary: 'existing summary',
         classification: 'notes',
-        key_entities: [],
+        key_entities: [{ type: 'concept', name: 'x', confidence: 0.5 }],
         language: 'en',
         provenance: fullProvenance,
       });
@@ -128,6 +128,42 @@ describe('UnifiedPipeline', () => {
 
       expect(provider.callCount).toBe(0);
       expect(result.model).toBe('skipped');
+    });
+
+    it('skips fields that hold human-authored values (no provenance) and fills the rest', async () => {
+      const aco = makeACO({ tags: ['human'], summary: 'human summary' });
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['tags']).toEqual(['human']);
+      expect(result.aco.frontmatter['summary']).toBe('human summary');
+      expect(result.aco.frontmatter['classification']).toBe(MOCK_OUTPUT.classification);
+      const prov = result.aco.frontmatter['provenance'] as Record<string, unknown>;
+      expect(prov['tags']).toBeUndefined();
+      expect(prov['classification']).toBeDefined();
+    });
+
+    it('re-enriches empty values even when provenance exists (no poisoning)', async () => {
+      const aco = makeACO({
+        key_entities: [],
+        provenance: { key_entities: { model: 'old', timestamp: '2024-01-01', confidence: 0 } },
+      });
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(result.aco.frontmatter['key_entities']).toEqual(MOCK_OUTPUT.key_entities);
+    });
+
+    it('records the model that actually answered when the provider exposes structuredCompleteWithMeta', async () => {
+      const provider: IEnrichmentProvider = {
+        name: 'router',
+        model: 'primary-model',
+        complete: async () => '',
+        structuredComplete: async () => MOCK_OUTPUT as any,
+        structuredCompleteWithMeta: async () => ({ result: MOCK_OUTPUT as any, provider: 'fallback', model: 'fallback-model' }),
+      };
+      const result = await pipeline.enrich(makeACO(), provider);
+      const prov = result.aco.frontmatter['provenance'] as Record<string, Record<string, unknown>>;
+      expect(prov['tags']!['model']).toBe('fallback-model');
+      expect(result.model).toBe('fallback-model');
     });
   });
 

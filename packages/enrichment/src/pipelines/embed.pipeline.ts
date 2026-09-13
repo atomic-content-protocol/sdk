@@ -6,6 +6,8 @@ import type {
   EnrichmentOptions,
 } from "./pipeline.interface.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
+import { embedWithModel } from "../utils/provider-meta.js";
+import { readProvenance } from "./single-field.pipeline.js";
 
 /**
  * Maximum body length (in characters) passed to the embedding model.
@@ -40,7 +42,7 @@ export class EmbedPipeline implements IEnrichmentPipeline {
     provider: IEnrichmentProvider,
     options?: EnrichmentOptions
   ): Promise<EnrichmentResult> {
-    if (!provider.embed) {
+    if (!provider.embed && !provider.embedWithMeta) {
       throw new Error(
         `Provider "${provider.name}" does not support embeddings. ` +
           `Use a provider that implements the embed() method (e.g. OpenAIProvider or OllamaProvider).`
@@ -50,9 +52,7 @@ export class EmbedPipeline implements IEnrichmentPipeline {
     const { frontmatter, body } = aco;
 
     // Idempotency check — skip if provenance record for "embedding" exists
-    const existingProvenance = (
-      frontmatter["provenance"] as Record<string, unknown> | undefined
-    )?.["embedding"];
+    const existingProvenance = readProvenance(frontmatter)["embedding"];
     if (existingProvenance && !options?.force) {
       return {
         aco,
@@ -67,28 +67,26 @@ export class EmbedPipeline implements IEnrichmentPipeline {
     const truncatedBody = body.slice(0, MAX_BODY_CHARS);
     const textToEmbed = title ? `${title}\n\n${truncatedBody}` : truncatedBody;
 
-    // Generate the embedding vector
-    const vector = await provider.embed(textToEmbed);
+    // Generate the embedding vector; `model` is the embedding model that
+    // actually ran (after router fallback), not the chat model.
+    const { result: vector, model } = await embedWithModel(provider, textToEmbed);
 
     // Write a provenance record to frontmatter so subsequent runs can skip
-    const provRecord = createProvenanceRecord(provider.model, 1.0, {
+    const provRecord = createProvenanceRecord(model, 1.0, {
       pipeline: this.name,
       tool: options?.tool,
     });
 
     const updatedFrontmatter: Record<string, unknown> = {
       ...frontmatter,
-      provenance: {
-        ...(frontmatter["provenance"] as Record<string, unknown> | undefined),
-        embedding: provRecord,
-      },
+      provenance: { ...readProvenance(frontmatter), embedding: provRecord },
     };
 
     return {
       aco: { frontmatter: updatedFrontmatter, body },
       fieldUpdated: this.field,
       confidence: 1.0,
-      model: provider.model,
+      model,
       embedding: vector,
     };
   }

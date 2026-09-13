@@ -44,6 +44,30 @@ function makeNoEmbedProvider(): IEnrichmentProvider {
 // Tests
 // ---------------------------------------------------------------------------
 
+describe('EmbedPipeline — model attribution', () => {
+  it('records the provider embeddingModel rather than the chat model', async () => {
+    const provider: IEnrichmentProvider = {
+      ...makeEmbedProvider(),
+      model: 'chat-model',
+      embeddingModel: 'embed-model',
+    };
+    const result = await new EmbedPipeline().enrich(makeACO(), provider);
+    const prov = result.aco.frontmatter['provenance'] as Record<string, Record<string, unknown>>;
+    expect(prov['embedding']!['model']).toBe('embed-model');
+    expect(result.model).toBe('embed-model');
+  });
+
+  it('uses embedWithMeta when available (router fallback attribution)', async () => {
+    const provider: IEnrichmentProvider = {
+      ...makeEmbedProvider(),
+      embedWithMeta: async () => ({ result: MOCK_VECTOR, provider: 'p2', model: 'p2-embed' }),
+    };
+    const result = await new EmbedPipeline().enrich(makeACO(), provider);
+    expect(result.model).toBe('p2-embed');
+    expect(result.embedding).toEqual(MOCK_VECTOR);
+  });
+});
+
 describe('EmbedPipeline', () => {
   const pipeline = new EmbedPipeline();
 

@@ -2,14 +2,29 @@ import type { ACO } from "@atomic-content-protocol/core";
 import type { IEnrichmentPipeline, EnrichmentOptions } from "../pipelines/pipeline.interface.js";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 
+export interface BatchOptions extends EnrichmentOptions {
+  /**
+   * Maximum number of ACOs enriched at the same time. Default 1 (strictly
+   * serial, the safest choice for LLM rate limits). Raise it when your
+   * provider quota allows; the router's circuit breakers still apply.
+   */
+  concurrency?: number;
+  /** Called after each ACO completes (or fails), with running totals. */
+  onProgress?: (completed: number, total: number) => void;
+}
+
+export interface BatchResult {
+  /** Successfully enriched ACOs, in the same relative order as the input. */
+  results: ACO[];
+  /** ACOs that failed, with their id (or `index-N`) and error message. */
+  errors: Array<{ id: string; index: number; error: string }>;
+}
+
 /**
  * BatchEnricher — runs a sequence of enrichment pipelines over one or many ACOs.
  *
  * The router is accepted as `IEnrichmentProvider` — `ProviderRouter` satisfies
  * this interface, so fallback and circuit-breaking are handled transparently.
- *
- * ACOs in `enrichMany` are processed in **series** (not parallel) to respect
- * LLM rate limits.
  */
 export class BatchEnricher {
   constructor(
@@ -31,38 +46,42 @@ export class BatchEnricher {
   }
 
   /**
-   * Run all pipelines on each ACO in the array, one ACO at a time.
+   * Run all pipelines on each ACO in the array.
    *
-   * Returns:
-   *   - `results`  — successfully enriched ACOs (same order as input).
-   *   - `errors`   — ACOs that failed, with their id and error message.
-   *
-   * `onProgress` is called after each ACO completes (or fails).
+   * ACOs are processed with at most `options.concurrency` in flight (default
+   * 1). Output order is stable regardless of completion order: `results`
+   * holds the successful ACOs in input order and `errors` carries the input
+   * index of each failure so callers can zip back to their inputs.
    */
-  async enrichMany(
-    acos: ACO[],
-    options?: EnrichmentOptions & {
-      onProgress?: (completed: number, total: number) => void;
-    }
-  ): Promise<{ results: ACO[]; errors: Array<{ id: string; error: string }> }> {
-    const results: ACO[] = [];
-    const errors: Array<{ id: string; error: string }> = [];
+  async enrichMany(acos: ACO[], options?: BatchOptions): Promise<BatchResult> {
+    const total = acos.length;
+    const concurrency = Math.max(1, Math.floor(options?.concurrency ?? 1));
+    const slots: Array<ACO | undefined> = new Array(total);
+    const errors: BatchResult["errors"] = [];
+    let completed = 0;
+    let next = 0;
 
-    for (let i = 0; i < acos.length; i++) {
-      const aco = acos[i]!;
-      const id = String(aco.frontmatter["id"] ?? `index-${i}`);
+    const { concurrency: _c, onProgress, ...pipelineOptions } = options ?? {};
 
-      try {
-        const enriched = await this.enrichOne(aco, options);
-        results.push(enriched);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        errors.push({ id, error: message });
+    const worker = async (): Promise<void> => {
+      for (;;) {
+        const i = next++;
+        if (i >= total) return;
+        const aco = acos[i] as ACO;
+        const id = String(aco.frontmatter["id"] ?? `index-${i}`);
+        try {
+          slots[i] = await this.enrichOne(aco, pipelineOptions);
+        } catch (err) {
+          errors.push({ id, index: i, error: err instanceof Error ? err.message : String(err) });
+        }
+        completed += 1;
+        onProgress?.(completed, total);
       }
+    };
 
-      options?.onProgress?.(i + 1, acos.length);
-    }
+    await Promise.all(Array.from({ length: Math.min(concurrency, total) }, worker));
 
-    return { results, errors };
+    errors.sort((a, b) => a.index - b.index);
+    return { results: slots.filter((s): s is ACO => s !== undefined), errors };
   }
 }

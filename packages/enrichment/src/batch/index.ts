@@ -1,1 +1,1 @@
-export { BatchEnricher } from "./batch-enricher.js";
+export { BatchEnricher, type BatchOptions, type BatchResult } from "./batch-enricher.js";
