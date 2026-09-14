@@ -6,7 +6,7 @@
     "nixpacksPlan": {
       "phases": {
         "install": {
-          "cmds": ["npm ci --no-audit --no-fund"]
+          "cmds": ["npm ci --include=dev --no-audit --no-fund"]
         }
       }
     }
