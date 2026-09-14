@@ -2,7 +2,8 @@
 // GET /api/fetch-url?url=https://example.com
 //
 // Guard rails (this endpoint used to be an open, edge-cached proxy):
-//   - HTTPS only; redirects are not followed (open-redirect → private IP).
+//   - HTTPS only; redirects are followed but every hop is re-validated, so an
+//     open redirector cannot reach a private address or downgrade to http.
 //   - Literal private / loopback / link-local / metadata addresses and
 //     internal hostnames are refused. (DNS-resolution checks are not
 //     available at the edge; the hosted MCP server does those.)
@@ -16,6 +17,8 @@ export const config = { runtime: "edge" };
 
 const MAX_BYTES = 1_000_000;
 const TIMEOUT_MS = 15_000;
+const MAX_REDIRECTS = 5;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 const ALLOWED_ORIGINS = new Set(["https://atomiccontentprotocol.org", "https://www.atomiccontentprotocol.org"]);
 
@@ -148,24 +151,37 @@ export default async function handler(request: Request): Promise<Response> {
   const check = validateTarget(target);
   if (!check.ok) return json(request, 400, { error: check.error });
 
+  // Follow redirects manually so each hop passes the same guard as the first.
   let upstream: Response;
-  try {
-    upstream = await fetch(check.url.toString(), {
-      headers: {
-        "User-Agent": "ACP-Playground/1.0 (https://atomiccontentprotocol.org)",
-        Accept: "text/html,application/xhtml+xml,text/plain;q=0.9",
-      },
-      redirect: "manual",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  } catch (err) {
-    const message = err instanceof Error && err.name === "TimeoutError" ? "Upstream timed out" : "Fetch failed";
-    return json(request, 502, { error: message });
+  let current = check.url.toString();
+  for (let hop = 0; ; hop++) {
+    const step = validateTarget(current);
+    if (!step.ok) return json(request, 400, { error: step.error });
+
+    try {
+      upstream = await fetch(step.url.toString(), {
+        headers: {
+          "User-Agent": "ACP-Playground/1.0 (https://atomiccontentprotocol.org)",
+          Accept: "text/html,application/xhtml+xml,text/plain;q=0.9",
+        },
+        redirect: "manual",
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+    } catch (err) {
+      const message = err instanceof Error && err.name === "TimeoutError" ? "Upstream timed out" : "Fetch failed";
+      return json(request, 502, { error: message });
+    }
+
+    const location = upstream.headers.get("location");
+    if (!REDIRECT_STATUSES.has(upstream.status) || !location) break;
+    if (hop >= MAX_REDIRECTS) return json(request, 502, { error: "Too many redirects" });
+    try {
+      current = new URL(location, current).toString();
+    } catch {
+      return json(request, 502, { error: "Invalid redirect target" });
+    }
   }
 
-  if (upstream.status >= 300 && upstream.status < 400) {
-    return json(request, 502, { error: "Redirects are not followed" });
-  }
   if (!upstream.ok) return json(request, 502, { error: `Upstream returned ${upstream.status}` });
 
   const contentType = upstream.headers.get("content-type") ?? "";

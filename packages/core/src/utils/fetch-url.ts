@@ -6,6 +6,8 @@ import { FetchError, ValidationError } from "./errors.js";
 const DEFAULT_MAX_CHARS = 100_000;
 const MAX_RESPONSE_BYTES = 10_000_000; // 10 MB hard cap, enforced on the stream
 const TIMEOUT_MS = 15_000;
+/** Redirect hops followed before giving up. Each hop is re-validated. */
+const MAX_REDIRECTS = 5;
 const DEFAULT_USER_AGENT = "ACP-SDK/0.2";
 /** Raw HTML handed to the text extractor. Bounded so extraction stays O(n) with a small n. */
 const MAX_HTML_FOR_EXTRACTION = 300_000;
@@ -418,6 +420,77 @@ async function readBodyCapped(response: Response, url: string): Promise<string> 
 }
 
 // ---------------------------------------------------------------------------
+// Redirect-following fetch
+// ---------------------------------------------------------------------------
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+/**
+ * Fetch `startUrl`, following redirects manually.
+ *
+ * Every hop — not just the first — goes through `validateUrl` and
+ * `assertResolvesPublic`, so an open redirector cannot walk us to a private
+ * address, an `http://` downgrade, or a blocked host. Refusing redirects
+ * outright (the previous behaviour) was equally safe but broke ordinary URLs:
+ * moved pages, `www.` normalisation and trailing-slash canonicalisation all
+ * answer 3xx.
+ *
+ * One deadline covers the whole chain, so N hops cannot multiply the timeout.
+ */
+async function fetchFollowingRedirects(
+  startUrl: string,
+  userAgent: string
+): Promise<{ response: Response; finalUrl: string }> {
+  const signal = AbortSignal.timeout(TIMEOUT_MS);
+  let current = startUrl;
+
+  for (let hop = 0; ; hop++) {
+    const host = validateUrl(current);
+    await assertResolvesPublic(host, current);
+
+    let response: Response;
+    try {
+      response = await fetch(current, {
+        headers: { "User-Agent": userAgent },
+        redirect: "manual",
+        signal,
+      });
+    } catch (err: unknown) {
+      const code = errnoCode(err);
+      const permanent = code !== undefined && PERMANENT_NETWORK_CODES.has(code);
+      throw new FetchError(`Network error fetching ${current}: ${(err as Error).message}`, permanent, code, {
+        cause: err,
+      });
+    }
+
+    const location = response.headers.get("location");
+    if (!REDIRECT_STATUSES.has(response.status) || !location) {
+      return { response, finalUrl: current };
+    }
+
+    if (hop >= MAX_REDIRECTS) {
+      await response.body?.cancel().catch(() => undefined);
+      throw new FetchError(
+        `Too many redirects (more than ${MAX_REDIRECTS}) starting at ${startUrl}`,
+        true,
+        "TOO_MANY_REDIRECTS"
+      );
+    }
+
+    let next: string;
+    try {
+      next = new URL(location, current).toString();
+    } catch {
+      await response.body?.cancel().catch(() => undefined);
+      throw new FetchError(`Invalid redirect target "${location}" from ${current}`, true, "INVALID_REDIRECT");
+    }
+
+    await response.body?.cancel().catch(() => undefined);
+    current = next;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -431,7 +504,7 @@ export interface FetchedPage {
   ogImage?: string;
   /** Meta description, when present. */
   description?: string;
-  /** Final URL requested (redirects are refused, so identical to the input). */
+  /** URL the content actually came from: the input, or the last hop if it redirected. */
   url: string;
 }
 
@@ -446,42 +519,27 @@ export interface FetchedPage {
  * the caller should retry; `FetchError.networkCode` gives the machine-readable
  * failure reason (e.g. "ENOTFOUND", "HTTP_404", "NON_HTML_CONTENT").
  *
- * HTTP redirects are refused (`redirect: "error"`) to prevent SSRF via open
- * redirectors. Node.js ≥ 20 is required (enforced in package.json engines).
+ * Redirects are followed (up to 5 hops) with every hop re-validated against
+ * the same SSRF guard, so an open redirector cannot reach a private address
+ * or downgrade to http. Node.js ≥ 20 is required (enforced in package.json
+ * engines).
  */
 export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): Promise<FetchedPage> {
   const maxChars = options?.maxChars ?? DEFAULT_MAX_CHARS;
   const userAgent = options?.userAgent ?? DEFAULT_USER_AGENT;
 
-  const host = validateUrl(url);
-  await assertResolvesPublic(host, url);
-
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: { "User-Agent": userAgent },
-      // Never follow redirects — a public URL can redirect to a private IP,
-      // bypassing the SSRF guard that only validates the initial hostname.
-      redirect: "error",
-      // AbortSignal.timeout requires Node ≥ 17.3; engines field enforces ≥ 20.
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  } catch (err: unknown) {
-    const code = errnoCode(err);
-    const permanent = code !== undefined && PERMANENT_NETWORK_CODES.has(code);
-    throw new FetchError(`Network error fetching ${url}: ${(err as Error).message}`, permanent, code, { cause: err });
-  }
+  const { response, finalUrl } = await fetchFollowingRedirects(url, userAgent);
 
   if (!response.ok) {
     const permanent = response.status >= 400 && response.status < 500;
-    throw new FetchError(`HTTP ${response.status} fetching ${url}`, permanent, `HTTP_${response.status}`);
+    throw new FetchError(`HTTP ${response.status} fetching ${finalUrl}`, permanent, `HTTP_${response.status}`);
   }
 
   // Refuse unexpectedly large responses before loading into memory.
   const contentLength = response.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_BYTES) {
     throw new FetchError(
-      `Response too large from ${url} (Content-Length: ${contentLength})`,
+      `Response too large from ${finalUrl} (Content-Length: ${contentLength})`,
       false,
       "RESPONSE_TOO_LARGE"
     );
@@ -496,17 +554,17 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
     !contentType.includes("text/plain") &&
     !contentType.includes("application/xhtml+xml")
   ) {
-    throw new FetchError(`Non-HTML response from ${url} (Content-Type: ${contentType})`, true, "NON_HTML_CONTENT");
+    throw new FetchError(`Non-HTML response from ${finalUrl} (Content-Type: ${contentType})`, true, "NON_HTML_CONTENT");
   }
 
   // Read the body; stream failures after headers arrive are treated as transient.
   let html: string;
   try {
-    html = await readBodyCapped(response, url);
+    html = await readBodyCapped(response, finalUrl);
   } catch (err: unknown) {
     if (err instanceof FetchError) throw err;
     throw new FetchError(
-      `Failed reading response body from ${url}: ${(err as Error).message}`,
+      `Failed reading response body from ${finalUrl}: ${(err as Error).message}`,
       false,
       "BODY_READ_ERROR",
       { cause: err }
@@ -524,7 +582,7 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
 
   let text = extractText(rawHtml);
   if (!text) {
-    text = spaFallback(rawHtml, url);
+    text = spaFallback(rawHtml, finalUrl);
   }
 
   return {
@@ -532,7 +590,7 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
     ...(title ? { title: decodeEntities(title) } : {}),
     ...(ogImage ? { ogImage } : {}),
     ...(description ? { description: decodeEntities(description) } : {}),
-    url,
+    url: finalUrl,
   };
 }
 
