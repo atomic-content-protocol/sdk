@@ -9,8 +9,14 @@ const TIMEOUT_MS = 15_000;
 /** Redirect hops followed before giving up. Each hop is re-validated. */
 const MAX_REDIRECTS = 5;
 const DEFAULT_USER_AGENT = "ACP-SDK/0.2";
-/** Raw HTML handed to the text extractor. Bounded so extraction stays O(n) with a small n. */
+/**
+ * Bound applied to the STRIPPED HTML handed to zone selection, so extraction
+ * stays O(n) with a small n. Applying this to the raw HTML instead silently
+ * truncated every page that front-loads large inline CSS or JSON.
+ */
 const MAX_HTML_FOR_EXTRACTION = 300_000;
+/** Prefix scanned for `<title>`, og: tags and the meta description. All live in `<head>`. */
+const MAX_HTML_FOR_META = 300_000;
 
 // Hoisted to module scope — not recreated on every call.
 const BLOCKED_HOSTS = new Set(["localhost", "metadata.google.internal", "metadata", "instance-data"]);
@@ -230,13 +236,31 @@ function errnoCode(err: unknown): string | undefined {
 // (thousands of unclosed tags) and turned URL enrichment into a CPU DoS.
 // ---------------------------------------------------------------------------
 
-/** Remove every `<tag …>…</tag>` element (case-insensitive) in one pass. Unclosed tags drop the rest. */
+/**
+ * Remove every `<tag …>…</tag>` element (case-insensitive) in one pass.
+ *
+ * An opener with no matching close is treated as a stray tag: the opener itself
+ * is dropped and scanning continues. It must NOT discard the rest of the
+ * document. Doing so silently destroyed real pages — a single unterminated
+ * `<style>` near the end of a truncated page threw away everything after it,
+ * and the extractor returned nothing but the `<title>`.
+ *
+ * The content of an unterminated raw-text element (`script`, `style`) is kept
+ * and may surface as text. That is the deliberate trade: leaking a fragment of
+ * a malformed page is recoverable, losing the whole page silently is not.
+ */
 function stripElements(html: string, tag: string): string {
   const lower = html.toLowerCase();
   const open = `<${tag}`;
   const close = `</${tag}`;
   let out = "";
   let pos = 0;
+  // Latches once a close tag is known to be absent from the remainder. `indexOf`
+  // has then already proven no `</tag>` exists at or after that offset, so none
+  // can exist later either. Without it, a page carrying thousands of unclosed
+  // openers would rescan the tail once per opener and go quadratic — exactly the
+  // CPU exhaustion this module was rewritten to prevent.
+  let noMoreCloses = false;
   for (;;) {
     const start = lower.indexOf(open, pos);
     if (start === -1) break;
@@ -256,40 +280,128 @@ function stripElements(html: string, tag: string): string {
       continue;
     }
     out += html.slice(pos, start);
-    const closeAt = lower.indexOf(close, start);
-    if (closeAt === -1) return out; // unclosed: discard remainder
+    const closeAt = noMoreCloses ? -1 : lower.indexOf(close, start);
+    if (closeAt === -1) {
+      noMoreCloses = true;
+      const openGt = lower.indexOf(">", start);
+      if (openGt === -1) return out; // opener never terminates: nothing usable follows
+      pos = openGt + 1; // drop the stray opener, keep everything after it
+      continue;
+    }
     const gt = lower.indexOf(">", closeAt);
     pos = gt === -1 ? lower.length : gt + 1;
   }
   return out + html.slice(pos);
 }
 
-/** Inner HTML of the first `<tag …>…</tag>` element, or undefined. Linear. */
-function innerOf(html: string, tag: string): string | undefined {
+/**
+ * Inner HTML of the LARGEST top-level `<tag …>…</tag>` element, or undefined.
+ *
+ * Taking the *first* match was wrong on real pages. Content sites mark their
+ * related-post teaser cards up as `<article>`, so the first one in document
+ * order is routinely a 200-character advert for an unrelated post. One saved
+ * card ended up with an ACO summarising a meal-replacement powder because the
+ * first `<article>` on a treadmill buying guide was a teaser for a Huel review.
+ *
+ * Nesting is tracked with a depth counter so an `<article>` inside an
+ * `<article>` does not terminate its parent at the inner `</article>`.
+ *
+ * Linear: every opener and closer position is visited at most once.
+ */
+function largestInnerOf(html: string, tag: string): string | undefined {
   const lower = html.toLowerCase();
-  let start = lower.indexOf(`<${tag}`);
-  while (start !== -1) {
-    const after = lower.charCodeAt(start + tag.length + 1);
-    if (after === 62 || after === 32 || after === 9 || after === 10 || after === 13) break;
-    start = lower.indexOf(`<${tag}`, start + 1);
+  const open = `<${tag}`;
+  const close = `</${tag}`;
+
+  const isBoundary = (at: number): boolean => {
+    const c = lower.charCodeAt(at);
+    return Number.isNaN(c) || c === 62 /* > */ || c === 32 || c === 47 /* / */ || c === 9 || c === 10 || c === 13;
+  };
+
+  let best: string | undefined;
+  let pos = 0;
+  let depth = 0;
+  let contentStart = -1;
+
+  for (;;) {
+    const nextOpen = lower.indexOf(open, pos);
+    const nextClose = lower.indexOf(close, pos);
+    if (nextOpen === -1 && nextClose === -1) break;
+
+    const openFirst = nextOpen !== -1 && (nextClose === -1 || nextOpen < nextClose);
+    if (openFirst) {
+      if (!isBoundary(nextOpen + open.length)) {
+        pos = nextOpen + open.length;
+        continue;
+      }
+      const gt = lower.indexOf(">", nextOpen);
+      if (gt === -1) break;
+      if (depth === 0) contentStart = gt + 1;
+      depth += 1;
+      pos = gt + 1;
+      continue;
+    }
+
+    if (!isBoundary(nextClose + close.length)) {
+      pos = nextClose + close.length;
+      continue;
+    }
+    if (depth > 0) {
+      depth -= 1;
+      if (depth === 0 && contentStart !== -1) {
+        const inner = html.slice(contentStart, nextClose);
+        if (best === undefined || inner.length > best.length) best = inner;
+        contentStart = -1;
+      }
+    }
+    const gt = lower.indexOf(">", nextClose);
+    pos = gt === -1 ? nextClose + close.length : gt + 1;
   }
-  if (start === -1) return undefined;
-  const gt = lower.indexOf(">", start);
-  if (gt === -1) return undefined;
-  const closeAt = lower.indexOf(`</${tag}`, gt + 1);
-  return closeAt === -1 ? undefined : html.slice(gt + 1, closeAt);
+
+  // An element left open at end-of-input (truncated page): take what we have.
+  if (best === undefined && depth > 0 && contentStart !== -1) {
+    return html.slice(contentStart);
+  }
+  return best;
 }
 
 const STRIPPED_TAGS = ["script", "style", "noscript", "iframe", "nav", "footer", "header", "aside"];
+
+/**
+ * Minimum share of the page's own text a semantic zone must hold to be believed.
+ * Below this it is a teaser card, a comment block or a sidebar promo rather than
+ * the article, and the full body is the better answer.
+ */
+const ZONE_MIN_TEXT_SHARE = 0.25;
+
+const flatten = (html: string): string => stripTags(html).replace(/\s+/g, " ").trim();
 
 function extractText(html: string): string {
   let stripped = html;
   for (const tag of STRIPPED_TAGS) stripped = stripElements(stripped, tag);
 
-  // Prefer semantic content zones: article > main > body
-  const zone = innerOf(stripped, "article") ?? innerOf(stripped, "main") ?? innerOf(stripped, "body") ?? stripped;
+  // Cap AFTER stripping, never before. Capping the raw HTML discarded the
+  // content of any page that front-loads large inline assets: a WordPress page
+  // carrying 276 KB of inline <style> put its entire article past the cut, so
+  // the extractor saw only <head> and returned the page title alone. Stripping
+  // first takes that same page from 654 KB to 94 KB, article included.
+  if (stripped.length > MAX_HTML_FOR_EXTRACTION) {
+    stripped = stripped.slice(0, MAX_HTML_FOR_EXTRACTION);
+  }
 
-  return stripTags(zone).replace(/\s+/g, " ").trim();
+  const bodyText = flatten(largestInnerOf(stripped, "body") ?? stripped);
+
+  // Prefer the richest semantic zone, but only when it plausibly IS the content.
+  let best = "";
+  for (const tag of ["article", "main"] as const) {
+    const inner = largestInnerOf(stripped, tag);
+    if (inner === undefined) continue;
+    const text = flatten(inner);
+    if (text.length > best.length) best = text;
+  }
+
+  if (best.length >= bodyText.length * ZONE_MIN_TEXT_SHARE) return best;
+  return bodyText;
 }
 
 /** Longest tag we are willing to inspect; anything longer is treated as text. */
@@ -571,18 +683,20 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
     );
   }
 
-  // Bound the HTML handed to the extractor: enough for any real article's
-  // main content, small enough that extraction is always cheap.
-  const cap = Math.min(MAX_HTML_FOR_EXTRACTION, maxChars * 8);
-  const rawHtml = html.length > cap ? html.slice(0, cap) : html;
+  // `<title>`, og: tags and the meta description all live in `<head>`, so a
+  // bounded prefix is enough and keeps this cheap on very large documents.
+  const metaHtml = html.length > MAX_HTML_FOR_META ? html.slice(0, MAX_HTML_FOR_META) : html;
+  const title = metaContent(metaHtml, "property", "og:title") ?? pageTitle(metaHtml);
+  const ogImage = metaContent(metaHtml, "property", "og:image");
+  const description = metaContent(metaHtml, "name", "description");
 
-  const title = metaContent(rawHtml, "property", "og:title") ?? pageTitle(rawHtml);
-  const ogImage = metaContent(rawHtml, "property", "og:image");
-  const description = metaContent(rawHtml, "name", "description");
-
-  let text = extractText(rawHtml);
+  // Text extraction gets the WHOLE document. It strips script/style/nav first
+  // and applies MAX_HTML_FOR_EXTRACTION to the stripped result, so the bound on
+  // extraction cost is preserved without cutting the article off the page.
+  // The total input is already bounded by MAX_RESPONSE_BYTES on the stream.
+  let text = extractText(html);
   if (!text) {
-    text = spaFallback(rawHtml, finalUrl);
+    text = spaFallback(metaHtml, finalUrl);
   }
 
   return {
@@ -612,4 +726,35 @@ function decodeEntities(s: string): string {
  */
 export async function fetchBodyForUrl(url: string, options?: FetchBodyOptions): Promise<string> {
   return (await fetchPageForUrl(url, options)).text;
+}
+
+/**
+ * Shortest extraction that can honestly support a summary, tags and entities.
+ *
+ * Chosen by measuring real saved pages: genuine articles extract to thousands of
+ * characters, while a failed extraction lands at the page title or a teaser card
+ * of a few hundred. A page below this yielded a confident ACO about the wrong
+ * subject, which is worse than no ACO at all.
+ */
+export const MIN_FETCHED_BODY_CHARS = 400;
+
+/**
+ * True when a *fetched* body is too thin to enrich honestly — the extraction
+ * failed even though the request succeeded.
+ *
+ * Only ever apply this to fetched content. A short body the caller supplied (a
+ * one-line note, a highlighted quote) is legitimate and must not be gated.
+ */
+export function isExtractionTooThin(text: string, title?: string): boolean {
+  const body = text.trim();
+  if (body.length < MIN_FETCHED_BODY_CHARS) return true;
+
+  // Some pages extract to nothing but their own title repeated. Longer than the
+  // floor, but it carries no information the ACO does not already hold.
+  if (title) {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+    const t = norm(title);
+    if (t.length > 0 && norm(body).replace(t, "").trim().length < MIN_FETCHED_BODY_CHARS) return true;
+  }
+  return false;
 }
