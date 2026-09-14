@@ -88,12 +88,12 @@ export function trackEnrichmentFailed(params: {
   });
 }
 
-export function trackRateLimitHit(params: { clientId: string; requestsInWindow: number }): void {
+export function trackRateLimitHit(params: { clientId: string; limit: number; weight: number }): void {
   if (!client) return;
   client.capture({
     distinctId: hashClient(params.clientId),
     event: "rate_limit_hit",
-    properties: { requests_in_window: params.requestsInWindow },
+    properties: { limit: params.limit, requested_weight: params.weight },
   });
 }
 

@@ -1,63 +1,14 @@
 import type { ACO, IStorageAdapter } from "@atomic-content-protocol/core";
-import type { IEnrichmentPipeline, IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
+import type { IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
 import {
-  ClassificationPipeline,
-  EmbedPipeline,
-  EntityPipeline,
-  hasValue,
-  SummaryPipeline,
-  TagPipeline,
-  UnifiedPipeline,
+  buildPipeline,
+  needsPipeline,
+  PIPELINE_NAMES,
+  type PipelineName,
+  pipelinesNeeded,
 } from "@atomic-content-protocol/enrichment";
 
-export const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified", "embed"] as const;
-export type PipelineName = (typeof PIPELINE_NAMES)[number];
-
-export function buildPipeline(name: PipelineName): IEnrichmentPipeline {
-  switch (name) {
-    case "tag":
-      return new TagPipeline();
-    case "summary":
-      return new SummaryPipeline();
-    case "entity":
-      return new EntityPipeline();
-    case "classification":
-      return new ClassificationPipeline();
-    case "unified":
-      return new UnifiedPipeline();
-    case "embed":
-      return new EmbedPipeline();
-  }
-}
-
-function provenanceOf(aco: ACO): Record<string, unknown> {
-  const p = aco.frontmatter["provenance"];
-  return typeof p === "object" && p !== null ? (p as Record<string, unknown>) : {};
-}
-
-/**
- * Whether running `name` on `aco` would change anything. Mirrors the
- * pipelines' own idempotency rule (a non-empty value is never overwritten
- * without `force`) so callers can skip the LLM call — and the round trip to
- * storage — entirely.
- */
-export function needsPipeline(aco: ACO, name: PipelineName): boolean {
-  const fm = aco.frontmatter;
-  switch (name) {
-    case "tag":
-      return !hasValue(fm["tags"]);
-    case "summary":
-      return !hasValue(fm["summary"]);
-    case "entity":
-      return !hasValue(fm["key_entities"]);
-    case "classification":
-      return !hasValue(fm["classification"]);
-    case "unified":
-      return ["tags", "summary", "classification", "key_entities", "language"].some((f) => !hasValue(fm[f]));
-    case "embed":
-      return !provenanceOf(aco)["embedding"];
-  }
-}
+export { buildPipeline, needsPipeline, PIPELINE_NAMES, type PipelineName };
 
 export interface RunPipelinesResult {
   aco: ACO;
@@ -65,12 +16,18 @@ export interface RunPipelinesResult {
   ran: PipelineName[];
   /** True when an embedding was produced and persisted to storage. */
   embedded: boolean;
+  /** Set when `embed` was requested but the storage adapter cannot persist vectors. */
+  warning?: string;
 }
 
 /**
  * Run pipelines over one ACO. Unlike `BatchEnricher.enrichOne`, this keeps
  * the per-pipeline results so an `EmbedPipeline` vector can be persisted via
  * `storage.putEmbedding` — the vector is never written to frontmatter.
+ *
+ * If the adapter has no `putEmbedding`, the `embed` pipeline is skipped
+ * entirely (rather than run and lost), so its provenance marker is never
+ * written and a later run against a capable adapter still embeds.
  */
 export async function runPipelines(
   aco: ACO,
@@ -79,14 +36,24 @@ export async function runPipelines(
   storage: IStorageAdapter,
   options: { force: boolean; tool: string }
 ): Promise<RunPipelinesResult> {
-  const ran = options.force ? names : names.filter((n) => needsPipeline(aco, n));
+  const canEmbed = typeof storage.putEmbedding === "function";
+  let warning: string | undefined;
+  let wanted = pipelinesNeeded(aco, names, options.force);
+  if (!canEmbed && wanted.includes("embed")) {
+    wanted = wanted.filter((n) => n !== "embed");
+    warning = "embed skipped: the storage adapter does not implement putEmbedding";
+  }
+
   let current = aco;
   let embedded = false;
+  const ran: PipelineName[] = [];
 
-  for (const name of ran) {
+  for (const name of wanted) {
     const result = await buildPipeline(name).enrich(current, provider, { force: options.force, tool: options.tool });
+    if (result.model === "skipped") continue;
+    ran.push(name);
     current = result.aco;
-    if (result.embedding && typeof storage.putEmbedding === "function") {
+    if (result.embedding && storage.putEmbedding) {
       const id = String(current.frontmatter["id"] ?? "");
       if (id) {
         await storage.putEmbedding(id, result.embedding, result.model);
@@ -95,7 +62,7 @@ export async function runPipelines(
     }
   }
 
-  return { aco: current, ran, embedded };
+  return { aco: current, ran, embedded, ...(warning ? { warning } : {}) };
 }
 
 /** Text used for embeddings and semantic comparison: title + body. */

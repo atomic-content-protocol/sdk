@@ -6,7 +6,9 @@ import { FetchError, ValidationError } from "./errors.js";
 const DEFAULT_MAX_CHARS = 100_000;
 const MAX_RESPONSE_BYTES = 10_000_000; // 10 MB hard cap, enforced on the stream
 const TIMEOUT_MS = 15_000;
-const DEFAULT_USER_AGENT = "ACP-SDK/0.1";
+const DEFAULT_USER_AGENT = "ACP-SDK/0.2";
+/** Raw HTML handed to the text extractor. Bounded so extraction stays O(n) with a small n. */
+const MAX_HTML_FOR_EXTRACTION = 300_000;
 
 // Hoisted to module scope — not recreated on every call.
 const BLOCKED_HOSTS = new Set(["localhost", "metadata.google.internal", "metadata", "instance-data"]);
@@ -93,6 +95,16 @@ export function isBlockedIPv6(ip: string): boolean {
   if (g0 === 0x64 && g1 === 0xff9b && g2 === 0 && g3 === 0 && g4 === 0 && g5 === 0) {
     return isBlockedIPv4(`${g6 >>> 8}.${g6 & 0xff}.${g7 >>> 8}.${g7 & 0xff}`);
   }
+  // ::a.b.c.d — deprecated IPv4-compatible form (::/96 other than :: and ::1)
+  if (isZeroPrefix && g5 === 0) return true;
+  // 2002::/16 — 6to4: embeds an IPv4 address in g1:g2
+  if (g0 === 0x2002) return isBlockedIPv4(`${g1 >>> 8}.${g1 & 0xff}.${g2 >>> 8}.${g2 & 0xff}`);
+  // 2001::/32 — Teredo tunnelling
+  if (g0 === 0x2001 && g1 === 0) return true;
+  // 100::/64 — discard-only
+  if (g0 === 0x100 && g1 === 0 && g2 === 0 && g3 === 0) return true;
+  // 64:ff9b:1::/48 — local-use NAT64
+  if (g0 === 0x64 && g1 === 0xff9b && g2 === 1) return true;
   // fc00::/7 unique local
   if ((g0 & 0xfe00) === 0xfc00) return true;
   // fe80::/10 link-local
@@ -209,47 +221,109 @@ function errnoCode(err: unknown): string | undefined {
 
 // ---------------------------------------------------------------------------
 // HTML content extraction
+//
+// Everything here is linear in the input: single forward scans with indexOf
+// and bounded-length regexes. Backtracking patterns such as
+// `<script[^>]*>[\s\S]*?</script>` are quadratic on adversarial input
+// (thousands of unclosed tags) and turned URL enrichment into a CPU DoS.
 // ---------------------------------------------------------------------------
 
+/** Remove every `<tag …>…</tag>` element (case-insensitive) in one pass. Unclosed tags drop the rest. */
+function stripElements(html: string, tag: string): string {
+  const lower = html.toLowerCase();
+  const open = `<${tag}`;
+  const close = `</${tag}`;
+  let out = "";
+  let pos = 0;
+  for (;;) {
+    const start = lower.indexOf(open, pos);
+    if (start === -1) break;
+    // Must be a real tag boundary: "<nav" but not "<navigation-menu".
+    const after = lower.charCodeAt(start + open.length);
+    const boundary =
+      Number.isNaN(after) ||
+      after === 62 /* > */ ||
+      after === 32 ||
+      after === 47 ||
+      after === 9 ||
+      after === 10 ||
+      after === 13;
+    if (!boundary) {
+      out += html.slice(pos, start + open.length);
+      pos = start + open.length;
+      continue;
+    }
+    out += html.slice(pos, start);
+    const closeAt = lower.indexOf(close, start);
+    if (closeAt === -1) return out; // unclosed: discard remainder
+    const gt = lower.indexOf(">", closeAt);
+    pos = gt === -1 ? lower.length : gt + 1;
+  }
+  return out + html.slice(pos);
+}
+
+/** Inner HTML of the first `<tag …>…</tag>` element, or undefined. Linear. */
+function innerOf(html: string, tag: string): string | undefined {
+  const lower = html.toLowerCase();
+  let start = lower.indexOf(`<${tag}`);
+  while (start !== -1) {
+    const after = lower.charCodeAt(start + tag.length + 1);
+    if (after === 62 || after === 32 || after === 9 || after === 10 || after === 13) break;
+    start = lower.indexOf(`<${tag}`, start + 1);
+  }
+  if (start === -1) return undefined;
+  const gt = lower.indexOf(">", start);
+  if (gt === -1) return undefined;
+  const closeAt = lower.indexOf(`</${tag}`, gt + 1);
+  return closeAt === -1 ? undefined : html.slice(gt + 1, closeAt);
+}
+
+const STRIPPED_TAGS = ["script", "style", "noscript", "iframe", "nav", "footer", "header", "aside"];
+
 function extractText(html: string): string {
-  const stripped = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, "")
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
-    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
-    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
-    .replace(/<aside[^>]*>[\s\S]*?<\/aside>/gi, "");
+  let stripped = html;
+  for (const tag of STRIPPED_TAGS) stripped = stripElements(stripped, tag);
 
   // Prefer semantic content zones: article > main > body
-  const zone =
-    /<article[^>]*>([\s\S]*?)<\/article>/i.exec(stripped)?.[1] ??
-    /<main[^>]*>([\s\S]*?)<\/main>/i.exec(stripped)?.[1] ??
-    /<body[^>]*>([\s\S]*?)<\/body>/i.exec(stripped)?.[1] ??
-    stripped;
+  const zone = innerOf(stripped, "article") ?? innerOf(stripped, "main") ?? innerOf(stripped, "body") ?? stripped;
 
   return zone
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^>]{0,5000}>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-// Extract a <meta> tag's content attribute, supporting both single and double
-// quotes and either attribute order (attrName=val content=X or content=X attrName=val).
+/** Parse `name="value"` / `name='value'` pairs from the inside of one tag. */
+function tagAttributes(tagInner: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]{0,63})\s*=\s*(?:"([^"]{0,4000})"|'([^']{0,4000})'|([^\s"'=<>`]{1,4000}))/g;
+  for (const m of tagInner.matchAll(re)) {
+    attrs[(m[1] as string).toLowerCase()] = (m[2] ?? m[3] ?? m[4] ?? "") as string;
+  }
+  return attrs;
+}
+
+// Extract a <meta> tag's content attribute where `attr` equals `value`
+// (e.g. property="og:title", name="description"). Single pass over
+// bounded-length <meta …> tags; attribute order and quote style do not matter.
 function metaContent(html: string, attr: string, value: string): string | undefined {
-  const q = `["']`;
-  const val = `([^"'<>]+)`;
-  return (
-    new RegExp(`<meta[^>]*${attr}=${q}${value}${q}[^>]*content=${q}${val}${q}`, "i").exec(html)?.[1] ??
-    new RegExp(`<meta[^>]*content=${q}${val}${q}[^>]*${attr}=${q}${value}${q}`, "i").exec(html)?.[1]
-  );
+  const re = /<meta\b([^>]{0,4000})>/gi;
+  for (const m of html.matchAll(re)) {
+    const attrs = tagAttributes(m[1] as string);
+    if (attrs[attr]?.toLowerCase() === value.toLowerCase() && attrs["content"]) return attrs["content"];
+  }
+  return undefined;
+}
+
+function pageTitle(html: string): string | undefined {
+  const m = /<title\b[^>]{0,500}>([^<]{0,1000})<\/title>/i.exec(html);
+  return m?.[1]?.trim() || undefined;
 }
 
 // SPA / empty-body fallback: synthesise signal from meta tags so the LLM
 // enrichment step still has something to work with.
 function spaFallback(html: string, url: string): string {
-  const title = /<title[^>]*>([^<]+)<\/title>/i.exec(html)?.[1]?.trim();
+  const title = pageTitle(html);
   const ogTitle = metaContent(html, "property", "og:title");
   const metaDesc = metaContent(html, "name", "description");
 
@@ -396,12 +470,12 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
     );
   }
 
-  // Pre-truncate raw HTML before running expensive regex operations.
-  // maxChars * 8 gives headroom for the markup that extractText strips away.
-  const rawHtml = html.length > maxChars * 8 ? html.slice(0, maxChars * 8) : html;
+  // Bound the HTML handed to the extractor: enough for any real article's
+  // main content, small enough that extraction is always cheap.
+  const cap = Math.min(MAX_HTML_FOR_EXTRACTION, maxChars * 8);
+  const rawHtml = html.length > cap ? html.slice(0, cap) : html;
 
-  const title =
-    metaContent(rawHtml, "property", "og:title") ?? /<title[^>]*>([^<]+)<\/title>/i.exec(rawHtml)?.[1]?.trim();
+  const title = metaContent(rawHtml, "property", "og:title") ?? pageTitle(rawHtml);
   const ogImage = metaContent(rawHtml, "property", "og:image");
   const description = metaContent(rawHtml, "name", "description");
 

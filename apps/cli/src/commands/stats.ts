@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import { loadConfig } from "../utils/config.js";
+import { startSpinner } from "../utils/spinner.js";
 import { createStorage } from "../utils/storage.js";
 
 export const statsCommand = new Command("stats")
@@ -10,7 +10,7 @@ export const statsCommand = new Command("stats")
     const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
     const storage = createStorage(config);
 
-    const spinner = ora("Loading vault stats...").start();
+    const spinner = startSpinner("Loading vault stats...");
 
     const [acos, containers, collections] = await Promise.all([
       storage.listACOs(),

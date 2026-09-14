@@ -2,7 +2,14 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm ci && npx turbo build --filter=acp-server"
+    "buildCommand": "npx turbo build --filter=acp-server",
+    "nixpacksPlan": {
+      "phases": {
+        "install": {
+          "cmds": ["npm ci --no-audit --no-fund"]
+        }
+      }
+    }
   },
   "deploy": {
     "startCommand": "node apps/server/dist/index.js",

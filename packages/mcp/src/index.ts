@@ -42,4 +42,10 @@ export type {
   ToolHandler,
   ToolOutput,
 } from "./types/tool.js";
-export { needsPipeline, PIPELINE_NAMES, type PipelineName, runPipelines } from "./utils/pipelines.js";
+export {
+  needsPipeline,
+  PIPELINE_NAMES,
+  type PipelineName,
+  type RunPipelinesResult,
+  runPipelines,
+} from "./utils/pipelines.js";

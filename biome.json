@@ -11,8 +11,11 @@
       "apps/cli/src/**",
       "apps/server/src/**",
       "apps/website/api/**",
+      "apps/website/src/**/*.ts",
       "examples/**/*.ts",
       "*.json",
+      "apps/**/*.json",
+      "packages/**/*.json",
       "!**/dist",
       "!**/.astro",
       "!package-lock.json"

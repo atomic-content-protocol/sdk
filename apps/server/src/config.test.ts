@@ -15,6 +15,7 @@ describe("loadConfig", () => {
 
   it("parses lists, numbers and booleans", () => {
     const c = loadConfig({
+      ANTHROPIC_API_KEY: "k",
       MCP_API_KEYS: " a , b ,",
       CORS_ORIGINS: "https://x.org",
       TRUST_PROXY: "true",
@@ -31,8 +32,8 @@ describe("loadConfig", () => {
   });
 
   it("rejects invalid values loudly", () => {
-    expect(() => loadConfig({ ENRICHMENT_QUALITY: "turbo" })).toThrow(/ENRICHMENT_QUALITY/);
-    expect(() => loadConfig({ RATE_LIMIT_PER_HOUR: "lots" })).toThrow(/RATE_LIMIT_PER_HOUR/);
-    expect(() => loadConfig({ TRUST_PROXY: "maybe" })).toThrow(/TRUST_PROXY/);
+    expect(() => loadConfig({ ANTHROPIC_API_KEY: "k", ENRICHMENT_QUALITY: "turbo" })).toThrow(/ENRICHMENT_QUALITY/);
+    expect(() => loadConfig({ ANTHROPIC_API_KEY: "k", RATE_LIMIT_PER_HOUR: "lots" })).toThrow(/RATE_LIMIT_PER_HOUR/);
+    expect(() => loadConfig({ ANTHROPIC_API_KEY: "k", TRUST_PROXY: "maybe" })).toThrow(/TRUST_PROXY/);
   });
 });

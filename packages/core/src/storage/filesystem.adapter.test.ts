@@ -283,7 +283,7 @@ describe("FilesystemAdapter — id safety", () => {
       const dir = await makeTempDir();
       const adapter = new FilesystemAdapter(dir);
       await expect(adapter.putACO(makeAco(id))).rejects.toThrow();
-      await expect(adapter.getACO(id)).rejects.toThrow();
+      expect(await adapter.getACO(id)).toBeNull();
       await expect(adapter.deleteACO(id)).rejects.toThrow();
       await expect(adapter.putEmbedding(id, [1, 0], "m")).rejects.toThrow();
       // Nothing escaped the vault.
@@ -307,7 +307,7 @@ describe("FilesystemAdapter — id safety", () => {
     const doc = { frontmatter: { id: "../x", object_type: "container" }, body: "" };
     await expect(adapter.putContainer(doc)).rejects.toThrow();
     await expect(adapter.putCollection(doc)).rejects.toThrow();
-    await expect(adapter.getContainer("../x")).rejects.toThrow();
+    expect(await adapter.getContainer("../x")).toBeNull();
   });
 });
 
@@ -397,5 +397,46 @@ describe("FilesystemAdapter — embeddings", () => {
     const adapter = new FilesystemAdapter(dir);
     await expect(adapter.putEmbedding("id-1", [], "m")).rejects.toThrow();
     await expect(adapter.putEmbedding("id-1", [1, Number.NaN], "m")).rejects.toThrow();
+  });
+});
+
+describe("FilesystemAdapter — index robustness (re-review)", () => {
+  it("rebuilds when an index entry has an unsafe key or a malformed shape", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    const indexPath = path.join(dir, ".acp", "index.json");
+    const idx = JSON.parse(await fs.readFile(indexPath, "utf-8"));
+    idx.entries["../evil"] = idx.entries["id-1"];
+    idx.entries["id-2"] = null;
+    await fs.writeFile(indexPath, JSON.stringify(idx));
+    expect((await adapter.listACOs()).map((a) => a.frontmatter["id"])).toEqual(["id-1"]);
+    expect(await adapter.queryACOs({ tags: ["x"] })).toEqual([]);
+  });
+
+  it("rebuild keys by file name and skips files whose id disagrees", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putACO(makeAco("id-1"));
+    await fs.copyFile(path.join(dir, "id-1.md"), path.join(dir, "renamed.md"));
+    await adapter.rebuildIndex();
+    const ids = (await adapter.listACOs()).map((a) => a.frontmatter["id"]);
+    expect(ids).toEqual(["id-1"]);
+  });
+
+  it("getACO/getContainer/getCollection return null for malformed ids (reads never throw)", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    expect(await adapter.getACO("../etc/passwd")).toBeNull();
+    expect(await adapter.getContainer("..")).toBeNull();
+    expect(await adapter.getCollection("a/b")).toBeNull();
+  });
+
+  it("listContainers skips an unparseable file instead of throwing", async () => {
+    const dir = await makeTempDir();
+    const adapter = new FilesystemAdapter(dir);
+    await adapter.putContainer({ frontmatter: { id: "c1", object_type: "container" }, body: "" });
+    await fs.writeFile(path.join(dir, ".containers", "bad.md"), "---\n: : bad yaml\n  - [\n---\n");
+    expect((await adapter.listContainers()).map((c) => c.frontmatter["id"])).toEqual(["c1"]);
   });
 });

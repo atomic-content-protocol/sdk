@@ -161,15 +161,19 @@ describe("OpenAIProvider", () => {
     const provider = new OpenAIProvider("k", "gpt-5.6-luna", { client });
     expect(await provider.complete("p", { temperature: 0.5, maxTokens: 77 })).toBe("hi");
     const [params] = create.mock.calls[0]!;
-    expect(params.max_completion_tokens).toBe(77);
+    // Reasoning models: budget floored so hidden reasoning cannot starve the answer.
+    expect(params.max_completion_tokens).toBe(1_024);
+    expect(params.reasoning_effort).toBe("low");
     expect(params).not.toHaveProperty("max_tokens");
     expect(params).not.toHaveProperty("temperature");
   });
 
   it("complete() keeps temperature for non-reasoning models", async () => {
     const { client, create } = openaiClient({ choices: [{ message: { content: "hi" } }] });
-    await new OpenAIProvider("k", "gpt-4o-mini", { client }).complete("p", { temperature: 0.5 });
+    await new OpenAIProvider("k", "gpt-4o-mini", { client }).complete("p", { temperature: 0.5, maxTokens: 77 });
     expect(create.mock.calls[0]![0].temperature).toBe(0.5);
+    expect(create.mock.calls[0]![0].max_completion_tokens).toBe(77);
+    expect(create.mock.calls[0]![0]).not.toHaveProperty("reasoning_effort");
   });
 
   it("structuredComplete() forces the function tool and parses arguments", async () => {

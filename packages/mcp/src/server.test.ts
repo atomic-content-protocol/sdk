@@ -264,6 +264,31 @@ describe("enrichment tools", () => {
     expect((rel.data as any).suggestions.some((s: any) => s.target_id === c && s.confidence > 0.5)).toBe(false);
   });
 
+  it("skips the embed pipeline with a warning when the adapter cannot store vectors", async () => {
+    const base = new FilesystemAdapter(await tempVault());
+    // Adapter facade without putEmbedding/findSimilar.
+    const storage = Object.create(base) as typeof base;
+    Object.defineProperty(storage, "putEmbedding", { value: undefined });
+    Object.defineProperty(storage, "findSimilar", { value: undefined });
+    const provider = fakeProvider();
+    const server = new ACPMCPServer({ storage, enrichment: { provider } });
+    const id = await create(server, "Alpha", "body");
+    const out = await server.callTool("enrich_aco", { id, pipelines: ["embed"] });
+    expect(out.success).toBe(true);
+    const data = out.data as {
+      pipelines_run: string[];
+      embedded: boolean;
+      warning?: string;
+      frontmatter: Record<string, unknown>;
+    };
+    expect(data.pipelines_run).toEqual([]);
+    expect(data.embedded).toBe(false);
+    expect(data.warning).toMatch(/putEmbedding/);
+    expect(provider.calls.embed).toBe(0);
+    // No poisoned provenance marker: a later capable adapter can still embed.
+    expect((data.frontmatter["provenance"] as Record<string, unknown> | undefined)?.["embedding"]).toBeUndefined();
+  });
+
   it("find_similar falls back to overlap when no vectors are stored", async () => {
     const { server } = await makeServer();
     const a = await create(server, "Alpha note", "x", { tags: ["alpha", "shared"] });

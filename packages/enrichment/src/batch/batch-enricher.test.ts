@@ -310,3 +310,40 @@ describe("BatchEnricher — concurrency", () => {
     expect(received).toEqual({ force: true });
   });
 });
+
+describe("BatchEnricher — embeddings", () => {
+  const embedPipeline: IEnrichmentPipeline = {
+    name: "embed",
+    field: "embedding",
+    enrich: async (aco): Promise<EnrichmentResult> => ({
+      aco: { ...aco, frontmatter: { ...aco.frontmatter, provenance: { embedding: { model: "e" } } } },
+      fieldUpdated: "embedding",
+      confidence: 1,
+      model: "embed-model",
+      embedding: [1, 2, 3],
+    }),
+  };
+
+  it("enrichOneDetailed surfaces the vector; enrichOne keeps its old shape", async () => {
+    const enricher = new BatchEnricher(NOOP_PROVIDER, [makeStampPipeline("done"), embedPipeline]);
+    const detailed = await enricher.enrichOneDetailed(makeACO("a"));
+    expect(detailed.embedding).toEqual({ vector: [1, 2, 3], model: "embed-model" });
+    expect(detailed.aco.frontmatter["done"]).toBe(true);
+    const plain = await enricher.enrichOne(makeACO("a"));
+    expect(plain.frontmatter["done"]).toBe(true);
+    expect(plain).not.toHaveProperty("embedding");
+  });
+
+  it("enrichMany returns embeddings keyed by id", async () => {
+    const enricher = new BatchEnricher(NOOP_PROVIDER, [embedPipeline]);
+    const { embeddings, results } = await enricher.enrichMany([makeACO("a"), makeACO("b")], { concurrency: 2 });
+    expect(results).toHaveLength(2);
+    expect([...embeddings.keys()].sort()).toEqual(["a", "b"]);
+    expect(embeddings.get("a")).toEqual({ vector: [1, 2, 3], model: "embed-model" });
+  });
+
+  it("enrichMany returns an empty map when no embed pipeline ran", async () => {
+    const { embeddings } = await new BatchEnricher(NOOP_PROVIDER, [makeStampPipeline("x")]).enrichMany([makeACO("a")]);
+    expect(embeddings.size).toBe(0);
+  });
+});

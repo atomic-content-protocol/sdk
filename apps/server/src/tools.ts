@@ -158,8 +158,20 @@ function fail(error: string, code: string, retryable: boolean): ToolError {
  * Map any thrown value to a client-safe ToolError. Upstream provider messages
  * are logged server-side but never echoed verbatim to clients.
  */
+function isAuthError(err: unknown): boolean {
+  const status = (err as { status?: unknown } | null)?.status;
+  return (
+    status === 401 ||
+    status === 403 ||
+    /authentication_error|invalid x-api-key|incorrect api key/i.test(String((err as Error)?.message ?? ""))
+  );
+}
+
 function toToolError(err: unknown, log: (msg: string) => void): ToolError {
-  if (err instanceof ValidationError) return fail(err.message, "INVALID_URL", false);
+  if (err instanceof ValidationError) {
+    const code = /url|host|address|https/i.test(err.message) ? "INVALID_URL" : "INVALID_INPUT";
+    return fail(err.message, code, false);
+  }
   if (err instanceof FetchError) {
     const code = err.networkCode ?? "FETCH_ERROR";
     return fail(`Failed to fetch URL (${code})`, "FETCH_ERROR", !err.permanent);
@@ -173,6 +185,7 @@ function toToolError(err: unknown, log: (msg: string) => void): ToolError {
   }
   const message = err instanceof Error ? err.message : String(err);
   log(`provider error: ${message}`);
+  if (isAuthError(err)) return fail("AI provider rejected the server's credentials", "PROVIDER_AUTH", false);
   return fail("AI provider error", "PROVIDER_ERROR", true);
 }
 
@@ -229,9 +242,10 @@ export class EnrichmentService {
     return this.spendGuard;
   }
 
-  /** Headline model for cost reporting. */
+  /** Headline model for cost reporting: whichever provider is primary. */
   private get estimateModel(): string {
-    return MODEL_PRESETS[this.config.quality].anthropic;
+    const preset = MODEL_PRESETS[this.config.quality];
+    return this.config.anthropicApiKey ? preset.anthropic : preset.openai;
   }
 
   // ---- content guards -----------------------------------------------------

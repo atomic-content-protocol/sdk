@@ -18,6 +18,17 @@ export interface BatchResult {
   results: ACO[];
   /** ACOs that failed, with their id (or `index-N`) and error message. */
   errors: Array<{ id: string; index: number; error: string }>;
+  /**
+   * Vectors produced by an `EmbedPipeline`, keyed by ACO id. They are never
+   * written to frontmatter; persist them with `storage.putEmbedding`.
+   */
+  embeddings: Map<string, { vector: number[]; model: string }>;
+}
+
+export interface EnrichOneResult {
+  aco: ACO;
+  /** Vector from an `EmbedPipeline` in the chain, if any. */
+  embedding?: { vector: number[]; model: string };
 }
 
 /**
@@ -37,12 +48,22 @@ export class BatchEnricher {
    * Each pipeline receives the output of the previous one.
    */
   async enrichOne(aco: ACO, options?: EnrichmentOptions): Promise<ACO> {
+    return (await this.enrichOneDetailed(aco, options)).aco;
+  }
+
+  /**
+   * Like `enrichOne`, but also returns the embedding vector if an
+   * `EmbedPipeline` ran, so callers can persist it.
+   */
+  async enrichOneDetailed(aco: ACO, options?: EnrichmentOptions): Promise<EnrichOneResult> {
     let current = aco;
+    let embedding: EnrichOneResult["embedding"];
     for (const pipeline of this.pipelines) {
       const result = await pipeline.enrich(current, this.provider, options);
       current = result.aco;
+      if (result.embedding) embedding = { vector: result.embedding, model: result.model };
     }
-    return current;
+    return embedding ? { aco: current, embedding } : { aco: current };
   }
 
   /**
@@ -58,6 +79,7 @@ export class BatchEnricher {
     const concurrency = Math.max(1, Math.floor(options?.concurrency ?? 1));
     const slots: Array<ACO | undefined> = new Array(total);
     const errors: BatchResult["errors"] = [];
+    const embeddings: BatchResult["embeddings"] = new Map();
     let completed = 0;
     let next = 0;
 
@@ -70,7 +92,9 @@ export class BatchEnricher {
         const aco = acos[i] as ACO;
         const id = String(aco.frontmatter["id"] ?? `index-${i}`);
         try {
-          slots[i] = await this.enrichOne(aco, pipelineOptions);
+          const detailed = await this.enrichOneDetailed(aco, pipelineOptions);
+          slots[i] = detailed.aco;
+          if (detailed.embedding) embeddings.set(id, detailed.embedding);
         } catch (err) {
           errors.push({ id, index: i, error: err instanceof Error ? err.message : String(err) });
         }
@@ -82,6 +106,6 @@ export class BatchEnricher {
     await Promise.all(Array.from({ length: Math.min(concurrency, total) }, worker));
 
     errors.sort((a, b) => a.index - b.index);
-    return { results: slots.filter((s): s is ACO => s !== undefined), errors };
+    return { results: slots.filter((s): s is ACO => s !== undefined), errors, embeddings };
   }
 }

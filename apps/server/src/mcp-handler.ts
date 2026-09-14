@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError } from "@modelcontextprotocol/sdk/types.js";
@@ -13,15 +14,22 @@ export interface McpHandlerDeps {
   service: EnrichmentService;
 }
 
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
 /** Identify the caller: bearer token when auth is on, else the (proxy-resolved) IP. */
-export function resolveClient(req: Request, config: ServerConfig): { id: string; authorized: boolean } {
+export function resolveClient(req: Request, config: ServerConfig): { id: string; ip: string; authorized: boolean } {
+  const ip = `ip:${req.ip || req.socket.remoteAddress || "unknown"}`;
+  if (config.apiKeys.length === 0) return { id: ip, ip, authorized: true };
   const header = req.header("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (config.apiKeys.length > 0) {
-    const ok = token.length > 0 && config.apiKeys.includes(token);
-    return { id: ok ? `key:${token}` : "unauthorized", authorized: ok };
-  }
-  return { id: `ip:${req.ip || req.socket.remoteAddress || "unknown"}`, authorized: true };
+  // Compare against every key so timing does not reveal which prefix matched.
+  let ok = false;
+  for (const key of config.apiKeys) if (safeEqual(token, key)) ok = true;
+  return { id: ok ? `key:${token}` : ip, ip, authorized: ok };
 }
 
 /** Weighted rate-limit cost of a JSON-RPC body; handshake messages are free. */
@@ -40,6 +48,14 @@ export function createMcpHandler({ config, limiter, service }: McpHandlerDeps) {
   return async function mcpHandler(req: Request, res: Response): Promise<void> {
     const client = resolveClient(req, config);
     if (!client.authorized) {
+      // Failed attempts are metered per IP so key guessing is rate-limited too.
+      const attempt = limiter.consume(client.ip, 1);
+      res.setHeader("RateLimit-Remaining", String(attempt.remaining));
+      if (!attempt.allowed) {
+        res.setHeader("Retry-After", String(Math.max(1, Math.ceil((attempt.resetAt - Date.now()) / 1000))));
+        res.status(429).json({ error: "Rate limit exceeded" });
+        return;
+      }
       res.status(401).json({ error: "Unauthorized", hint: "Send Authorization: Bearer <api key>" });
       return;
     }
@@ -53,7 +69,7 @@ export function createMcpHandler({ config, limiter, service }: McpHandlerDeps) {
     res.setHeader("RateLimit-Reset", new Date(decision.resetAt).toISOString());
 
     if (!decision.allowed) {
-      trackRateLimitHit({ clientId: client.id, requestsInWindow: decision.limit });
+      trackRateLimitHit({ clientId: client.id, limit: decision.limit, weight });
       const retryAfter = Math.max(1, Math.ceil((decision.resetAt - Date.now()) / 1000));
       res.setHeader("Retry-After", String(retryAfter));
       res.status(429).json({ error: "Rate limit exceeded", retryAfter });

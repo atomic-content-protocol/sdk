@@ -18,9 +18,10 @@ export async function ask(question: string): Promise<string> {
 
 /**
  * Yes/no confirmation. Non-interactive sessions (CI, pipes) return `fallback`
- * instead of hanging on stdin.
+ * (default **false**, so a script never spends money without `--yes`) instead
+ * of hanging on stdin.
  */
-export async function confirm(message: string, fallback = true): Promise<boolean> {
+export async function confirm(message: string, fallback = false): Promise<boolean> {
   if (!isInteractive()) return fallback;
   const answer = (await ask(`${message} [Y/n] `)).toLowerCase();
   return answer === "" || answer === "y" || answer === "yes";

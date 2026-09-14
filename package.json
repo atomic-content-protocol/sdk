@@ -29,8 +29,5 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "npm@10.8.0",
-  "overrides": {
-    "qs": "^6.16.0"
-  }
+  "packageManager": "npm@10.8.0"
 }

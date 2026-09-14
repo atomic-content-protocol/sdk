@@ -26,7 +26,7 @@ const inputSchema = z.object({
 const definition: ACPToolDefinition = {
   name: "list_acos",
   description:
-    "List ACOs in the vault with optional filtering by tags, status, source_type, and visibility. Sorting and pagination apply after filtering. Returns frontmatter only (no body) for efficiency.",
+    "List ACOs in the vault with optional filtering by tags, status, source_type, and visibility. Sorting and pagination apply after filtering; `total` is included for filtered queries. Returns frontmatter only (no body) for efficiency.",
   inputSchema,
   annotations: { readOnlyHint: true },
 };
@@ -49,7 +49,7 @@ export function createListACOsTool(ctx: ToolContext): ToolEntry {
         page = filtered.slice(offset, offset + limit);
       } else {
         page = await ctx.storage.listACOs({ limit, offset, sortBy, order });
-        total = page.length < limit && offset === 0 ? page.length : -1;
+        total = -1; // unknown without a full scan; reported only for filtered queries
       }
 
       const items = page.map((aco) => aco.frontmatter);

@@ -8,6 +8,8 @@ export type {
   EnrichmentResult,
   IEnrichmentPipeline,
 } from "./pipeline.interface.js";
+export type { PipelineName } from "./registry.js";
+export { buildPipeline, isPipelineName, needsPipeline, PIPELINE_NAMES, pipelinesNeeded } from "./registry.js";
 export {
   extractJsonArray,
   type GeneratedField,

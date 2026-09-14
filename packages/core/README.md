@@ -32,7 +32,7 @@ await vault.putACO(aco);
 
 ## Runtime support
 
-Node.js ≥ 20. The package entry point uses `node:fs`, `node:crypto` and `node:dns` (filesystem vault, content hashing, SSRF-safe URL fetching), so it is not browser-bundleable as a whole. The Zod schemas in `schema/` have no Node dependencies and can be deep-imported by browser code once subpath exports land (tracked for 0.2).
+Node.js ≥ 20. The package entry point uses `node:fs`, `node:crypto` and `node:dns` (filesystem vault, content hashing, SSRF-safe URL fetching), so it is not browser-bundleable as a whole. The Zod schemas in `schema/` have no Node dependencies and can be deep-imported by browser code once subpath exports land (planned for 0.3).
 
 ## What's in the package
 

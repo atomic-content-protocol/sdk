@@ -61,8 +61,8 @@ Create any `.md` file with the 6 required frontmatter fields. That is a valid AC
 
 ```bash
 npx @atomic-content-protocol/cli init ./my-vault
-npx @atomic-content-protocol/cli create --title "My First ACO"
-npx @atomic-content-protocol/cli enrich ./my-vault/my-first-aco.md
+npx @atomic-content-protocol/cli --vault ./my-vault create --title "My First ACO" --body "..."
+npx @atomic-content-protocol/cli --vault ./my-vault enrich <id>   # id printed by create
 ```
 
 ### 3. Use the Stacklist MCP (zero-setup enrichment)

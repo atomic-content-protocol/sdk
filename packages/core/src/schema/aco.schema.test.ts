@@ -375,3 +375,20 @@ describe("ACOFrontmatterSchema", () => {
     }
   });
 });
+
+describe("language", () => {
+  it("accepts null (media ACOs with no text) as well as a string", () => {
+    const base = {
+      id: "x",
+      acp_version: "0.2",
+      object_type: "aco",
+      source_type: "uploaded_image",
+      created: "2026-01-01T00:00:00Z",
+      author: { id: "a", name: "A" },
+      title: "t",
+    };
+    expect(ACOFrontmatterSchema.safeParse({ ...base, language: null }).success).toBe(true);
+    expect(ACOFrontmatterSchema.safeParse({ ...base, language: "en" }).success).toBe(true);
+    expect(ACOFrontmatterSchema.safeParse({ ...base, language: 5 }).success).toBe(false);
+  });
+});

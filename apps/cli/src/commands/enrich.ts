@@ -1,12 +1,12 @@
 import { estimateEnrichmentCost, formatCostEstimate } from "@atomic-content-protocol/enrichment";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import { loadConfig } from "../utils/config.js";
 import { buildPipelines, createRouter, estimateModel, parsePipelines } from "../utils/enrichment.js";
 import { CliError, EXIT } from "../utils/errors.js";
 import { TOOL } from "../utils/pkg.js";
 import { confirm } from "../utils/prompt.js";
+import { startSpinner } from "../utils/spinner.js";
 import { createStorage } from "../utils/storage.js";
 
 interface EnrichOptions {
@@ -51,7 +51,7 @@ export const enrichCommand = new Command("enrich")
       return;
     }
 
-    const spinner = options.json ? null : ora("Running pipelines...").start();
+    const spinner = options.json ? null : startSpinner("Running pipelines...");
     let current = aco;
     const ran: string[] = [];
     let embedded = false;

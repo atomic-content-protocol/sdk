@@ -1,31 +1,24 @@
 import type { ACO } from "@atomic-content-protocol/core";
-import type { IEnrichmentPipeline, ProviderConfig, QualityTier } from "@atomic-content-protocol/enrichment";
+import type {
+  IEnrichmentPipeline,
+  PipelineName,
+  ProviderConfig,
+  QualityTier,
+} from "@atomic-content-protocol/enrichment";
 import {
-  ClassificationPipeline,
+  buildPipeline,
   DEFAULT_QUALITY,
-  EmbedPipeline,
-  EntityPipeline,
   estimateEnrichmentCost,
+  isPipelineName,
   MODEL_PRESETS,
+  PIPELINE_NAMES,
   ProviderRouter,
-  SummaryPipeline,
-  TagPipeline,
-  UnifiedPipeline,
+  pipelinesNeeded,
 } from "@atomic-content-protocol/enrichment";
 import type { ACPConfig } from "./config.js";
 import { CliError, EXIT } from "./errors.js";
 
-export const PIPELINE_NAMES = ["tag", "summary", "entity", "classification", "unified", "embed"] as const;
-export type PipelineName = (typeof PIPELINE_NAMES)[number];
-
-const PIPELINES: Record<PipelineName, () => IEnrichmentPipeline> = {
-  tag: () => new TagPipeline(),
-  summary: () => new SummaryPipeline(),
-  entity: () => new EntityPipeline(),
-  classification: () => new ClassificationPipeline(),
-  unified: () => new UnifiedPipeline(),
-  embed: () => new EmbedPipeline(),
-};
+export { PIPELINE_NAMES, type PipelineName };
 
 /** Parse `--pipelines a,b,c`, rejecting unknown names with a usage error. */
 export function parsePipelines(raw: string): PipelineName[] {
@@ -34,7 +27,7 @@ export function parsePipelines(raw: string): PipelineName[] {
     .map((s) => s.trim())
     .filter(Boolean);
   if (names.length === 0) throw new CliError("No pipelines given", EXIT.USAGE);
-  const bad = names.filter((n) => !(PIPELINE_NAMES as readonly string[]).includes(n));
+  const bad = names.filter((n) => !isPipelineName(n));
   if (bad.length > 0) {
     throw new CliError(
       `Unknown pipeline(s): ${bad.join(", ")}`,
@@ -46,7 +39,7 @@ export function parsePipelines(raw: string): PipelineName[] {
 }
 
 export function buildPipelines(names: PipelineName[]): IEnrichmentPipeline[] {
-  return names.map((n) => PIPELINES[n]());
+  return names.map(buildPipeline);
 }
 
 /** Resolve the ProviderConfig from config file + environment. */
@@ -100,6 +93,8 @@ export interface BatchPlan {
   selected: ACO[];
   /** ACOs left out because the cumulative estimate would exceed the cap. */
   deferred: ACO[];
+  /** ACOs that need none of the requested pipelines (already enriched). */
+  skipped: ACO[];
   perACOCost: number[];
   totalCost: number;
 }
@@ -109,12 +104,23 @@ export interface BatchPlan {
  * per-ACO estimates. Nothing is spent on a deferred ACO — the check happens
  * before any provider call, not after.
  */
-export function planBatch(acos: ACO[], model: string, maxCost?: number): BatchPlan {
+export function planBatch(
+  acos: ACO[],
+  model: string,
+  maxCost?: number,
+  pipelines: readonly PipelineName[] = ["unified"],
+  force = false
+): BatchPlan {
   const selected: ACO[] = [];
   const deferred: ACO[] = [];
+  const skipped: ACO[] = [];
   const perACOCost: number[] = [];
   let total = 0;
   for (const aco of acos) {
+    if (pipelinesNeeded(aco, pipelines, force).length === 0) {
+      skipped.push(aco);
+      continue;
+    }
     const cost = estimateEnrichmentCost(aco.body, "standard", { model }).cost;
     if (maxCost !== undefined && total + cost > maxCost) {
       deferred.push(aco);
@@ -124,5 +130,5 @@ export function planBatch(acos: ACO[], model: string, maxCost?: number): BatchPl
     perACOCost.push(cost);
     total += cost;
   }
-  return { selected, deferred, perACOCost, totalCost: total };
+  return { selected, deferred, skipped, perACOCost, totalCost: total };
 }

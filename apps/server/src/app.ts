@@ -36,8 +36,9 @@ export function createApp(config: ServerConfig, deps: EnrichmentServiceDeps = {}
 
   app.get("/health", createHealthHandler(config));
 
-  // Body limit sized for a full batch (10 × maxContentLength) plus JSON overhead.
-  const bodyLimit = Math.ceil((config.maxBatchSize * config.maxContentLength * 1.5) / 1024) + 64;
+  // Body limit sized for a full batch (10 × maxContentLength). maxContentLength
+  // counts characters; UTF-8 needs up to 4 bytes each, plus JSON escaping headroom.
+  const bodyLimit = Math.ceil((config.maxBatchSize * config.maxContentLength * 4.5) / 1024) + 64;
   app.post("/mcp", express.json({ limit: `${bodyLimit}kb` }), createMcpHandler({ config, limiter, service }));
   app.get("/mcp", (_req, res) => {
     res.status(405).json({ error: "SSE not supported in stateless mode" });
@@ -57,7 +58,15 @@ export function createApp(config: ServerConfig, deps: EnrichmentServiceDeps = {}
       res.status(400).json({ error: "Malformed JSON body" });
       return;
     }
-    next(err);
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+    // Anything else (unsupported Content-Encoding, charset, …): a clean JSON
+    // status, never Express's HTML page with a stack trace.
+    const status = typeof e?.status === "number" && e.status >= 400 && e.status < 600 ? e.status : 500;
+    if (status >= 500) console.error("[app] unhandled error:", err);
+    res.status(status).json({ error: status >= 500 ? "Internal server error" : (e?.message ?? "Bad request") });
   });
 
   return app;

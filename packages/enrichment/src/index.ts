@@ -16,7 +16,7 @@
  * ```
  */
 
-export type { BatchOptions, BatchResult } from "./batch/index.js";
+export type { BatchOptions, BatchResult, EnrichOneResult } from "./batch/index.js";
 // Batch
 export { BatchEnricher } from "./batch/index.js";
 // Pipelines
@@ -27,14 +27,21 @@ export type {
   GeneratedField,
   IEnrichmentPipeline,
   KeyEntity,
+  PipelineName,
 } from "./pipelines/index.js";
+// Pipeline registry (shared by the CLI and MCP server)
 export {
+  buildPipeline,
   ClassificationPipeline,
   EmbedPipeline,
   ENTITY_TYPES,
   EntityPipeline,
   extractJsonArray,
   hasValue,
+  isPipelineName,
+  needsPipeline,
+  PIPELINE_NAMES,
+  pipelinesNeeded,
   SingleFieldPipeline,
   SummaryPipeline,
   TagPipeline,
