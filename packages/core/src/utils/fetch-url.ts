@@ -319,53 +319,94 @@ function largestInnerOf(html: string, tag: string): string | undefined {
   };
 
   let best: string | undefined;
-  let pos = 0;
   let depth = 0;
   let contentStart = -1;
 
-  for (;;) {
-    const nextOpen = lower.indexOf(open, pos);
-    const nextClose = lower.indexOf(close, pos);
-    if (nextOpen === -1 && nextClose === -1) break;
+  // Both cursors are advanced monotonically and each is re-searched ONLY after
+  // it has been consumed, so every character is scanned a bounded number of
+  // times. Recomputing both on each pass instead is quadratic: a page of
+  // near-miss openers such as `<articlez` repeated never matches a close tag,
+  // so each of the ~40,000 iterations rescanned the whole remainder looking for
+  // one. Measured at 5.6 s of CPU for a single 300 KB page against a 50 ms
+  // baseline — the same exhaustion class this module was rewritten to remove.
+  // A -1 is final for the rest of the scan, so it is never searched for again.
+  let nextOpen = lower.indexOf(open);
+  let nextClose = lower.indexOf(close);
 
+  while (nextOpen !== -1 || nextClose !== -1) {
     const openFirst = nextOpen !== -1 && (nextClose === -1 || nextOpen < nextClose);
+
     if (openFirst) {
-      if (!isBoundary(nextOpen + open.length)) {
-        pos = nextOpen + open.length;
+      const at = nextOpen;
+      if (!isBoundary(at + open.length)) {
+        nextOpen = lower.indexOf(open, at + open.length);
         continue;
       }
-      const gt = lower.indexOf(">", nextOpen);
-      if (gt === -1) break;
+      const gt = lower.indexOf(">", at);
+      if (gt === -1) break; // opener never terminates: nothing further is parseable
       if (depth === 0) contentStart = gt + 1;
       depth += 1;
-      pos = gt + 1;
+      nextOpen = lower.indexOf(open, gt + 1);
+      if (nextClose !== -1 && nextClose < gt + 1) nextClose = lower.indexOf(close, gt + 1);
       continue;
     }
 
-    if (!isBoundary(nextClose + close.length)) {
-      pos = nextClose + close.length;
+    const at = nextClose;
+    if (!isBoundary(at + close.length)) {
+      nextClose = lower.indexOf(close, at + close.length);
       continue;
     }
     if (depth > 0) {
       depth -= 1;
       if (depth === 0 && contentStart !== -1) {
-        const inner = html.slice(contentStart, nextClose);
+        const inner = html.slice(contentStart, at);
         if (best === undefined || inner.length > best.length) best = inner;
         contentStart = -1;
       }
     }
-    const gt = lower.indexOf(">", nextClose);
-    pos = gt === -1 ? nextClose + close.length : gt + 1;
+    const gt = lower.indexOf(">", at);
+    const resume = gt === -1 ? at + close.length : gt + 1;
+    nextClose = lower.indexOf(close, resume);
+    if (nextOpen !== -1 && nextOpen < resume) nextOpen = lower.indexOf(open, resume);
   }
 
-  // An element left open at end-of-input (truncated page): take what we have.
-  if (best === undefined && depth > 0 && contentStart !== -1) {
-    return html.slice(contentStart);
+  // An element left open at end-of-input (a truncated page). Take it when it
+  // beats anything already found — a completed teaser must not win just because
+  // the real article's closing tag fell past the extraction cap.
+  if (depth > 0 && contentStart !== -1) {
+    const trailing = html.slice(contentStart);
+    if (best === undefined || trailing.length > best.length) return trailing;
   }
   return best;
 }
 
 const STRIPPED_TAGS = ["script", "style", "noscript", "iframe", "nav", "footer", "header", "aside"];
+
+/**
+ * Remove `<!-- … -->` comments. Linear, indexOf-only.
+ *
+ * Required before zone selection, not merely cosmetic. A commented-out
+ * `<!-- <article> -->` — ordinary in CMS templates and ad-slot placeholders —
+ * is otherwise counted as a real opener. The depth counter then never returns
+ * to zero, no zone is ever closed, and selection falls through to the
+ * truncated-page branch and hands back the remainder of the document. A
+ * comment could also smuggle hidden text into the extracted body.
+ *
+ * An unterminated comment drops the rest of the document, which is correct
+ * here: a browser would not render it either.
+ */
+function stripComments(html: string): string {
+  let out = "";
+  let pos = 0;
+  for (;;) {
+    const start = html.indexOf("<!--", pos);
+    if (start === -1) return out + html.slice(pos);
+    out += html.slice(pos, start);
+    const end = html.indexOf("-->", start + 4);
+    if (end === -1) return out; // unterminated: nothing after it is renderable
+    pos = end + 3;
+  }
+}
 
 /**
  * Minimum share of the page's own text a semantic zone must hold to be believed.
@@ -377,7 +418,7 @@ const ZONE_MIN_TEXT_SHARE = 0.25;
 const flatten = (html: string): string => stripTags(html).replace(/\s+/g, " ").trim();
 
 function extractText(html: string): string {
-  let stripped = html;
+  let stripped = stripComments(html);
   for (const tag of STRIPPED_TAGS) stripped = stripElements(stripped, tag);
 
   // Cap AFTER stripping, never before. Capping the raw HTML discarded the
@@ -756,12 +797,18 @@ export function isExtractionTooThin(text: string, title?: string): boolean {
   const body = text.trim();
   if (body.length < MIN_FETCHED_BODY_CHARS) return true;
 
-  // Some pages extract to nothing but their own title repeated. Longer than the
-  // floor, but it carries no information the ACO does not already hold.
+  // Some pages extract to nothing but their own title, repeated. Longer than
+  // the floor, but carrying no information the ACO does not already hold.
+  //
+  // Every occurrence has to go, not just the first: a title repeated forty
+  // times clears the floor comfortably once one copy is removed, which is
+  // precisely the case this is here to catch. split/join rather than a regex,
+  // so a title containing regex metacharacters needs no escaping and cannot
+  // become a catastrophic pattern.
   if (title) {
     const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
     const t = norm(title);
-    if (t.length > 0 && norm(body).replace(t, "").trim().length < MIN_FETCHED_BODY_CHARS) return true;
+    if (t.length > 0 && norm(body).split(t).join("").trim().length < MIN_FETCHED_BODY_CHARS) return true;
   }
   return false;
 }

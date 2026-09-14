@@ -44,7 +44,7 @@ import type { SourceType } from "./schema/aco.schema.js";
 import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { FetchError, type FetchStatus, ValidationError } from "./utils/errors.js";
-import { fetchBodyForUrl, isExtractionTooThin } from "./utils/fetch-url.js";
+import { fetchPageForUrl, isExtractionTooThin } from "./utils/fetch-url.js";
 import { computeContentHash, normalizeBody } from "./utils/hash.js";
 import { generateId } from "./utils/id.js";
 import { MIN_BODY_LENGTH_FOR_ENRICHMENT, SOURCE_TYPE_MODALITY } from "./utils/source-type.js";
@@ -126,14 +126,18 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
 
   if (hasUrl) {
     try {
-      body = await fetchBodyForUrl(params.url as string);
+      // fetchPageForUrl rather than fetchBodyForUrl so the page's own <title>
+      // is available to the thin-body check. `params.title` is undefined for
+      // the common createACO({ url }) call, which left that check dead.
+      const page = await fetchPageForUrl(params.url as string);
+      body = page.text;
       // A 200 response is not the same as a usable page. Script-only pages,
       // bot walls and consent interstitials all return content that extracts
       // to little more than the title. Enriching that produces a fluent,
       // confident ACO about whatever fragment survived, which is worse than
       // no ACO — so report it as a permanent fetch failure and let the caller
       // decide. Callers already branching on `fetch_status` need no change.
-      fetchStatus = isExtractionTooThin(body, params.title)
+      fetchStatus = isExtractionTooThin(body, params.title ?? page.title)
         ? {
             ok: false,
             permanent: true,

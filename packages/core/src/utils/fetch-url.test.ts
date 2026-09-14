@@ -981,6 +981,46 @@ describe("extractText — content correctness regressions", () => {
     expect(text).toContain("Trailing sentence");
   });
 
+  it("stays linear on near-miss openers that never match a close tag", async () => {
+    // Found by ensemble review of this very PR. Recomputing both the opener and
+    // closer search on every pass made zone selection quadratic: `<articlez`
+    // repeated never matches `</article`, so each of ~40,000 iterations rescanned
+    // the whole remainder. Measured at 5.6 s of CPU for one 300 KB page.
+    mockFetch(`<html><body><main>${ARTICLE_BODY}</main>${"<articlez ".repeat(33_000)}</body></html>`);
+    const started = Date.now();
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("stays linear on near-miss <main openers", async () => {
+    mockFetch(`<html><body><article>${ARTICLE_BODY}</article>${"<mainz ".repeat(50_000)}</body></html>`);
+    const started = Date.now();
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("ignores a commented-out <article> rather than letting it corrupt nesting", async () => {
+    // A commented placeholder counted as a real opener, so depth never returned
+    // to zero, no zone ever closed, and selection fell through to returning the
+    // rest of the document — including text the page had deliberately hidden.
+    mockFetch(
+      `<html><body><!-- <article>hidden placeholder text</article> --><article>${ARTICLE_BODY}</article></body></html>`
+    );
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+    expect(text).not.toContain("hidden placeholder");
+  });
+
+  it("prefers a truncated trailing article over a smaller completed teaser", async () => {
+    // The real article's closing tag can fall past the extraction cap. The
+    // trailing candidate must still beat a completed teaser on size.
+    mockFetch(`<html><body><article>Teaser. Read more.</article><article>${ARTICLE_BODY}`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+  });
+
   it("stays linear when a page carries thousands of unclosed openers", async () => {
     // The unclosed-tag path now continues scanning rather than bailing out, so
     // it must latch the missing close or it reintroduces the quadratic DoS.
@@ -1006,6 +1046,13 @@ describe("isExtractionTooThin", () => {
   it("flags a body that is only the page title repeated", () => {
     const title = "Treadmill Buying Guide";
     expect(isExtractionTooThin(`${title} ${title}`, title)).toBe(true);
+  });
+
+  it("flags a body that is the title repeated many times", () => {
+    // A single-occurrence replace left the other 39 copies in place, so the
+    // body cleared the floor and the check never fired.
+    const title = "Treadmill Buying Guide";
+    expect(isExtractionTooThin(`${title} `.repeat(40), title)).toBe(true);
   });
 
   it("does not flag a long body merely because it starts with the title", () => {
