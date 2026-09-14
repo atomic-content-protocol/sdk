@@ -29,6 +29,7 @@ Every value has a safe default; only a provider key is required, and the server 
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | — | At least one required. |
 | `ENRICHMENT_QUALITY` | `fast` | `fast` (Haiku 4.5 / GPT-5.6 Luna), `balanced`, `best`. |
 | `TRUST_PROXY` | `1` | Reverse-proxy hops in front. `true` lets clients spoof their IP and is warned about at boot. |
+| `CLIENT_IP_HEADERS` | `x-envoy-external-address,…` | Headers consulted in order for the real client address before falling back to `req.ip`. |
 | `RATE_LIMIT_PER_HOUR` | `50` | Weighted units per client per hour, per instance. A batch of N items costs N; the MCP handshake is free. |
 | `MCP_API_KEYS` | unset | Comma-separated bearer tokens. When set, `/mcp` requires one; failed attempts are metered per IP. |
 | `CORS_ORIGINS` | unset | Browser origins allowed to call `/mcp`. Non-browser MCP clients send no `Origin` and are unaffected. |
@@ -38,6 +39,8 @@ Every value has a safe default; only a provider key is required, and the server 
 ### Choosing `DAILY_COST_CAP_USD`
 
 The cap is a blast-radius limit, not a quota: it counts the *estimated* cost of every enrichment across all clients and, once exhausted, answers `BUDGET_EXCEEDED` to everyone until 00:00 UTC. Set it to the most you are willing to lose in a day.
+
+> **Check that clients are identified correctly.** `GET /health` returns `client.key_source` and `client.key_hash`. Call it twice from the same machine: if `key_hash` changes, the server is keying on something unstable (typically an internal proxy address surfaced by `trust proxy`) and the hourly limit will never bite, because every request gets a fresh bucket. Point `CLIENT_IP_HEADERS` at whatever header your platform sets to the external client address.
 
 > **Replicas multiply both budgets.** The rate limiter and the spend guard are in-memory, so each instance enforces its own copy. With two replicas a `50`/hour limit is really 100/hour and a `$10` cap is really `$20`, and clients see `RateLimit-Remaining` jump around as requests land on different instances. Every response carries an `X-ACP-Instance` header (also reported as `instance` by `GET /health`): if a burst of requests returns more than one value, you have more than one replica. Either run a single replica, or divide the figures below by the replica count.
 

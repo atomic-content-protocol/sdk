@@ -50,6 +50,14 @@ export interface ServerConfig {
   apiKeys: string[];
   /** Allowed CORS origins. Empty means no browser origins are allowed. */
   corsOrigins: string[];
+  /**
+   * Headers consulted, in order, for the real client address before falling
+   * back to `req.ip`. Platform proxies (Railway/Envoy, Cloudflare) set one of
+   * these to the external client; `req.ip` under `trust proxy` can resolve to
+   * an internal proxy address that differs per request, which would hand every
+   * request its own rate-limit bucket.
+   */
+  clientIpHeaders: string[];
   /** Max estimated USD spend per UTC day across all clients. Infinity = off. */
   dailyCostCapUsd: number;
   quality: QualityTier;
@@ -93,6 +101,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     rateLimitPerHour: int(env, "RATE_LIMIT_PER_HOUR", 50),
     apiKeys: list(env, "MCP_API_KEYS"),
     corsOrigins: list(env, "CORS_ORIGINS"),
+    clientIpHeaders: (env.CLIENT_IP_HEADERS ?? "x-envoy-external-address,cf-connecting-ip,true-client-ip,x-real-ip")
+      .split(",")
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean),
     dailyCostCapUsd:
       capRaw === undefined || capRaw === "" ? Number.POSITIVE_INFINITY : num(env, "DAILY_COST_CAP_USD", 0),
     quality: qualityRaw as QualityTier,

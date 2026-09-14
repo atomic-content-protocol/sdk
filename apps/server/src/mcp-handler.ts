@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError } from "@modelcontextprotocol/sdk/types.js";
@@ -14,6 +14,32 @@ export interface McpHandlerDeps {
   service: EnrichmentService;
 }
 
+/**
+ * Identify the calling client for rate limiting.
+ *
+ * `req.ip` is unreliable behind a multi-hop proxy chain: with `trust proxy: N`
+ * Express skips N hops from the right, so a chain of `client, edge1, edge2`
+ * yields an *internal* address that can differ per request — every request
+ * then gets a fresh bucket and the limit never bites. Prefer the platform's
+ * dedicated client-address header when present.
+ */
+export function clientAddress(req: Request, config: ServerConfig): { address: string; source: string } {
+  for (const header of config.clientIpHeaders) {
+    const raw = req.header(header);
+    if (raw) {
+      // Some proxies send a list; the first entry is the client.
+      const value = raw.split(",")[0]?.trim();
+      if (value) return { address: value, source: header };
+    }
+  }
+  return { address: req.ip || req.socket.remoteAddress || "unknown", source: "req.ip" };
+}
+
+/** Stable, non-reversible id for a client address — safe to expose for diagnostics. */
+export function clientKeyHash(address: string): string {
+  return createHash("sha256").update(`acp-client:${address}`).digest("hex").slice(0, 8);
+}
+
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -22,7 +48,7 @@ function safeEqual(a: string, b: string): boolean {
 
 /** Identify the caller: bearer token when auth is on, else the (proxy-resolved) IP. */
 export function resolveClient(req: Request, config: ServerConfig): { id: string; ip: string; authorized: boolean } {
-  const ip = `ip:${req.ip || req.socket.remoteAddress || "unknown"}`;
+  const ip = `ip:${clientAddress(req, config).address}`;
   if (config.apiKeys.length === 0) return { id: ip, ip, authorized: true };
   const header = req.header("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
