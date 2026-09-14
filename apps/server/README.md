@@ -51,9 +51,16 @@ Tune it from the `enrichment_completed` events in PostHog, which carry the per-c
 
 [`railway.json`](railway.json) pins the build:
 
-- Install runs in the Nixpacks install phase as `npm ci --include=dev`. The `--include=dev` matters because Railway sets the npm `production` config, and the build needs TypeScript, turbo and `@types/*`. Do **not** add `npm ci` to `buildCommand`; it fails with `EBUSY` on the cache directory Nixpacks mounts inside `node_modules`.
-- `buildCommand` only compiles: `npx turbo build --filter=acp-server`.
-- `startCommand` runs the compiled entry point, which shuts down gracefully on `SIGTERM` and flushes PostHog first.
+```json
+"buildCommand": "npm install --include=dev --no-audit --no-fund && npx turbo build --filter=acp-server"
+```
+
+Two constraints are baked into that one line, each learned from a failed deploy:
+
+- **`--include=dev`, not a bare install.** Railway sets npm's `production` config, so the platform's own install phase omits `devDependencies` and `tsc` fails with `TS7016` on `express` and `cors`. Only `--include=dev` overrides that config; `--omit=` does not. A `nixpacksPlan.phases.install` override is accepted by the schema but was ignored in practice, so the build command does the work itself.
+- **`npm install`, not `npm ci`.** `npm ci` deletes `node_modules` before installing, and Nixpacks mounts its build cache at `node_modules/.cache`, which cannot be removed — the build dies with `EBUSY`. `npm install` reconciles in place against the committed lockfile and leaves the mount alone.
+
+`startCommand` runs the compiled entry point, which shuts down gracefully on `SIGTERM` and flushes PostHog first.
 
 Recommended production variables: `CORS_ORIGINS=https://atomiccontentprotocol.org` and a `DAILY_COST_CAP_USD`.
 
