@@ -2,7 +2,7 @@ import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 import type { ServerConfig } from "./config.js";
-import { createHealthHandler } from "./health.js";
+import { createHealthHandler, INSTANCE } from "./health.js";
 import { createMcpHandler } from "./mcp-handler.js";
 import { RateLimiter } from "./rate-limit.js";
 import { EnrichmentService, type EnrichmentServiceDeps } from "./tools.js";
@@ -19,6 +19,13 @@ export function createApp(config: ServerConfig, deps: EnrichmentServiceDeps = {}
   app.set("trust proxy", config.trustProxy);
   app.disable("x-powered-by");
 
+  // Identify the serving process on every response. The rate limiter and the
+  // spend guard are in-memory, so when several replicas are up each enforces
+  // its own budget; this header makes that visible from the outside.
+  app.use((_req, res, next) => {
+    res.setHeader("X-ACP-Instance", INSTANCE);
+    next();
+  });
   app.use(helmet());
   app.use(
     cors({

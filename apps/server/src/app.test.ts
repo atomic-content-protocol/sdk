@@ -270,6 +270,18 @@ describe("bearer auth", () => {
   });
 });
 
+describe("instance identification", () => {
+  it("every response carries a stable X-ACP-Instance header matching /health", async () => {
+    const health = await fetch(`${base}/health`);
+    const fromBody = (await health.json()) as { instance: string };
+    const fromHeader = health.headers.get("x-acp-instance");
+    expect(fromHeader).toMatch(/^[0-9a-f]{8}$/);
+    expect(fromHeader).toBe(fromBody.instance);
+    const { res } = await post(rpc("tools/list", {}));
+    expect(res.headers.get("x-acp-instance")).toBe(fromHeader);
+  });
+});
+
 describe("hardening (re-review)", () => {
   it("unsupported Content-Encoding gets a JSON 4xx, never an HTML stack trace", async () => {
     const res = await fetch(`${base}/mcp`, {
