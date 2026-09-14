@@ -1,6 +1,6 @@
 {
   "name": "@atomic-content-protocol/mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP server for the Atomic Content Protocol \u2014 exposes ACO tools to AI agents",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
@@ -25,8 +25,8 @@
     "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
-    "@atomic-content-protocol/core": "^0.2.0",
-    "@atomic-content-protocol/enrichment": "^0.2.0",
+    "@atomic-content-protocol/core": "^0.2.1",
+    "@atomic-content-protocol/enrichment": "^0.2.1",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.24.0",
     "zod-to-json-schema": "^3.24.0"
