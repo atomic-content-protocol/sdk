@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-14
+
+Fixes for HTML text extraction. `@atomic-content-protocol/core` is the only package with code changes; the others move with it so the release stays a single tag.
+
+The trigger was a saved card whose ACO described a meal-replacement powder rather than the treadmill buying guide it was attached to. The model had not confabulated — it summarised, accurately, the 216 characters of unrelated promotional text the extractor handed it.
+
+### Upgrade notes
+- A fetched page that extracts to less than 400 characters, or to nothing but its own title, is now reported as `fetch_status: { ok: false, permanent: true, networkCode: "EXTRACTION_TOO_THIN" }` rather than enriched. A 200 response is not the same as a usable page, and a confident ACO about a fragment is worse than no ACO. Callers already branching on `fetch_status` need no change. Only *fetched* bodies are gated; a short body passed to `createACO({ body })` is untouched.
+- `createACO({ url })` now calls `fetchPageForUrl` internally so the page's own `<title>` is available to that check. No signature change.
+- New exports: `isExtractionTooThin`, `MIN_FETCHED_BODY_CHARS`.
+- Expect more text per page and different text on some pages. Any cached `content_hash` derived from a previous extraction of the same URL will no longer match.
+
+### Fixed
+- **Extraction cap applied to the wrong input (regression in 0.2.0).** The raw HTML was truncated to 300 KB and stripped afterwards, so any page front-loading large inline assets lost its article entirely. A page carrying 276 KB of inline CSS before its content extracted to nothing but the `<title>` — 50 characters instead of 28,670. Stripping now happens first and the bound applies to the stripped result. 0.1.x had no cap, so this was silent content loss introduced by hardening work. Three of eight sampled pages exceed 300 KB.
+- **Unclosed tags discarded the rest of the document.** One unterminated `<style>` threw away everything after it. The stray opener is now dropped and scanning continues, with the missing close latched so the unclosed path cannot go quadratic.
+- **Zone selection took the first `<article>`, not the largest.** Content sites mark related-post teasers up as `<article>`; on the page above all four were teasers and the real content sat outside every one. Selection now takes the largest top-level candidate and tracks nesting so an inner `</article>` cannot terminate its parent.
+- **`<main>` outranked the `<article>` it wraps.** Preferring whichever held more text chose `<main>` by a rounding margin and put an icon-font sprite ahead of the article. Since only the first few thousand characters reach the model, leading chrome displaces the content. Precedence is now article, then main, then body, each still required to clear a share-of-page floor.
+- **Quadratic scan in zone selection.** Recomputing both the opener and closer search on every pass meant a page of near-miss openers such as `<articlez` repeated rescanned the whole remainder on each of ~40,000 iterations: 5,627 ms of CPU for one 300 KB page, against a 50 ms baseline. Now 7 ms. Found by ensemble review.
+- **Commented-out markup corrupted nesting.** `<!-- <article> -->` counted as a real opener, so depth never returned to zero and selection returned the remainder of the document, including text the page had hidden in a comment. Comments are stripped before zone selection.
+- **A truncated trailing article lost to a smaller completed teaser** when the real article's closing tag fell past the cap.
+- **The title-repetition check could not fire.** A single-occurrence string replace left a repeated title above the floor, and the title passed in was undefined for the common `createACO({ url })` call.
+
+### Testing
+378 tests in core, 18 new. The extraction tests assert on extracted *content* and the performance tests assert a wall-clock bound: the previous suite proved this extractor was fast on adversarial input and never that it returned the right text, which is what let these ship. Verified live against 20 real saved URLs.
+
 ## [0.2.0] - 2026-09-14
 
 All four packages move to 0.2.0 together. Highlights: the storage layer and both public HTTP surfaces are hardened against path traversal and SSRF, enrichment records truthful provenance and never overwrites human-authored fields, vector search works end to end, quality tiers select current models, and every workspace has a test suite (core 347, enrichment 163, mcp 15, server 30, cli 18).
