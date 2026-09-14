@@ -255,7 +255,7 @@ describe("fetchBodyForUrl — network error mapping", () => {
     expect((err as FetchError).networkCode).toBe("ECONNREFUSED");
   });
 
-  it("redirect refusal → FetchError with permanent: false (no networkCode)", async () => {
+  it("a hard network failure with no errno → FetchError with permanent: false (no networkCode)", async () => {
     // Simulate what happens when redirect: "error" causes fetch to throw
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
     const err = await fetchBodyForUrl("https://example.com").catch((e) => e);
@@ -772,5 +772,117 @@ describe("isBlockedAddress — additional IPv6 embeddings", () => {
   });
   it.each(["2002:801:801::", "2001:4860:4860::8888", "64:ff9b:2::1"])("allows %s", (ip) => {
     expect(isBlockedAddress(ip)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Redirects — followed, but every hop re-validated
+// ---------------------------------------------------------------------------
+
+/** Mock a redirect chain: each entry is a Location, the last entry is the final HTML page. */
+function mockChain(
+  hops: Array<{ status?: number; location?: string; html?: string; headers?: Record<string, string> }>
+) {
+  const seen: string[] = [];
+  let i = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation((url: string) => {
+      seen.push(url);
+      const hop = hops[Math.min(i, hops.length - 1)];
+      i++;
+      if (hop?.location) {
+        return Promise.resolve({
+          ok: false,
+          status: hop.status ?? 308,
+          headers: { get: (h: string) => (h.toLowerCase() === "location" ? hop.location : null) },
+          body: null,
+          text: async () => "",
+        });
+      }
+      const headers = hop?.headers ?? { "content-type": "text/html" };
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: { get: (h: string) => headers[h.toLowerCase()] ?? null },
+        body: null,
+        text: async () => hop?.html ?? "<html><body><p>done</p></body></html>",
+      });
+    })
+  );
+  return seen;
+}
+
+describe("fetchPageForUrl — redirects", () => {
+  it("follows a redirect and reports the final URL", async () => {
+    const seen = mockChain([
+      { location: "https://example.com/moved" },
+      { html: "<html><head><title>Moved</title></head><body><p>final</p></body></html>" },
+    ]);
+    const page = await fetchPageForUrl("https://example.com/start");
+    expect(page.text).toBe("final");
+    expect(page.title).toBe("Moved");
+    expect(page.url).toBe("https://example.com/moved");
+    expect(seen).toEqual(["https://example.com/start", "https://example.com/moved"]);
+  });
+
+  it("resolves a relative Location against the current URL", async () => {
+    const seen = mockChain([{ location: "/docs/intro" }, { html: "<html><body><p>ok</p></body></html>" }]);
+    const page = await fetchPageForUrl("https://example.com/a/b");
+    expect(seen[1]).toBe("https://example.com/docs/intro");
+    expect(page.url).toBe("https://example.com/docs/intro");
+  });
+
+  it.each([301, 302, 303, 307, 308])("follows a %i", async (status) => {
+    mockChain([{ status, location: "https://example.com/final" }, { html: "<html><body><p>x</p></body></html>" }]);
+    expect((await fetchPageForUrl("https://example.com/s")).url).toBe("https://example.com/final");
+  });
+
+  it("refuses a redirect to a private address (open-redirect SSRF)", async () => {
+    mockChain([{ location: "https://169.254.169.254/latest/meta-data/" }]);
+    await expect(fetchPageForUrl("https://example.com/evil")).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("refuses a redirect that downgrades to http", async () => {
+    mockChain([{ location: "http://example.com/insecure" }]);
+    await expect(fetchPageForUrl("https://example.com/s")).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("refuses a redirect to a hostname that resolves to a private IP", async () => {
+    mockChain([{ location: "https://internal.example.com/x" }]);
+    dnsLookup.mockImplementation(async (host: string) =>
+      host === "internal.example.com" ? [{ address: "10.0.0.5", family: 4 }] : [{ address: "93.184.216.34", family: 4 }]
+    );
+    await expect(fetchPageForUrl("https://example.com/s")).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("gives up after too many hops", async () => {
+    mockChain([{ location: "https://example.com/loop" }]);
+    const err = await fetchPageForUrl("https://example.com/loop").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).networkCode).toBe("TOO_MANY_REDIRECTS");
+  });
+
+  it("rejects an unparseable Location", async () => {
+    mockChain([{ location: "http://[::bad::]/x" }]);
+    const err = await fetchPageForUrl("https://example.com/s").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).networkCode).toBe("INVALID_REDIRECT");
+  });
+
+  it("treats a 3xx without a Location header as the final response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 302,
+        headers: { get: () => null },
+        body: null,
+        text: async () => "",
+      })
+    );
+    const err = await fetchPageForUrl("https://example.com/s").catch((e) => e);
+    expect(err).toBeInstanceOf(FetchError);
+    expect((err as FetchError).networkCode).toBe("HTTP_302");
   });
 });

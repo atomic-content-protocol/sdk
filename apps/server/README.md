@@ -66,7 +66,7 @@ Recommended production variables: `CORS_ORIGINS=https://atomiccontentprotocol.or
 
 ## Security posture
 
-HTTPS-only, SSRF-guarded fetching via `@atomic-content-protocol/core` (private, loopback, link-local, CGNAT, mapped-IPv6 and NAT64 ranges refused; DNS resolved before connecting; redirects not followed; response size capped). Helmet is on, CORS is closed by default, tool failures never echo upstream provider text, and per-request MCP servers and transports are closed when the response ends.
+HTTPS-only, SSRF-guarded fetching via `@atomic-content-protocol/core` (private, loopback, link-local, CGNAT, mapped-IPv6 and NAT64 ranges refused; DNS resolved before connecting; redirects followed only after re-validating every hop, max 5; response size capped). Helmet is on, CORS is closed by default, tool failures never echo upstream provider text, and per-request MCP servers and transports are closed when the response ends.
 
 ## License
 

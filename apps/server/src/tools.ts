@@ -82,7 +82,10 @@ const enrichContentSchema = z.object({
 });
 
 const enrichUrlSchema = z.object({
-  url: z.string().url().describe("HTTPS URL to fetch and enrich. Redirects are not followed."),
+  url: z
+    .string()
+    .url()
+    .describe("HTTPS URL to fetch and enrich. Redirects are followed (max 5) with every hop re-validated."),
   depth: depthSchema,
 });
 
@@ -119,7 +122,7 @@ export const TOOL_DEFINITIONS = [
   {
     name: "enrich_url",
     description:
-      "Fetch an HTTPS URL, extract its content, and enrich it into an ACO. Returns enriched frontmatter with source URL, tags, summary, classification, key entities, and cost estimate.",
+      "Fetch an HTTPS URL, extract its content, and enrich it into an ACO. Redirects are followed. Returns enriched frontmatter with the final source URL, tags, summary, classification, key entities, and cost estimate.",
     inputSchema: toInputSchema(enrichUrlSchema),
   },
   {
@@ -334,7 +337,10 @@ export class EnrichmentService {
         savings_per_read: estimate.savingsPerRead,
         savings_percent: Math.round(estimate.savingsPercent),
         break_even_reads: estimate.breakEvenReads,
-        message: `Future reads use ~${estimate.frontmatterTokens} tokens instead of ~${estimate.contentTokens} — saving ${estimate.savingsPerRead.toLocaleString()} tokens (${Math.round(estimate.savingsPercent)}%) per read. Break-even after ${estimate.breakEvenReads} reads.`,
+        message:
+          estimate.savingsPerRead > 0
+            ? `Future reads use ~${estimate.frontmatterTokens} tokens instead of ~${estimate.contentTokens} — saving ${estimate.savingsPerRead.toLocaleString()} tokens (${Math.round(estimate.savingsPercent)}%) per read. Break-even after ${estimate.breakEvenReads} reads.`
+            : `This content (~${estimate.contentTokens} tokens) is already shorter than its enriched frontmatter (~${estimate.frontmatterTokens} tokens), so enrichment adds structure and searchability rather than saving tokens.`,
       },
     };
   }
