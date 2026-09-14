@@ -10,7 +10,7 @@ const startedAt = Date.now();
  * distinct `instance` values tells you how many replicas are serving traffic,
  * and therefore the real effective limits.
  */
-const INSTANCE = randomBytes(4).toString("hex");
+export const INSTANCE = randomBytes(4).toString("hex");
 
 export function createHealthHandler(config: ServerConfig) {
   return (_req: Request, res: Response): void => {

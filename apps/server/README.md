@@ -39,7 +39,7 @@ Every value has a safe default; only a provider key is required, and the server 
 
 The cap is a blast-radius limit, not a quota: it counts the *estimated* cost of every enrichment across all clients and, once exhausted, answers `BUDGET_EXCEEDED` to everyone until 00:00 UTC. Set it to the most you are willing to lose in a day.
 
-> **Replicas multiply both budgets.** The rate limiter and the spend guard are in-memory, so each instance enforces its own copy. With two replicas a `50`/hour limit is really 100/hour and a `$10` cap is really `$20`, and clients see `RateLimit-Remaining` jump around as requests land on different instances. `GET /health` returns an `instance` id: probe it a few times and count distinct values. Either run a single replica, or divide the figures below by the replica count.
+> **Replicas multiply both budgets.** The rate limiter and the spend guard are in-memory, so each instance enforces its own copy. With two replicas a `50`/hour limit is really 100/hour and a `$10` cap is really `$20`, and clients see `RateLimit-Remaining` jump around as requests land on different instances. Every response carries an `X-ACP-Instance` header (also reported as `instance` by `GET /health`): if a burst of requests returns more than one value, you have more than one replica. Either run a single replica, or divide the figures below by the replica count.
 
 | Cap | Roughly | Fits |
 |---|---|---|
