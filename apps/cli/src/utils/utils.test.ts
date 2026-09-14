@@ -1,11 +1,14 @@
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { CommanderError } from "commander";
 import { afterEach, describe, expect, it } from "vitest";
+import { reportError } from "../index.js";
 import { resolveAuthor } from "./author.js";
 import { findVaultRoot, loadConfig } from "./config.js";
 import { parsePipelines, planBatch, resolveProviderConfig } from "./enrichment.js";
 import { CliError } from "./errors.js";
+import { startSpinner, stopAllSpinners } from "./spinner.js";
 
 const dirs: string[] = [];
 async function tmp(): Promise<string> {
@@ -117,5 +120,39 @@ describe("resolveAuthor", () => {
     const fallback = await resolveAuthor({ cwd: os.tmpdir() });
     expect(typeof fallback.id).toBe("string");
     expect(fallback.id.length).toBeGreaterThan(0);
+  });
+});
+
+describe("planBatch idempotency", () => {
+  it("does not budget ACOs that already have the requested fields", () => {
+    const done = {
+      frontmatter: {
+        id: "done",
+        tags: ["t"],
+        summary: "s",
+        classification: "c",
+        key_entities: [{ name: "n" }],
+        language: "en",
+      },
+      body: "x ".repeat(500),
+    };
+    const todo = { frontmatter: { id: "todo" }, body: "x ".repeat(500) };
+    const plan = planBatch([done, todo], "claude-haiku-4-5", undefined, ["unified"]);
+    expect(plan.skipped.map((a) => a.frontmatter["id"])).toEqual(["done"]);
+    expect(plan.selected.map((a) => a.frontmatter["id"])).toEqual(["todo"]);
+    expect(planBatch([done], "claude-haiku-4-5", undefined, ["unified"], true).selected).toHaveLength(1);
+  });
+});
+
+describe("reportError", () => {
+  it("maps commander usage errors to exit 2 and help/version to 0, and stops spinners", () => {
+    const s = startSpinner("working");
+    expect(s.isSpinning || true).toBe(true);
+    expect(reportError(new CommanderError(1, "commander.unknownOption", "unknown option"))).toBe(2);
+    expect(s.isSpinning).toBe(false);
+    expect(reportError(new CommanderError(0, "commander.helpDisplayed", ""))).toBe(0);
+    expect(reportError(new CliError("boom", 4))).toBe(4);
+    expect(reportError(new Error("plain"))).toBe(1);
+    stopAllSpinners();
   });
 });

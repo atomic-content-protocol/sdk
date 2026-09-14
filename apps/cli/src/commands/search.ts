@@ -1,7 +1,8 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import { loadConfig } from "../utils/config.js";
+import { CliError, EXIT } from "../utils/errors.js";
+import { startSpinner } from "../utils/spinner.js";
 import { createStorage } from "../utils/storage.js";
 
 export const searchCommand = new Command("search")
@@ -14,7 +15,7 @@ export const searchCommand = new Command("search")
     const { config } = await loadConfig(cmd.optsWithGlobals()["vault"] as string | undefined);
     const storage = createStorage(config);
 
-    const spinner = ora("Searching...").start();
+    const spinner = startSpinner("Searching...");
 
     const searchQuery: {
       search?: string;
@@ -31,7 +32,13 @@ export const searchCommand = new Command("search")
       searchQuery.status = [(options.status as string).trim()];
     }
 
-    const limit = parseInt(options.limit as string, 10) || 20;
+    const limit = Number.parseInt(options.limit as string, 10);
+    if (!Number.isInteger(limit) || limit < 1) {
+      throw new CliError(`Invalid --limit "${options.limit}"`, EXIT.USAGE, "Expected a positive integer.");
+    }
+    if (options.status && !["draft", "final", "archived"].includes((options.status as string).trim())) {
+      throw new CliError(`Invalid --status "${options.status}"`, EXIT.USAGE, "Valid values: draft, final, archived");
+    }
     const results = await storage.queryACOs(searchQuery);
     const limited = results.slice(0, limit);
 

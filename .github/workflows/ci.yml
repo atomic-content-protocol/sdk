@@ -30,6 +30,8 @@ jobs:
         run: npx turbo build --filter='@atomic-content-protocol/*' --filter=acp-server
       - name: Type-check sources and tests
         run: npx turbo lint
+      - name: Build website
+        run: npx turbo build --filter=acp-website
 
   build-and-test:
     name: Build & test (Node ${{ matrix.node-version }})

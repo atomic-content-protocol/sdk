@@ -4,9 +4,9 @@ import type { ACO } from "@atomic-content-protocol/core";
 import { parseACO, validateACO } from "@atomic-content-protocol/core";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import { loadConfig } from "../utils/config.js";
 import { CliError, EXIT } from "../utils/errors.js";
+import { startSpinner } from "../utils/spinner.js";
 import { createStorage } from "../utils/storage.js";
 
 interface Report {
@@ -47,7 +47,7 @@ export const validateCommand = new Command("validate")
     } else {
       const { config } = await loadConfig(target ?? (cmd.optsWithGlobals()["vault"] as string | undefined));
       const storage = createStorage(config);
-      const spinner = options.json ? null : ora("Scanning vault...").start();
+      const spinner = options.json ? null : startSpinner("Scanning vault...");
       // Validate what is on disk, not what the index remembers: files added
       // or edited by hand must be checked too, so rebuild the index first.
       await storage.rebuildIndex();

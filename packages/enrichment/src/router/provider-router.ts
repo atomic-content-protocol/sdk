@@ -203,7 +203,13 @@ export class ProviderRouter implements IEnrichmentProvider {
    */
   static fromConfig(config: ProviderConfig, options?: RouterOptions): ProviderRouter {
     const providers: IEnrichmentProvider[] = [];
-    const preset = MODEL_PRESETS[config.quality ?? DEFAULT_QUALITY];
+    const quality = config.quality ?? DEFAULT_QUALITY;
+    const preset = MODEL_PRESETS[quality];
+    if (!preset) {
+      throw new Error(
+        `ProviderRouter.fromConfig: unknown quality "${String(quality)}" (expected fast | balanced | best)`
+      );
+    }
 
     if (config.anthropic) {
       providers.push(new AnthropicProvider(config.anthropic.apiKey, config.anthropic.model ?? preset.anthropic));
@@ -271,14 +277,31 @@ export class ProviderRouter implements IEnrichmentProvider {
   }
 }
 
-/** Combine the caller's signal with the breaker's timeout signal. */
+/**
+ * Combine the caller's signal with the breaker's timeout signal. Listeners are
+ * detached once either fires or the breaker signal settles, so a long-lived
+ * caller signal (a server request, a batch controller) does not accumulate
+ * one listener per call.
+ */
 function mergeSignals(a: AbortSignal | undefined, b: AbortSignal): AbortSignal {
   if (!a) return b;
   if (a.aborted) return a;
   if (b.aborted) return b;
+  if (typeof AbortSignal.any === "function") return AbortSignal.any([a, b]);
   const controller = new AbortController();
-  const onAbort = (s: AbortSignal) => () => controller.abort(s.reason);
-  a.addEventListener("abort", onAbort(a), { once: true });
-  b.addEventListener("abort", onAbort(b), { once: true });
+  const cleanup = () => {
+    a.removeEventListener("abort", onA);
+    b.removeEventListener("abort", onB);
+  };
+  const onA = () => {
+    cleanup();
+    controller.abort(a.reason);
+  };
+  const onB = () => {
+    cleanup();
+    controller.abort(b.reason);
+  };
+  a.addEventListener("abort", onA, { once: true });
+  b.addEventListener("abort", onB, { once: true });
   return controller.signal;
 }

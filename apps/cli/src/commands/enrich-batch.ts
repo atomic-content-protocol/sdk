@@ -1,12 +1,12 @@
 import { BatchEnricher } from "@atomic-content-protocol/enrichment";
 import chalk from "chalk";
 import { Command, InvalidArgumentError } from "commander";
-import ora from "ora";
 import { loadConfig } from "../utils/config.js";
 import { buildPipelines, createRouter, estimateModel, parsePipelines, planBatch } from "../utils/enrichment.js";
 import { CliError, EXIT } from "../utils/errors.js";
 import { TOOL } from "../utils/pkg.js";
 import { confirm } from "../utils/prompt.js";
+import { startSpinner } from "../utils/spinner.js";
 import { createStorage } from "../utils/storage.js";
 
 function parseUsd(value: string): number {
@@ -56,7 +56,7 @@ export const enrichBatchCommand = new Command("enrich-batch")
     const storage = createStorage(config);
     const router = createRouter(config);
 
-    const spinner = options.json ? null : ora("Scanning vault...").start();
+    const spinner = options.json ? null : startSpinner("Scanning vault...");
 
     const query: { tags?: string[]; status?: string[] } = {};
     if (options.filterTags)
@@ -83,12 +83,14 @@ export const enrichBatchCommand = new Command("enrich-batch")
     }
 
     const model = estimateModel(config);
-    const plan = planBatch(acos, model, options.maxCost);
+    const plan = planBatch(acos, model, options.maxCost, pipelineNames, options.force);
 
     if (!options.json) {
       console.log();
       console.log(chalk.bold("Batch cost estimate:"));
       console.log(`  ACOs found:           ${acos.length}`);
+      if (plan.skipped.length > 0)
+        console.log(`  Already enriched:     ${plan.skipped.length} (skipped; use --force to redo)`);
       console.log(`  Will enrich:          ${plan.selected.length}`);
       console.log(`  Estimated total cost: ~$${plan.totalCost.toFixed(4)} (${model})`);
       if (options.maxCost !== undefined) {
@@ -105,7 +107,18 @@ export const enrichBatchCommand = new Command("enrich-batch")
     }
 
     if (plan.selected.length === 0) {
-      throw new CliError("Budget too small for even one ACO", EXIT.USAGE, "Raise --max-cost or omit it.");
+      if (plan.deferred.length > 0) {
+        throw new CliError("Budget too small for even one ACO", EXIT.USAGE, "Raise --max-cost or omit it.");
+      }
+      if (options.json)
+        console.log(
+          JSON.stringify({ found: acos.length, enriched: 0, skipped: plan.skipped.length, deferred: 0, failed: 0 })
+        );
+      else
+        console.log(
+          chalk.dim("Nothing to enrich — every ACO already has the requested fields (use --force to regenerate).")
+        );
+      return;
     }
 
     if (!options.yes && !(await confirm("Continue?"))) {
@@ -114,10 +127,10 @@ export const enrichBatchCommand = new Command("enrich-batch")
     }
 
     const enricher = new BatchEnricher(router, buildPipelines(pipelineNames));
-    const progress = options.json ? null : ora(`Enriching 0/${plan.selected.length}...`).start();
+    const progress = options.json ? null : startSpinner(`Enriching 0/${plan.selected.length}...`);
     let spent = 0;
 
-    const { results, errors } = await enricher.enrichMany(plan.selected, {
+    const { results, errors, embeddings } = await enricher.enrichMany(plan.selected, {
       force: options.force,
       tool: TOOL,
       concurrency: options.concurrency,
@@ -129,15 +142,20 @@ export const enrichBatchCommand = new Command("enrich-batch")
 
     if (progress) progress.text = "Saving results...";
     for (const aco of results) await storage.putACO(aco);
-    progress?.succeed(`Enriched ${results.length}/${plan.selected.length} ACOs`);
+    for (const [id, { vector, model: embedModel }] of embeddings) await storage.putEmbedding(id, vector, embedModel);
+    progress?.succeed(
+      `Enriched ${results.length}/${plan.selected.length} ACOs${embeddings.size > 0 ? ` (${embeddings.size} embeddings stored)` : ""}`
+    );
 
     if (options.json) {
       console.log(
         JSON.stringify({
           found: acos.length,
           enriched: results.length,
+          skipped: plan.skipped.length,
           deferred: plan.deferred.length,
           failed: errors.length,
+          embedded: embeddings.size,
           estimated_cost_usd: Number(plan.totalCost.toFixed(4)),
           model,
           errors,
@@ -151,6 +169,7 @@ export const enrichBatchCommand = new Command("enrich-batch")
       }
       console.log();
       console.log(chalk.green(`  Succeeded: ${results.length}`));
+      if (plan.skipped.length > 0) console.log(chalk.dim(`  Skipped:   ${plan.skipped.length} (already enriched)`));
       if (errors.length > 0) console.log(chalk.red(`  Failed:    ${errors.length}`));
       if (plan.deferred.length > 0) console.log(chalk.yellow(`  Deferred:  ${plan.deferred.length} (over --max-cost)`));
       console.log(chalk.cyan(`  Est. cost: $${plan.totalCost.toFixed(4)}`));

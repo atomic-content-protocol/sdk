@@ -77,6 +77,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
 
   const capRaw = env.DAILY_COST_CAP_USD;
 
+  if (!env.ANTHROPIC_API_KEY && !env.OPENAI_API_KEY) {
+    throw new Error("No AI provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.");
+  }
+  if (trustProxy === true) {
+    console.warn(
+      "[config] TRUST_PROXY=true trusts every X-Forwarded-For hop; clients can spoof their IP and bypass per-client rate limits. Prefer a hop count (e.g. 1)."
+    );
+  }
+
   return {
     version: pkg.version,
     port: int(env, "PORT", 3000),

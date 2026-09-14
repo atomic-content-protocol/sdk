@@ -98,8 +98,12 @@ const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/;
  * Throws `ValidationError` otherwise. Exported for adapters that reuse the
  * same on-disk conventions.
  */
+export function isSafeId(id: unknown): id is string {
+  return typeof id === "string" && SAFE_ID.test(id) && !id.includes("..");
+}
+
 export function assertSafeId(id: string, label = "id"): void {
-  if (typeof id !== "string" || !SAFE_ID.test(id) || id.includes("..")) {
+  if (!isSafeId(id)) {
     throw new ValidationError(
       `Invalid ${label} "${id}": ids may only contain letters, digits, ".", "_" and "-" and must not start with "."`
     );
@@ -169,14 +173,33 @@ function applyListOptions<T extends { frontmatter: Record<string, unknown> }>(it
   return limit !== undefined ? sliced.slice(0, limit) : sliced;
 }
 
-function isVaultIndex(value: unknown): value is VaultIndex {
+function isIndexEntry(value: unknown): value is IndexEntry {
+  if (typeof value !== "object" || value === null) return false;
+  const e = value as Record<string, unknown>;
   return (
-    typeof value === "object" &&
-    value !== null &&
-    (value as VaultIndex).version === INDEX_VERSION &&
-    typeof (value as VaultIndex).entries === "object" &&
-    (value as VaultIndex).entries !== null
+    typeof e["title"] === "string" &&
+    typeof e["source_type"] === "string" &&
+    typeof e["created"] === "string" &&
+    Array.isArray(e["tags"]) &&
+    typeof e["status"] === "string"
   );
+}
+
+/**
+ * Accept an index only if its shape is fully valid: version, and every key a
+ * safe id mapping to a well-formed entry. Anything else triggers a rebuild,
+ * so a hand-edited or corrupt file can never make reads throw.
+ */
+function isVaultIndex(value: unknown): value is VaultIndex {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  if (v["version"] !== INDEX_VERSION) return false;
+  const entries = v["entries"];
+  if (typeof entries !== "object" || entries === null || Array.isArray(entries)) return false;
+  for (const [id, entry] of Object.entries(entries as Record<string, unknown>)) {
+    if (!SAFE_ID.test(id) || id.includes("..") || !isIndexEntry(entry)) return false;
+  }
+  return true;
 }
 
 function isEmbeddingsStore(value: unknown): value is EmbeddingsStore {
@@ -329,8 +352,11 @@ export class FilesystemAdapter implements IStorageAdapter {
       } catch {
         continue; // skip unparseable files rather than poison the index
       }
+      // The file name is the storage key; a frontmatter id that disagrees
+      // would produce an entry getACO could never resolve, so skip it.
+      const stem = file.slice(0, -3);
       const id = String(result.frontmatter["id"] ?? "");
-      if (!id || !SAFE_ID.test(id)) continue;
+      if (!id || id !== stem || !SAFE_ID.test(id)) continue;
       index.entries[id] = this.indexEntryFromACO(result);
     }
 
@@ -354,6 +380,8 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getACO(id: string): Promise<ACO | null> {
     await this.ensureDirectories();
+    // Reads treat a malformed id as "no such object" (0.1 behaviour); writes throw.
+    if (!isSafeId(id)) return null;
     const filePath = documentPath(this.vaultPath, id, "ACO id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
@@ -485,6 +513,7 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getContainer(id: string): Promise<Container | null> {
     await this.ensureDirectories();
+    if (!isSafeId(id)) return null;
     const filePath = documentPath(this.containersPath, id, "container id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
@@ -513,6 +542,7 @@ export class FilesystemAdapter implements IStorageAdapter {
 
   async getCollection(id: string): Promise<Collection | null> {
     await this.ensureDirectories();
+    if (!isSafeId(id)) return null;
     const filePath = documentPath(this.collectionsPath, id, "collection id");
     const raw = await readFileSafe(filePath);
     if (raw === null) return null;
@@ -543,8 +573,12 @@ export class FilesystemAdapter implements IStorageAdapter {
       if (!file.endsWith(".md")) continue;
       const raw = await readFileSafe(path.join(dir, file));
       if (raw === null) continue;
-      const result = parseACO(raw);
-      docs.push({ frontmatter: result.frontmatter, body: result.body });
+      try {
+        const result = parseACO(raw);
+        docs.push({ frontmatter: result.frontmatter, body: result.body });
+      } catch {
+        // skip unparseable documents rather than failing the whole listing
+      }
     }
     return docs;
   }

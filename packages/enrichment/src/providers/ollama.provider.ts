@@ -13,20 +13,29 @@ export interface OllamaProviderOptions {
   fetch?: typeof fetch;
 }
 
-/** Combine an optional caller signal with a timeout into one AbortSignal. */
-function combineSignals(timeoutMs: number, signal?: AbortSignal): AbortSignal {
+/**
+ * Combine an optional caller signal with a timeout. Returns the signal and a
+ * `dispose` that clears the timer and detaches listeners; call it in a
+ * finally so a successful request does not keep the event loop alive.
+ */
+function withTimeout(timeoutMs: number, signal?: AbortSignal): { signal: AbortSignal; dispose: () => void } {
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(new Error(`Ollama request timed out after ${timeoutMs}ms`)),
     timeoutMs
   );
-  const clear = () => clearTimeout(timer);
-  controller.signal.addEventListener("abort", clear, { once: true });
+  const onAbort = () => controller.abort(signal?.reason);
   if (signal) {
     if (signal.aborted) controller.abort(signal.reason);
-    else signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+    else signal.addEventListener("abort", onAbort, { once: true });
   }
-  return controller.signal;
+  return {
+    signal: controller.signal,
+    dispose: () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    },
+  };
 }
 
 /**
@@ -59,12 +68,18 @@ export class OllamaProvider implements IEnrichmentProvider {
   // ---------------------------------------------------------------------------
 
   private async post<T>(path: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
-    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: combineSignals(this.timeoutMs, signal),
-    });
+    const t = withTimeout(this.timeoutMs, signal);
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: t.signal,
+      });
+    } finally {
+      t.dispose();
+    }
 
     if (!response.ok) {
       const text = await response.text().catch(() => "");

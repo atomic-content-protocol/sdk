@@ -245,21 +245,26 @@ export const UnifiedOutputSchema = z.object({
     return out;
   }),
   summary: z.string().transform((s) => s.trim().replace(/\s+/g, " ").slice(0, MAX_SUMMARY_CHARS)),
-  classification: z.string().transform((c) => {
-    const v = c.trim().toLowerCase();
-    return (CLASSIFICATIONS as readonly string[]).includes(v) ? v : "other";
-  }),
+  classification: z
+    .string()
+    .catch("other")
+    .transform((c) => {
+      const v = c.trim().toLowerCase();
+      return (CLASSIFICATIONS as readonly string[]).includes(v) ? v : "other";
+    }),
   key_entities: z
-    .array(
-      z.object({
-        type: z.string(),
-        name: z.string(),
-        confidence: z.number().catch(0.5),
-      })
-    )
+    .array(z.unknown())
     .catch([])
-    .transform((entities) =>
-      entities
+    .transform((raw) =>
+      raw
+        .filter(
+          (e): e is { type?: unknown; name?: unknown; confidence?: unknown } => typeof e === "object" && e !== null
+        )
+        .map((e) => ({
+          type: typeof e.type === "string" ? e.type : "",
+          name: typeof e.name === "string" ? e.name : "",
+          confidence: typeof e.confidence === "number" ? e.confidence : 0.5,
+        }))
         .map((e) => ({
           type: (ENTITY_TYPES as readonly string[]).includes(e.type.trim().toLowerCase())
             ? e.type.trim().toLowerCase()

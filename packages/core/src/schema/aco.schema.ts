@@ -163,7 +163,7 @@ export const ACOFrontmatterSchema = z
      * misidentifying the filename as a language code (e.g. "ja.jpeg" → "ja").
      * Omit this field when there is no readable text body.
      */
-    language: z.string().optional(),
+    language: z.string().nullable().optional(),
 
     /**
      * SHA-256 hash of the content body (everything after the closing ---).

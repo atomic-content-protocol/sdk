@@ -100,11 +100,11 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
       const output = parseUnifiedOutput(raw);
       model = usedModel;
 
-      if (llmNeededForTags) {
+      if (llmNeededForTags && hasValue(output.tags)) {
         updatedFields["tags"] = output.tags;
         newProvenance["tags"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
       }
-      if (llmNeededForSummary) {
+      if (llmNeededForSummary && hasValue(output.summary)) {
         updatedFields["summary"] = output.summary;
         newProvenance["summary"] = createProvenanceRecord(model, 0.85, { pipeline: this.name, tool: options?.tool });
       }
@@ -115,7 +115,7 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
           tool: options?.tool,
         });
       }
-      if (llmNeededForEntities) {
+      if (llmNeededForEntities && hasValue(output.key_entities)) {
         updatedFields["key_entities"] = output.key_entities;
         newProvenance["key_entities"] = createProvenanceRecord(model, 0.8, {
           pipeline: this.name,
@@ -128,6 +128,16 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
         updatedFields["language"] = output.language;
         newProvenance["language"] = createProvenanceRecord(model, 0.95, { pipeline: this.name, tool: options?.tool });
       }
+    }
+
+    // Nothing was written (model returned only empty values, or no field
+    // needed work after all): hand back the input untouched with no
+    // provenance so callers do not persist a no-op and the next run retries.
+    const changed =
+      Object.keys(newProvenance).length !== Object.keys(existingProvenance).length ||
+      Object.keys(newProvenance).some((k) => newProvenance[k] !== existingProvenance[k]);
+    if (!changed) {
+      return { aco, fieldUpdated: this.field, confidence: 0, model: needsLLM ? model : "skipped" };
     }
 
     updatedFields["provenance"] = newProvenance;

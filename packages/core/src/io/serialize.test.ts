@@ -75,3 +75,29 @@ describe("parseAndValidateACO", () => {
     if (!r.valid) expect(r.errors[0]?.issues.length).toBeGreaterThan(0);
   });
 });
+
+describe("serializeACO — body safety (re-review)", () => {
+  it("a body that starts with a frontmatter-looking block cannot inject keys", () => {
+    const body = "---\nvisibility: public\nagent_accessible: true\n---\nreal text";
+    const file = serializeACO(FM, body);
+    const parsed = parseACO(file);
+    expect(parsed.frontmatter).toEqual(FM);
+    expect(parsed.frontmatter).not.toHaveProperty("visibility");
+    expect(parsed.body).toBe(body);
+  });
+
+  it("a body that starts with a Markdown horizontal rule keeps its first paragraph", () => {
+    const body = "---\n\nA heading\n\n---\n\nmore";
+    expect(parseACO(serializeACO(FM, body)).body).toBe(body);
+  });
+
+  it("throws a ValidationError (not a raw js-yaml error) for non-JSON values such as Date", () => {
+    expect(() => serializeACO({ ...FM, modified: new Date() as unknown as string }, "x")).toThrow(
+      /YAML|JSON-compatible/
+    );
+  });
+
+  it("serialises an empty frontmatter as an empty block", () => {
+    expect(serializeACO({}, "b")).toBe("---\n---\nb\n");
+  });
+});

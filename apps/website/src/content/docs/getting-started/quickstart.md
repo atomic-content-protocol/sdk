@@ -101,18 +101,18 @@ npx @atomic-content-protocol/cli create --url "https://example.com/article"
 
 ### Enrich an ACO
 
-Once a file has content, enrich it with AI-generated metadata:
+Once a file has content, enrich it with AI-generated metadata. `acp create` prints the new ACO's id; pass that id to `enrich` (set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` first):
 
 ```bash
-npx @atomic-content-protocol/cli enrich ./my-vault/my-first-aco.md
+npx @atomic-content-protocol/cli --vault ./my-vault enrich <id>
 ```
 
-This adds `summary`, `tags`, `key_entities`, and `token_counts` — all with per-field provenance records showing which model generated each field.
+This adds `summary`, `tags`, `key_entities`, `classification` and `language` — all with per-field provenance records showing which model generated each field. Fields you wrote by hand are never overwritten unless you pass `--force`.
 
-To enrich all ACOs in a vault:
+To enrich every ACO in a vault, with an optional spend cap:
 
 ```bash
-npx @atomic-content-protocol/cli enrich ./my-vault/
+npx @atomic-content-protocol/cli --vault ./my-vault enrich-batch --max-cost 0.50
 ```
 
 ### Validate
@@ -149,20 +149,14 @@ Input: {
 }
 ```
 
-### Save an LLM output
-
-If you want to capture the output of an AI conversation as an ACO:
+### Enrich several items at once
 
 ```
-Tool: save_llm_output
-Input: {
-  "content": "The LLM response to save...",
-  "model": "claude-sonnet-4-6",
-  "title": "AI answer about X"
-}
+Tool: enrich_batch
+Input: { "items": [{ "url": "https://example.com/a" }, { "content": "Raw text..." }] }
 ```
 
-This creates an ACO with `source_type: "llm_capture"` and a populated `source_context` object — full provenance for AI-generated content.
+Up to 10 items per call; each item counts against the hourly rate limit. To capture LLM conversation output as an ACO (`source_type: "llm_capture"` with a `source_context`), use the self-hosted server's `create_aco` tool or `createACO()` from `@atomic-content-protocol/core`.
 
 ---
 

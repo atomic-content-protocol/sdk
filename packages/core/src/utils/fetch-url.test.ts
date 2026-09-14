@@ -723,3 +723,54 @@ describe("fetchPageForUrl", () => {
     expect(await fetchBodyForUrl("https://example.com/c")).toBe("same text");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Adversarial HTML — extraction must stay linear
+// ---------------------------------------------------------------------------
+
+describe("fetchPageForUrl — adversarial HTML stays fast", () => {
+  const time = async (html: string) => {
+    mockFetch(html);
+    const t0 = performance.now();
+    await fetchPageForUrl("https://example.com/adv");
+    return performance.now() - t0;
+  };
+
+  it("100k unclosed <script> tags", async () => {
+    expect(await time("<script>".repeat(100_000) + "<p>x</p>")).toBeLessThan(1_500);
+  });
+
+  it("20k <meta tags plus filler", async () => {
+    expect(await time("<meta ".repeat(20_000) + "x".repeat(200_000))).toBeLessThan(1_500);
+  });
+
+  it("30k unterminated og:title meta tags", async () => {
+    expect(await time('<meta property="og:title" '.repeat(30_000))).toBeLessThan(1_500);
+  });
+
+  it("still extracts real metadata and text after the rewrite", async () => {
+    mockFetch(`<html><head><title>T</title><meta content="OG" property='og:title'><meta name=description content="D"></head>
+      <body><nav>menu</nav><navigation-menu>keep</navigation-menu><script>var x = "<p>not text</p>";</script><article><h1>Hi</h1><p>Body &amp; text</p></article><footer>f</footer></body></html>`);
+    const page = await fetchPageForUrl("https://example.com/ok");
+    expect(page.title).toBe("OG");
+    expect(page.description).toBe("D");
+    expect(page.text).toBe("Hi Body &amp; text"); // article zone wins; <navigation-menu> is not <nav>
+  });
+});
+
+describe("isBlockedAddress — additional IPv6 embeddings", () => {
+  it.each([
+    "::7f00:1",
+    "::a00:1",
+    "2002:7f00:1::",
+    "2002:a00:1::1",
+    "2001:0:53aa:64c:0:1:2:3",
+    "100::1",
+    "64:ff9b:1::1",
+  ])("blocks %s", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(true);
+  });
+  it.each(["2002:801:801::", "2001:4860:4860::8888", "64:ff9b:2::1"])("allows %s", (ip) => {
+    expect(isBlockedAddress(ip)).toBe(false);
+  });
+});

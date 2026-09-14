@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import chalk from "chalk";
 import { Command, CommanderError } from "commander";
 import { createCommand } from "./commands/create.js";
@@ -12,6 +14,7 @@ import { statsCommand } from "./commands/stats.js";
 import { validateCommand } from "./commands/validate.js";
 import { CliError, EXIT } from "./utils/errors.js";
 import { PKG } from "./utils/pkg.js";
+import { stopAllSpinners } from "./utils/spinner.js";
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -38,9 +41,10 @@ export function buildProgram(): Command {
 
 /** Map any failure to a clean, single-line message and exit code. */
 export function reportError(err: unknown): number {
+  stopAllSpinners();
   if (err instanceof CommanderError) {
-    // --help / --version exit 0; usage errors already printed by commander.
-    return err.exitCode;
+    // --help / --version exit 0; commander already printed usage errors.
+    return err.exitCode === 0 ? 0 : EXIT.USAGE;
   }
   if (err instanceof CliError) {
     process.stderr.write(chalk.red(`error: ${err.message}`) + "\n");
@@ -65,4 +69,15 @@ async function main(): Promise<void> {
   }
 }
 
-void main();
+/** True when this file is the process entry point (not when imported by tests). */
+function isEntryPoint(): boolean {
+  const argv1 = process.argv[1];
+  if (!argv1) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(argv1)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) void main();

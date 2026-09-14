@@ -45,6 +45,7 @@ export function createEnrichACOTool(ctx: ToolContext): ToolEntry {
         aco: enriched,
         ran,
         embedded,
+        warning,
       } = await runPipelines(aco, pipelines as PipelineName[], provider, ctx.storage, {
         force,
         tool: ctx.toolId,
@@ -56,7 +57,11 @@ export function createEnrichACOTool(ctx: ToolContext): ToolEntry {
           data: {
             id,
             pipelines_run: [],
-            message: "All requested enrichment already present. Use force=true to re-enrich.",
+            embedded: false,
+            ...(warning ? { warning } : {}),
+            message: warning
+              ? "Nothing ran."
+              : "All requested enrichment already present. Use force=true to re-enrich.",
             frontmatter: aco.frontmatter,
           },
         };
@@ -65,7 +70,7 @@ export function createEnrichACOTool(ctx: ToolContext): ToolEntry {
       await ctx.storage.putACO(enriched);
       return {
         success: true,
-        data: { id, pipelines_run: ran, embedded, frontmatter: enriched.frontmatter },
+        data: { id, pipelines_run: ran, embedded, ...(warning ? { warning } : {}), frontmatter: enriched.frontmatter },
       };
     } catch (err) {
       return { success: false, error: toErrorMessage(err) };

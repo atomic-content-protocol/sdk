@@ -363,8 +363,8 @@ Configure multiple providers for resilience:
 
 ```typescript
 const router = ProviderRouter.fromConfig({
-  anthropic: { apiKey: process.env.ANTHROPIC_API_KEY },
-  openai: { apiKey: process.env.OPENAI_API_KEY },      // fallback
+  anthropic: { apiKey: process.env.ANTHROPIC_API_KEY! },
+  openai: { apiKey: process.env.OPENAI_API_KEY! },     // fallback
   ollama: { baseUrl: 'http://localhost:11434' },         // local fallback
 });
 ```

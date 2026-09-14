@@ -2,6 +2,9 @@ import OpenAI from "openai";
 import { DEFAULT_EMBEDDING_MODELS, DEFAULT_QUALITY, MODEL_PRESETS, openaiIsReasoningModel } from "./models.js";
 import type { CompletionOptions, IEnrichmentProvider, StructuredSchema } from "./provider.interface.js";
 
+/** Minimum completion budget handed to reasoning models (visible answer + hidden reasoning). */
+const REASONING_MIN_COMPLETION_TOKENS = 1_024;
+
 export interface OpenAIProviderOptions {
   /** Embedding model used by `embed()`. Default `text-embedding-3-small`. */
   embeddingModel?: string;
@@ -60,6 +63,16 @@ export class OpenAIProvider implements IEnrichmentProvider {
     return openaiIsReasoningModel(this.model) ? {} : { temperature: options.temperature };
   }
 
+  /**
+   * Reasoning models spend hidden reasoning tokens from the same budget as
+   * the visible answer, so a 20-token classification budget returns nothing.
+   * Floor the budget and ask for low reasoning effort on those models.
+   */
+  private budget(maxTokens: number): { max_completion_tokens: number; reasoning_effort?: "low" } {
+    if (!openaiIsReasoningModel(this.model)) return { max_completion_tokens: maxTokens };
+    return { max_completion_tokens: Math.max(maxTokens, REASONING_MIN_COMPLETION_TOKENS), reasoning_effort: "low" };
+  }
+
   private messages(prompt: string, options?: CompletionOptions): OpenAI.Chat.ChatCompletionMessageParam[] {
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
     if (options?.systemPrompt) messages.push({ role: "system", content: options.systemPrompt });
@@ -77,7 +90,7 @@ export class OpenAIProvider implements IEnrichmentProvider {
     const response = await client.chat.completions.create(
       {
         model: this.model,
-        max_completion_tokens: options?.maxTokens ?? 1_000,
+        ...this.budget(options?.maxTokens ?? 1_000),
         messages: this.messages(prompt, options),
         ...this.sampling(options),
       },
@@ -98,7 +111,7 @@ export class OpenAIProvider implements IEnrichmentProvider {
     const response = await client.chat.completions.create(
       {
         model: this.model,
-        max_completion_tokens: options?.maxTokens ?? 4_096,
+        ...this.budget(options?.maxTokens ?? 4_096),
         messages: this.messages(prompt, options),
         ...this.sampling(options),
         tools: [

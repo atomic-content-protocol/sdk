@@ -2,7 +2,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { IEnrichmentProvider } from "@atomic-content-protocol/enrichment";
 import { ProviderRouter } from "@atomic-content-protocol/enrichment";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { requestWeight } from "./mcp-handler.js";
@@ -270,10 +270,80 @@ describe("bearer auth", () => {
   });
 });
 
-describe("cleanup", () => {
-  it("no timers leak from the enrichment path", () => {
-    vi.useFakeTimers();
-    expect(vi.getTimerCount()).toBe(0);
-    vi.useRealTimers();
+describe("hardening (re-review)", () => {
+  it("unsupported Content-Encoding gets a JSON 4xx, never an HTML stack trace", async () => {
+    const res = await fetch(`${base}/mcp`, {
+      method: "POST",
+      headers: { ...HEADERS, "Content-Encoding": "br" },
+      body: "x",
+    });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+    expect(res.headers.get("content-type")).toMatch(/json/);
+    expect(await res.text()).not.toMatch(/at .*\.js:\d+/);
+  });
+
+  it("provider 401 maps to PROVIDER_AUTH, not retryable", async () => {
+    const config = loadConfig({ ANTHROPIC_API_KEY: "bad", RATE_LIMIT_PER_HOUR: "5" });
+    const failing: IEnrichmentProvider = {
+      ...fakeProvider(),
+      structuredComplete: async () => {
+        throw Object.assign(new Error("authentication_error"), { status: 401 });
+      },
+    };
+    const app = createApp(config, { router: new ProviderRouter([failing]), log: () => {} });
+    const srv: Server = await new Promise((r) => {
+      const h = app.listen(0, () => r(h));
+    });
+    try {
+      const port = (srv.address() as AddressInfo).port;
+      const res = await fetch(`http://127.0.0.1:${port}/mcp`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify(rpc("tools/call", { name: "enrich_content", arguments: { content: "hello world" } })),
+      });
+      const parsed = parseRpc(await res.text());
+      const tool = JSON.parse(parsed.result.content[0].text);
+      expect(tool.code).toBe("PROVIDER_AUTH");
+      expect(tool.retryable).toBe(false);
+    } finally {
+      await new Promise<void>((r) => srv.close(() => r()));
+    }
+  });
+
+  it("loadConfig refuses to start without any provider key", () => {
+    expect(() => loadConfig({})).toThrow(/No AI provider/);
+  });
+});
+
+describe("bearer auth metering", () => {
+  it("failed attempts consume rate-limit units per IP and eventually 429", async () => {
+    const config = loadConfig({ ANTHROPIC_API_KEY: "test", MCP_API_KEYS: "secret-1", RATE_LIMIT_PER_HOUR: "2" });
+    const app = createApp(config, { router: new ProviderRouter([fakeProvider()]), log: () => {} });
+    const srv: Server = await new Promise((r) => {
+      const h = app.listen(0, () => r(h));
+    });
+    try {
+      const port = (srv.address() as AddressInfo).port;
+      const body = JSON.stringify(rpc("tools/list", {}));
+      const hit = () =>
+        fetch(`http://127.0.0.1:${port}/mcp`, {
+          method: "POST",
+          headers: { ...HEADERS, Authorization: "Bearer nope", "X-Forwarded-For": "203.0.113.200" },
+          body,
+        });
+      expect((await hit()).status).toBe(401);
+      expect((await hit()).status).toBe(401);
+      expect((await hit()).status).toBe(429);
+      // A valid key from the same IP is unaffected (keyed separately).
+      const ok = await fetch(`http://127.0.0.1:${port}/mcp`, {
+        method: "POST",
+        headers: { ...HEADERS, Authorization: "Bearer secret-1", "X-Forwarded-For": "203.0.113.200" },
+        body,
+      });
+      expect(ok.status).toBe(200);
+    } finally {
+      await new Promise<void>((r) => srv.close(() => r()));
+    }
   });
 });

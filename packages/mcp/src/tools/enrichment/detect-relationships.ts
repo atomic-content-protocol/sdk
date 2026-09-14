@@ -75,7 +75,7 @@ export function createDetectRelationshipsTool(ctx: ToolContext): ToolEntry {
           const provider = ctx.getProvider();
           if (provider.embed) {
             const vector = await provider.embed(embeddingText(source));
-            const hits = await ctx.storage.findSimilar(vector, { limit: 1_000, threshold: 0 });
+            const hits = await ctx.storage.findSimilar(vector, { limit: 10_000, threshold: 0 });
             for (const hit of hits) cosineById.set(hit.id, hit.score);
             semantic = cosineById.size > 0;
           }

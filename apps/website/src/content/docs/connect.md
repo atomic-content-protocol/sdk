@@ -117,7 +117,7 @@ Classification: reference · Language: en
 Tags: micronation, croatia, tourism, citizenship, coastal-territories
 
 Stats: 474 content tokens → 200 frontmatter tokens (58% savings).
-Cost: ~$0.0005 via claude-haiku-4-5.
+Cost: ~$0.002 via claude-haiku-4-5.
 ```
 
 ---
@@ -126,13 +126,13 @@ Cost: ~$0.0005 via claude-haiku-4-5.
 
 Measured on a real 9-URL collection of MCP server documentation:
 
-| Approach | Tokens to triage all 9 | Cost (Opus input) |
+| Approach | Tokens to triage all 9 | Cost (Claude Opus 5 input, $5/M) |
 |---|---|---|
-| Raw pages | 11,250 | ~$0.17 |
-| ACP frontmatter | 1,800 | ~$0.027 |
+| Raw pages | 11,250 | ~$0.056 |
+| ACP frontmatter | 1,800 | ~$0.009 |
 | **Savings** | **84% fewer** | **~6× cheaper** |
 
-**Break-even: after the first read.** The one-time enrichment cost (~$0.007 for 9 items) pays itself back the moment an agent triages the collection once. Every future read is pure upside.
+**Break-even: after the first read.** The one-time enrichment cost (~$0.025 for 9 items on Claude Haiku 4.5) pays itself back the moment an agent triages the collection once. Every future read is pure upside.
 
 See the [full benchmark](/benchmark/) for methodology and per-model numbers.
 
