@@ -13,6 +13,8 @@ export {
   fetchBodyForUrl,
   fetchPageForUrl,
   isBlockedAddress,
+  isExtractionTooThin,
+  MIN_FETCHED_BODY_CHARS,
 } from "./fetch-url.js";
 export { computeContentHash, normalizeBody } from "./hash.js";
 export { generateId } from "./id.js";

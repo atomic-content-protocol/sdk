@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createACO } from "../index.js";
 import { FetchError, ValidationError } from "./errors.js";
-import { fetchBodyForUrl, fetchPageForUrl, isBlockedAddress } from "./fetch-url.js";
+import { fetchBodyForUrl, fetchPageForUrl, isBlockedAddress, isExtractionTooThin } from "./fetch-url.js";
 
 const AUTHOR = { id: "test", name: "Test" };
 
@@ -26,6 +26,22 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 // Mock helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * A paragraph long enough to clear MIN_FETCHED_BODY_CHARS, so fixtures that
+ * mean "the fetch worked" actually look like a page that extracted properly.
+ * A twelve-character fixture is a failed extraction under the thin-body guard,
+ * which is the whole point of that guard.
+ */
+const REAL_ARTICLE_TEXT = [
+  "Content here.",
+  "Durable Objects give a Cloudflare Worker single-threaded stateful coordination",
+  "backed by SQLite storage and alarms, which makes them a good fit for multiplayer",
+  "presence, per-room chat state and rate limiters that must be exact rather than",
+  "approximate. This paragraph exists so the fixture clears the minimum extracted",
+  "body length and represents a page whose article content was genuinely recovered",
+  "rather than a bot wall or a script-only shell that yielded nothing but a title.",
+].join(" ");
 
 function mockFetch(
   html: string,
@@ -540,7 +556,7 @@ describe("createACO — url integration", () => {
   });
 
   it("sets source_type to 'link' and source_url when url fetch succeeds", async () => {
-    mockFetch("<html><body><article>Content here</article></body></html>");
+    mockFetch(`<html><body><article>${REAL_ARTICLE_TEXT}</article></body></html>`);
     const aco = await createACO({ url: "https://example.com", author: AUTHOR });
     expect(aco.frontmatter["source_type"]).toBe("link");
     expect(aco.frontmatter["source_url"]).toBe("https://example.com");
@@ -608,7 +624,7 @@ describe("createACO — url integration", () => {
   });
 
   it("fetch_status always wins over caller-supplied frontmatter value", async () => {
-    mockFetch("<html><body><article>Content</article></body></html>");
+    mockFetch(`<html><body><article>${REAL_ARTICLE_TEXT}</article></body></html>`);
     const aco = await createACO({
       url: "https://example.com",
       author: AUTHOR,
@@ -884,5 +900,178 @@ describe("fetchPageForUrl — redirects", () => {
     const err = await fetchPageForUrl("https://example.com/s").catch((e) => e);
     expect(err).toBeInstanceOf(FetchError);
     expect((err as FetchError).networkCode).toBe("HTTP_302");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: HTML extraction must return the RIGHT content, not just quickly.
+//
+// The suite previously proved the extractor was fast on adversarial input and
+// never that it returned the correct text. Three defects shipped behind that
+// gap; one test per defect.
+// ---------------------------------------------------------------------------
+
+describe("extractText — content correctness regressions", () => {
+  const ARTICLE_BODY =
+    "The ultimate treadmill buying guide. Motor power is measured in continuous horsepower, " +
+    "and a running deck shorter than 55 inches will feel cramped for anyone over six feet. " +
+    "Incline range, cushioning and belt width matter more than the screen bolted to the console. " +
+    "Budget models skimp on the motor first, so check continuous rather than peak horsepower.";
+
+  it("keeps page content after an unclosed element instead of discarding the remainder", async () => {
+    // A single unterminated <style> used to drop everything that followed it,
+    // so a page whose article sat after the stray tag extracted to nothing.
+    mockFetch(`<html><body><style>.a{color:red}<main>${ARTICLE_BODY}</main></body></html>`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("does not truncate a page that front-loads a very large inline stylesheet", async () => {
+    // Real failure: a WordPress page carried 276 KB of inline CSS before its
+    // article. Capping the RAW html put the entire article past the cut and the
+    // extractor returned only the <title>. Stripping must happen first.
+    const hugeCss = `<style>${".x{color:red}".repeat(30_000)}</style>`;
+    mockFetch(
+      `<html><head><title>Treadmill Buying Guide</title></head><body>${hugeCss}<main>${ARTICLE_BODY}</main></body></html>`
+    );
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+    expect(text).not.toMatch(/color:red/);
+  });
+
+  it("picks the largest <article>, not the first, so teaser cards cannot win", async () => {
+    // Real failure: a treadmill guide's first <article> was a related-post
+    // teaser for a meal-replacement review, and the saved ACO summarised Huel.
+    const teaser = "<article>Huel Review (2026): Well-Formulated for a Meal-On-The-Go. Read More</article>";
+    mockFetch(`<html><body>${teaser}<article>${ARTICLE_BODY}</article></body></html>`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+    expect(text).not.toContain("Huel");
+  });
+
+  it("falls back to the body when every semantic zone is a small teaser", async () => {
+    // All four <article> elements on the real page were teasers and the actual
+    // content sat outside any of them.
+    const teasers = ["Huel Review", "Best Vitamin D", "CrossFit At Home"]
+      .map((t) => `<article>${t}. Read More</article>`)
+      .join("");
+    mockFetch(`<html><body>${teasers}<div class="content">${ARTICLE_BODY}</div></body></html>`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("prefers <article> over the <main> that wraps it, so page chrome cannot lead", async () => {
+    // <main> is always at least as large as the <article> inside it, so picking
+    // whichever zone is biggest chose <main> by a rounding margin and put an
+    // icon-font sprite ahead of the article. Only the first few thousand
+    // characters ever reach the model, so leading chrome displaces the content.
+    const chrome = "facebook instagram pinterest twitter search envelope-o chevron-circle-right ";
+    mockFetch(`<html><body><main>${chrome}<article>${ARTICLE_BODY}</article></main></body></html>`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text.startsWith("The ultimate treadmill buying guide")).toBe(true);
+    expect(text).not.toContain("envelope-o");
+  });
+
+  it("handles a nested <article> without terminating the parent early", async () => {
+    mockFetch(
+      `<html><body><article>${ARTICLE_BODY}<article>a pull quote</article> Trailing sentence about decks.</article></body></html>`
+    );
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+    expect(text).toContain("Trailing sentence");
+  });
+
+  it("stays linear on near-miss openers that never match a close tag", async () => {
+    // Found by ensemble review of this very PR. Recomputing both the opener and
+    // closer search on every pass made zone selection quadratic: `<articlez`
+    // repeated never matches `</article`, so each of ~40,000 iterations rescanned
+    // the whole remainder. Measured at 5.6 s of CPU for one 300 KB page.
+    mockFetch(`<html><body><main>${ARTICLE_BODY}</main>${"<articlez ".repeat(33_000)}</body></html>`);
+    const started = Date.now();
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("stays linear on near-miss <main openers", async () => {
+    mockFetch(`<html><body><article>${ARTICLE_BODY}</article>${"<mainz ".repeat(50_000)}</body></html>`);
+    const started = Date.now();
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("ignores a commented-out <article> rather than letting it corrupt nesting", async () => {
+    // A commented placeholder counted as a real opener, so depth never returned
+    // to zero, no zone ever closed, and selection fell through to returning the
+    // rest of the document — including text the page had deliberately hidden.
+    mockFetch(
+      `<html><body><!-- <article>hidden placeholder text</article> --><article>${ARTICLE_BODY}</article></body></html>`
+    );
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+    expect(text).not.toContain("hidden placeholder");
+  });
+
+  it("prefers a truncated trailing article over a smaller completed teaser", async () => {
+    // The real article's closing tag can fall past the extraction cap. The
+    // trailing candidate must still beat a completed teaser on size.
+    mockFetch(`<html><body><article>Teaser. Read more.</article><article>${ARTICLE_BODY}`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text).toContain("continuous horsepower");
+  });
+
+  it("stays linear when a page carries thousands of unclosed openers", async () => {
+    // The unclosed-tag path now continues scanning rather than bailing out, so
+    // it must latch the missing close or it reintroduces the quadratic DoS.
+    mockFetch(`<html><body><main>${ARTICLE_BODY}</main>${"<script src=x ".repeat(50_000)}</body></html>`);
+    const started = Date.now();
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(text).toContain("continuous horsepower");
+  });
+});
+
+describe("isExtractionTooThin", () => {
+  const LONG = "word ".repeat(200);
+
+  it("flags a body below the minimum", () => {
+    expect(isExtractionTooThin("Treadmill Buying Guide (2026) | Garage Gym Reviews")).toBe(true);
+  });
+
+  it("accepts a real article", () => {
+    expect(isExtractionTooThin(LONG)).toBe(false);
+  });
+
+  it("flags a body that is only the page title repeated", () => {
+    const title = "Treadmill Buying Guide";
+    expect(isExtractionTooThin(`${title} ${title}`, title)).toBe(true);
+  });
+
+  it("flags a body that is the title repeated many times", () => {
+    // A single-occurrence replace left the other 39 copies in place, so the
+    // body cleared the floor and the check never fired.
+    const title = "Treadmill Buying Guide";
+    expect(isExtractionTooThin(`${title} `.repeat(40), title)).toBe(true);
+  });
+
+  it("does not flag a long body merely because it starts with the title", () => {
+    expect(isExtractionTooThin(`Treadmill Buying Guide ${LONG}`, "Treadmill Buying Guide")).toBe(false);
+  });
+
+  it("marks a thin fetched page as a permanent fetch failure on the ACO", async () => {
+    mockFetch("<html><head><title>Bot wall</title></head><body><main>Please enable JavaScript.</main></body></html>");
+    const aco = await createACO({ url: "https://example.com", author: AUTHOR });
+    const status = aco.frontmatter["fetch_status"] as { ok: boolean; permanent: boolean; networkCode: string };
+    expect(status.ok).toBe(false);
+    expect(status.permanent).toBe(true);
+    expect(status.networkCode).toBe("EXTRACTION_TOO_THIN");
+  });
+
+  it("does NOT gate a short body the caller supplied directly", async () => {
+    // Only fetched content is gated. A one-line note is legitimate.
+    const aco = await createACO({ body: "Check the Q3 numbers.", source_type: "manual", author: AUTHOR });
+    expect(aco.frontmatter["fetch_status"]).toBeUndefined();
+    expect(aco.body).toBe("Check the Q3 numbers.");
   });
 });
