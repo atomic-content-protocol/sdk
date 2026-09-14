@@ -270,6 +270,59 @@ describe("bearer auth", () => {
   });
 });
 
+describe("client identification for rate limiting", () => {
+  it("prefers the platform client-address header over req.ip", async () => {
+    const a = await fetch(`${base}/health`, { headers: { "X-Envoy-External-Address": "203.0.113.42" } });
+    const b = await fetch(`${base}/health`, {
+      headers: { "X-Envoy-External-Address": "203.0.113.42", "X-Forwarded-For": "10.9.9.9, 10.8.8.8" },
+    });
+    const ja = (await a.json()) as { client: { key_source: string; key_hash: string } };
+    const jb = (await b.json()) as { client: { key_source: string; key_hash: string } };
+    expect(ja.client.key_source).toBe("x-envoy-external-address");
+    // Same client, different proxy chain — the key must not move.
+    expect(jb.client.key_hash).toBe(ja.client.key_hash);
+  });
+
+  it("falls back to req.ip when no platform header is present", async () => {
+    const res = await fetch(`${base}/health`);
+    const body = (await res.json()) as { client: { key_source: string; key_hash: string } };
+    expect(body.client.key_source).toBe("req.ip");
+    expect(body.client.key_hash).toMatch(/^[0-9a-f]{8}$/);
+  });
+
+  it("rate-limits by the platform header, not the varying proxy hop", async () => {
+    const config = loadConfig({ ANTHROPIC_API_KEY: "test", RATE_LIMIT_PER_HOUR: "3" });
+    const app = createApp(config, { router: new ProviderRouter([fakeProvider()]), log: () => {} });
+    const srv: Server = await new Promise((r) => {
+      const h = app.listen(0, () => r(h));
+    });
+    try {
+      const port = (srv.address() as AddressInfo).port;
+      const call = (proxyHop: string) =>
+        fetch(`http://127.0.0.1:${port}/mcp`, {
+          method: "POST",
+          headers: {
+            ...HEADERS,
+            "X-Envoy-External-Address": "198.51.100.7",
+            "X-Forwarded-For": `198.51.100.7, ${proxyHop}`,
+          },
+          body: JSON.stringify(rpc("tools/call", { name: "enrich_content", arguments: { content: "hello world" } })),
+        });
+      // Each request arrives via a different internal hop, as on Railway.
+      const first = await call("10.0.0.1");
+      const second = await call("10.0.0.2");
+      const third = await call("10.0.0.3");
+      expect(first.headers.get("ratelimit-remaining")).toBe("2");
+      expect(second.headers.get("ratelimit-remaining")).toBe("1");
+      expect(third.headers.get("ratelimit-remaining")).toBe("0");
+      const fourth = await call("10.0.0.4");
+      expect(fourth.status).toBe(429);
+    } finally {
+      await new Promise<void>((r) => srv.close(() => r()));
+    }
+  });
+});
+
 describe("instance identification", () => {
   it("every response carries a stable X-ACP-Instance header matching /health", async () => {
     const health = await fetch(`${base}/health`);
