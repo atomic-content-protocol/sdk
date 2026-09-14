@@ -18,9 +18,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
+          # Trusted publishing needs Node >= 22.14.0.
           node-version: 22
           cache: npm
-          registry-url: 'https://registry.npmjs.org'
+          # Deliberately no registry-url: it writes an .npmrc authToken
+          # placeholder, and a token entry stops npm using the OIDC identity.
+          # registry.npmjs.org is the default anyway.
+
+      # Trusted publishing landed in npm 11.5.1; the runner's bundled npm is
+      # usually older. Pin the floor rather than hope.
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - run: npm ci
 
@@ -38,23 +48,20 @@ jobs:
       - name: Test
         run: npx turbo test --filter='@atomic-content-protocol/*'
 
+      # Published via npm trusted publishing (OIDC): no NPM_TOKEN, and npm
+      # generates the provenance attestation itself, so no --provenance flag.
+      # Each package's trusted publisher on npmjs.com must name this repo, the
+      # workflow file `publish.yml`, and the `npm` environment used below.
+      #
       # Dependency order matters: each package's ^version range must resolve.
       - name: Publish @atomic-content-protocol/core
-        run: cd packages/core && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd packages/core && npm publish --access public
 
       - name: Publish @atomic-content-protocol/enrichment
-        run: cd packages/enrichment && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd packages/enrichment && npm publish --access public
 
       - name: Publish @atomic-content-protocol/mcp
-        run: cd packages/mcp && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd packages/mcp && npm publish --access public
 
       - name: Publish @atomic-content-protocol/cli
-        run: cd apps/cli && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd apps/cli && npm publish --access public
