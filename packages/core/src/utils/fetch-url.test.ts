@@ -960,6 +960,18 @@ describe("extractText — content correctness regressions", () => {
     expect(text).toContain("continuous horsepower");
   });
 
+  it("prefers <article> over the <main> that wraps it, so page chrome cannot lead", async () => {
+    // <main> is always at least as large as the <article> inside it, so picking
+    // whichever zone is biggest chose <main> by a rounding margin and put an
+    // icon-font sprite ahead of the article. Only the first few thousand
+    // characters ever reach the model, so leading chrome displaces the content.
+    const chrome = "facebook instagram pinterest twitter search envelope-o chevron-circle-right ";
+    mockFetch(`<html><body><main>${chrome}<article>${ARTICLE_BODY}</article></main></body></html>`);
+    const text = await fetchBodyForUrl("https://example.com");
+    expect(text.startsWith("The ultimate treadmill buying guide")).toBe(true);
+    expect(text).not.toContain("envelope-o");
+  });
+
   it("handles a nested <article> without terminating the parent early", async () => {
     mockFetch(
       `<html><body><article>${ARTICLE_BODY}<article>a pull quote</article> Trailing sentence about decks.</article></body></html>`

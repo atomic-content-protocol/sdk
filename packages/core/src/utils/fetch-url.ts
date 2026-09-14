@@ -390,17 +390,24 @@ function extractText(html: string): string {
   }
 
   const bodyText = flatten(largestInnerOf(stripped, "body") ?? stripped);
+  const floor = bodyText.length * ZONE_MIN_TEXT_SHARE;
 
-  // Prefer the richest semantic zone, but only when it plausibly IS the content.
-  let best = "";
+  // Precedence is article, then main, then body — NOT "whichever is biggest".
+  // `<main>` normally wraps `<article>`, so it is always at least as large while
+  // also carrying the page chrome. Picking the larger of the two therefore chose
+  // `<main>` by a rounding margin and dragged an icon-font sprite in ahead of the
+  // article. Since only the first few thousand characters of the body ever reach
+  // the model, leading chrome displaces the content it is meant to summarise.
+  //
+  // Within a single tag the largest instance still wins, which is what keeps a
+  // related-post teaser from being mistaken for the article.
   for (const tag of ["article", "main"] as const) {
     const inner = largestInnerOf(stripped, tag);
     if (inner === undefined) continue;
     const text = flatten(inner);
-    if (text.length > best.length) best = text;
+    if (text.length >= floor) return text;
   }
 
-  if (best.length >= bodyText.length * ZONE_MIN_TEXT_SHARE) return best;
   return bodyText;
 }
 
