@@ -29,15 +29,17 @@ Every value has a safe default; only a provider key is required, and the server 
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | — | At least one required. |
 | `ENRICHMENT_QUALITY` | `fast` | `fast` (Haiku 4.5 / GPT-5.6 Luna), `balanced`, `best`. |
 | `TRUST_PROXY` | `1` | Reverse-proxy hops in front. `true` lets clients spoof their IP and is warned about at boot. |
-| `RATE_LIMIT_PER_HOUR` | `50` | Weighted units per client per hour. A batch of N items costs N; the MCP handshake is free. |
+| `RATE_LIMIT_PER_HOUR` | `50` | Weighted units per client per hour, per instance. A batch of N items costs N; the MCP handshake is free. |
 | `MCP_API_KEYS` | unset | Comma-separated bearer tokens. When set, `/mcp` requires one; failed attempts are metered per IP. |
 | `CORS_ORIGINS` | unset | Browser origins allowed to call `/mcp`. Non-browser MCP clients send no `Origin` and are unaffected. |
-| `DAILY_COST_CAP_USD` | unset | Global estimated-spend ceiling per UTC day. See below. |
+| `DAILY_COST_CAP_USD` | unset | Estimated-spend ceiling per UTC day, per instance. See below. |
 | `MAX_CONTENT_LENGTH` | `50000` | Characters per item. The JSON body limit is derived from it. |
 
 ### Choosing `DAILY_COST_CAP_USD`
 
 The cap is a blast-radius limit, not a quota: it counts the *estimated* cost of every enrichment across all clients and, once exhausted, answers `BUDGET_EXCEEDED` to everyone until 00:00 UTC. Set it to the most you are willing to lose in a day.
+
+> **Replicas multiply both budgets.** The rate limiter and the spend guard are in-memory, so each instance enforces its own copy. With two replicas a `50`/hour limit is really 100/hour and a `$10` cap is really `$20`, and clients see `RateLimit-Remaining` jump around as requests land on different instances. `GET /health` returns an `instance` id: probe it a few times and count distinct values. Either run a single replica, or divide the figures below by the replica count.
 
 | Cap | Roughly | Fits |
 |---|---|---|

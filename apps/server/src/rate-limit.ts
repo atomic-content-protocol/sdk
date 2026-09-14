@@ -9,8 +9,11 @@
  * oldest-expiring entry is evicted so an attacker rotating source addresses
  * cannot grow memory without limit.
  *
- * Single-process only. Put a shared store (Redis) behind this interface when
- * running more than one replica.
+ * Single-process only: the budget is per instance. With N replicas behind a
+ * load balancer the effective limit is N x `limit`, and a client's
+ * `RateLimit-Remaining` will appear to jump around as requests land on
+ * different instances. Run one replica, or put a shared store (Redis) behind
+ * this interface. `GET /health` reports an `instance` id so you can count them.
  */
 
 export interface RateLimitEntry {
@@ -127,6 +130,9 @@ export class RateLimiter {
  * Daily spend guard. Tracks estimated USD spent since the start of the
  * current UTC day; `tryReserve` refuses once the cap would be exceeded.
  * A cap of `Infinity` disables the guard.
+ *
+ * In-memory, so the cap is **per instance**: with N replicas the real ceiling
+ * is N x cap. Size it accordingly, or run a single replica.
  */
 export class SpendGuard {
   private day = "";
