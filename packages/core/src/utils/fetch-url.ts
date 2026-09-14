@@ -287,13 +287,36 @@ function extractText(html: string): string {
   // Prefer semantic content zones: article > main > body
   const zone = innerOf(stripped, "article") ?? innerOf(stripped, "main") ?? innerOf(stripped, "body") ?? stripped;
 
-  return zone
-    .replace(/<[^>]{0,5000}>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return stripTags(zone).replace(/\s+/g, " ").trim();
 }
 
-/** Parse `name="value"` / `name='value'` pairs from the inside of one tag. */
+/** Longest tag we are willing to inspect; anything longer is treated as text. */
+const MAX_TAG_LENGTH = 5_000;
+
+/**
+ * Iterate `<name …>` tags by name using indexOf scans only. Each tag is
+ * located with two memchr-speed searches, so cost is O(n) regardless of how
+ * many unterminated openers the page contains.
+ */
+function* tagsNamed(html: string, name: string): Generator<string> {
+  const lower = html.toLowerCase();
+  const needle = `<${name}`;
+  let pos = 0;
+  for (;;) {
+    const start = lower.indexOf(needle, pos);
+    if (start === -1) return;
+    pos = start + needle.length;
+    const after = lower.charCodeAt(pos);
+    if (!(after === 62 || after === 32 || after === 47 || after === 9 || after === 10 || after === 13)) continue;
+    const gt = lower.indexOf(">", pos);
+    if (gt === -1) return;
+    if (gt - start > MAX_TAG_LENGTH) continue; // absurdly long "tag": skip it
+    yield html.slice(pos, gt);
+    pos = gt + 1;
+  }
+}
+
+/** Parse `name="value"` / `name='value'` / `name=value` pairs from the inside of one tag. */
 function tagAttributes(tagInner: string): Record<string, string> {
   const attrs: Record<string, string> = {};
   const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]{0,63})\s*=\s*(?:"([^"]{0,4000})"|'([^']{0,4000})'|([^\s"'=<>`]{1,4000}))/g;
@@ -303,14 +326,34 @@ function tagAttributes(tagInner: string): Record<string, string> {
   return attrs;
 }
 
+/** Replace every `<…>` tag with a space, linearly; a `<` with no `>` within MAX_TAG_LENGTH is kept as text. */
+function stripTags(html: string): string {
+  let out = "";
+  let pos = 0;
+  for (;;) {
+    const lt = html.indexOf("<", pos);
+    if (lt === -1) break;
+    const gt = html.indexOf(">", lt + 1);
+    if (gt === -1) break;
+    if (gt - lt > MAX_TAG_LENGTH) {
+      out += html.slice(pos, lt + 1);
+      pos = lt + 1;
+      continue;
+    }
+    out += `${html.slice(pos, lt)} `;
+    pos = gt + 1;
+  }
+  return out + html.slice(pos);
+}
+
 // Extract a <meta> tag's content attribute where `attr` equals `value`
-// (e.g. property="og:title", name="description"). Single pass over
-// bounded-length <meta …> tags; attribute order and quote style do not matter.
+// (e.g. property="og:title", name="description"). Attribute order and quote
+// style do not matter.
 function metaContent(html: string, attr: string, value: string): string | undefined {
-  const re = /<meta\b([^>]{0,4000})>/gi;
-  for (const m of html.matchAll(re)) {
-    const attrs = tagAttributes(m[1] as string);
-    if (attrs[attr]?.toLowerCase() === value.toLowerCase() && attrs["content"]) return attrs["content"];
+  const want = value.toLowerCase();
+  for (const inner of tagsNamed(html, "meta")) {
+    const attrs = tagAttributes(inner);
+    if (attrs[attr]?.toLowerCase() === want && attrs["content"]) return attrs["content"];
   }
   return undefined;
 }

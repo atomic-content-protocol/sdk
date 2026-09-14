@@ -737,15 +737,15 @@ describe("fetchPageForUrl — adversarial HTML stays fast", () => {
   };
 
   it("100k unclosed <script> tags", async () => {
-    expect(await time("<script>".repeat(100_000) + "<p>x</p>")).toBeLessThan(2_000);
+    expect(await time("<script>".repeat(100_000) + "<p>x</p>")).toBeLessThan(1_500);
   });
 
   it("20k <meta tags plus filler", async () => {
-    expect(await time("<meta ".repeat(20_000) + "x".repeat(200_000))).toBeLessThan(2_000);
+    expect(await time("<meta ".repeat(20_000) + "x".repeat(200_000))).toBeLessThan(1_500);
   });
 
   it("30k unterminated og:title meta tags", async () => {
-    expect(await time('<meta property="og:title" '.repeat(30_000))).toBeLessThan(2_000);
+    expect(await time('<meta property="og:title" '.repeat(30_000))).toBeLessThan(1_500);
   });
 
   it("still extracts real metadata and text after the rewrite", async () => {
