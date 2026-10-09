@@ -1,0 +1,75 @@
+{
+  "name": "@atomic-content-protocol/web",
+  "version": "0.2.1",
+  "description": "Make any website readable by AI agents through ACP: build-time ACOs for every page, edge serving for agents, and measurement of who read what",
+  "author": "Stacks, Inc (https://www.stacks.inc/)",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/worker/index.js",
+  "types": "./dist/worker/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/worker/index.d.ts",
+      "import": "./dist/worker/index.js",
+      "default": "./dist/worker/index.js"
+    },
+    "./worker": {
+      "types": "./dist/worker/index.d.ts",
+      "import": "./dist/worker/index.js",
+      "default": "./dist/worker/index.js"
+    },
+    "./build": {
+      "types": "./dist/build/index.d.ts",
+      "import": "./dist/build/index.js",
+      "default": "./dist/build/index.js"
+    }
+  },
+  "bin": {
+    "acp-web": "./dist/build/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@atomic-content-protocol/core": "^0.2.1",
+    "@atomic-content-protocol/enrichment": "^0.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^5.0.0"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomic-content-protocol/sdk.git",
+    "directory": "packages/web"
+  },
+  "homepage": "https://atomiccontentprotocol.org",
+  "bugs": {
+    "url": "https://github.com/atomic-content-protocol/sdk/issues"
+  },
+  "keywords": [
+    "acp",
+    "atomic-content-protocol",
+    "ai-agents",
+    "llm",
+    "cloudflare-workers",
+    "markdown",
+    "aeo"
+  ]
+}

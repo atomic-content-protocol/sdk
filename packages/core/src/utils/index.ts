@@ -8,6 +8,7 @@ export {
   ValidationError,
 } from "./errors.js";
 export {
+  extractPageFromHtml,
   type FetchBodyOptions,
   type FetchedPage,
   fetchBodyForUrl,
