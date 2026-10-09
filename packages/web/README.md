@@ -18,9 +18,12 @@ npx acp-web build --from http://localhost:3000 --origin https://example.com --ou
 
 Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` to enrich (summary, tags, key entities); `--no-enrich` skips it.
 
+Real output, a one-page Next.js site measured on 2026-10-09:
+
 ```
-new       /         24358 → 2042 tokens
-4 pages as ACOs. An agent reading every page pays 7,610 tokens instead of 81,204 (90.6% less).
+new       /  24358 → 2042 tokens
+
+1 pages as ACOs. An agent reading every page pays 2,042 tokens instead of 24,358 (91.6% less).
 ```
 
 Or from code: `buildSiteACOs({ pages, origin, outDir, author, enrich })` with `pagesFromDirectory(dir)` or `pagesFromSitemap(url)` from `@atomic-content-protocol/web/build`.
