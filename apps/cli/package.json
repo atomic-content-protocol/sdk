@@ -5,7 +5,7 @@
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
   "bin": {
-    "acp": "./dist/index.js"
+    "acp": "dist/index.js"
   },
   "files": [
     "dist",
