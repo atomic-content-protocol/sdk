@@ -159,6 +159,8 @@ describe("pagesFromDirectory", () => {
       await writeFile(path.join(dir, "_not-found.html"), "<html>404</html>");
       await mkdir(path.join(dir, "about"), { recursive: true });
       await writeFile(path.join(dir, "about", "index.html"), "<html>about</html>");
+      await mkdir(path.join(dir, "blog", "_draft"), { recursive: true });
+      await writeFile(path.join(dir, "blog", "_draft", "index.html"), "<html>draft</html>");
       const paths = [];
       for await (const p of pagesFromDirectory(dir)) paths.push(p.path);
       expect(paths.sort()).toEqual(["/", "/about/"]);
