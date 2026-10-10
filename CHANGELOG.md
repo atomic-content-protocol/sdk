@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-10-10
+
+`@atomic-content-protocol/web` is the only package with code changes. The others move with it, so the release stays a single tag.
+
+### Changed
+- **Stable ids without history.** A page with no previous manifest now gets a UUID v5 of its URL instead of a random id. Hosts that build from a fresh checkout every time, such as Vercel, keep each page's identity across deploys without storing anything. A page that already has an ACO keeps the id it had.
+
+### Fixed
+- `pagesFromDirectory` skips framework internals: any path with a `_`-prefixed segment, such as the `/_not-found.html` that Next.js writes into `.next/server/app`.
+
 ## [0.3.0] - 2026-10-10
 
 ### Added
