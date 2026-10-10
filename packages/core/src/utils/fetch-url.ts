@@ -731,6 +731,19 @@ export async function fetchPageForUrl(url: string, options?: FetchBodyOptions): 
     );
   }
 
+  return extractPageFromHtml(html, finalUrl, { maxChars });
+}
+
+/**
+ * extractPageFromHtml — the extraction half of `fetchPageForUrl`, for HTML the
+ * caller already has (a site's own build output, a page fetched elsewhere).
+ * Same rules as a fetched card: main text with nav/script/style stripped,
+ * `<article>` preferred over the `<main>` around it, SPA fallback, and the
+ * page's title, og:image and description. No network, no SSRF guard needed.
+ */
+export function extractPageFromHtml(html: string, url: string, options?: { maxChars?: number }): FetchedPage {
+  const maxChars = options?.maxChars ?? DEFAULT_MAX_CHARS;
+  const finalUrl = url;
   // `<title>`, og: tags and the meta description all live in `<head>`, so a
   // bounded prefix is enough and keeps this cheap on very large documents.
   const metaHtml = html.length > MAX_HTML_FOR_META ? html.slice(0, MAX_HTML_FOR_META) : html;
