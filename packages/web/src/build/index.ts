@@ -30,7 +30,10 @@ import { acoPathFor } from "../worker/serve.js";
 /** Stamped into enrichment provenance and the manifest, per ACP §3.13. */
 export const TOOL = (() => {
   // Read from package.json so a release can never stamp the wrong version.
-  const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as { name: string; version: string };
+  const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as {
+    name: string;
+    version: string;
+  };
   return `${pkg.name}@${pkg.version}`;
 })();
 
