@@ -12,6 +12,7 @@
  * records what every page costs an agent to read as HTML and as ACO.
  */
 
+import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -27,7 +28,14 @@ import {
 import { acoPathFor } from "../worker/serve.js";
 
 /** Stamped into enrichment provenance and the manifest, per ACP §3.13. */
-export const TOOL = "@atomic-content-protocol/web@0.2.1";
+export const TOOL = (() => {
+  // Read from package.json so a release can never stamp the wrong version.
+  const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as {
+    name: string;
+    version: string;
+  };
+  return `${pkg.name}@${pkg.version}`;
+})();
 
 export interface SitePage {
   /** URL path on the site, e.g. "/about". */

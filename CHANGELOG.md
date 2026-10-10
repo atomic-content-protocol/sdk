@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-10
+
+### Added
+- **`@atomic-content-protocol/web`**, a new package: ACP for any website. Every page becomes an ACO at build time, an edge handler serves it to agents, and every agent visit is measured.
+  - `/build` (Node): `buildSiteACOs`, `pagesFromDirectory` and `pagesFromSitemap`, plus an `acp-web build` CLI.
+    - Pages become ACOs the way card ACOs are made: `createACO`, `status: final`, `agent_accessible: true`, `source_url`, UnifiedPipeline enrichment. They are written with `serializeACO`.
+    - A page keeps its `id` and `created` across rebuilds. Only pages whose title, description or text changed are re-enriched, and ACOs of pages that are gone are removed.
+    - `/.well-known/acp.json` records every page's token cost as HTML and as ACO.
+  - `/worker` (no dependencies, any Fetch runtime): `handleWithACP`.
+    - `.md` URLs, `Accept: text/markdown` and AI agents get the ACO. Search crawlers and people always get the page.
+    - Every HTML page carries `Link: rel="alternate" type="text/markdown"`.
+    - An HTML fallback is never served as an ACO.
+  - `posthogSink` sends `bot_fetch` events in Stacklist's `bot_class` taxonomy, adding `served_format`, `acp_reason`, `aco_available` and tokens.
+- `extractPageFromHtml` in core: the extraction half of `fetchPageForUrl`, for HTML the caller already has.
+
+### Changed
+- `fetchPageForUrl` now delegates to `extractPageFromHtml`. Behaviour is unchanged.
+
+### Security
+- `@modelcontextprotocol/sdk` → 1.32.1 (GHSA-6qxp-vccf-f47h) and `axios` → 1.20.0 via `posthog-node` (eleven high-severity advisories). These are lockfile updates within existing ranges. `npm audit --omit=dev --audit-level=high` is clean.
+
 ## [0.2.1] - 2026-09-14
 
 Fixes for HTML text extraction. `@atomic-content-protocol/core` is the only package with code changes; the others move with it so the release stays a single tag.
