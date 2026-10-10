@@ -1,9 +1,9 @@
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseACO, validateACO } from "@atomic-content-protocol/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildSiteACOs, MANIFEST_PATH, pagesFromSitemap, type SitePage } from "./index.js";
+import { buildSiteACOs, MANIFEST_PATH, pagesFromDirectory, pagesFromSitemap, type SitePage, urlId } from "./index.js";
 
 const story = (extra = "") =>
   `Harbor Bakery has baked sourdough on the harbour front since 1987. ${extra}` +
@@ -117,5 +117,53 @@ describe("pagesFromSitemap", () => {
     for await (const p of pagesFromSitemap("http://localhost:3000")) pages.push(p.path);
     expect(pages).toEqual(["/", "/about"]);
     expect(fetched).toContain("http://localhost:3000/about");
+  });
+});
+
+describe("stable ids without history", () => {
+  it("derives a v5 UUID from the URL (checked against the uuid package) and reuses it across fresh builds", async () => {
+    // uuid.v5("https://example.com/", uuid.v5.URL) === this value.
+    expect(urlId("https://example.com/")).toBe("dd2c1780-811a-5296-81c5-178a0ef488bc");
+    const first = await mkdtemp(path.join(tmpdir(), "acp-web-a-"));
+    const second = await mkdtemp(path.join(tmpdir(), "acp-web-b-"));
+    try {
+      const pages = [{ path: "/", html: page("Harbor Bakery", story()) }];
+      const a = await buildSiteACOs({
+        pages,
+        origin: "https://harborbakery.test",
+        outDir: first,
+        author,
+        enrich: false,
+      });
+      const b = await buildSiteACOs({
+        pages,
+        origin: "https://harborbakery.test",
+        outDir: second,
+        author,
+        enrich: false,
+      });
+      expect(a.pages[0].id).toBe(b.pages[0].id);
+      expect(a.pages[0].id).toBe(urlId("https://harborbakery.test/"));
+    } finally {
+      await rm(first, { recursive: true, force: true });
+      await rm(second, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("pagesFromDirectory", () => {
+  it("skips framework internals like Next.js's /_not-found", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "acp-web-dir-"));
+    try {
+      await writeFile(path.join(dir, "index.html"), "<html>home</html>");
+      await writeFile(path.join(dir, "_not-found.html"), "<html>404</html>");
+      await mkdir(path.join(dir, "about"), { recursive: true });
+      await writeFile(path.join(dir, "about", "index.html"), "<html>about</html>");
+      const paths = [];
+      for await (const p of pagesFromDirectory(dir)) paths.push(p.path);
+      expect(paths.sort()).toEqual(["/", "/about/"]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

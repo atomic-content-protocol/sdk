@@ -12,6 +12,7 @@
  * records what every page costs an agent to read as HTML and as ACO.
  */
 
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -142,6 +143,11 @@ export async function buildSiteACOs(options: BuildOptions): Promise<Manifest> {
         if (before.created) aco.frontmatter.created = before.created;
         aco.frontmatter.modified = new Date().toISOString();
         status = "changed";
+      } else {
+        // No history (a first build, or a host that builds from a fresh checkout every
+        // time): the id comes from the page's URL, so the same page has the same id on
+        // every build without anything being stored.
+        aco.frontmatter.id = urlId(url);
       }
       if (enricher) {
         try {
@@ -208,6 +214,19 @@ export async function buildSiteACOs(options: BuildOptions): Promise<Manifest> {
   await writeFile(path.join(options.outDir, MANIFEST_PATH), `${JSON.stringify(manifest, null, 2)}\n`);
   if (options.llmsTxt !== false) await writeLlmsTxt(options.outDir, manifest);
   return manifest;
+}
+
+/** RFC 4122 URL namespace. */
+const URL_NAMESPACE = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
+
+/** UUID v5 of a URL: the same URL always gives the same id. */
+export function urlId(url: string): string {
+  const namespace = Buffer.from(URL_NAMESPACE.replace(/-/g, ""), "hex");
+  const bytes = createHash("sha1").update(namespace).update(url, "utf8").digest().subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 /** Tokens the way the SDK counts them everywhere else: cl100k when available, else chars/4. */
@@ -293,6 +312,8 @@ export async function* pagesFromDirectory(dir: string): AsyncGenerator<SitePage>
     const file = path.join(entry.parentPath, entry.name);
     const relative = `/${path.relative(dir, file).split(path.sep).join("/")}`;
     if (/^\/(404|500)\.html$/.test(relative)) continue;
+    // Framework internals (Next.js writes /_not-found.html, /_global-error.html) are not pages.
+    if (relative.split("/").some((segment) => segment.startsWith("_"))) continue;
     const pagePath = relative.replace(/\/index\.html$/, "/").replace(/\.html$/, "");
     yield { path: pagePath || "/", html: await readFile(file, "utf8") };
   }
