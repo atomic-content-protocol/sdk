@@ -127,6 +127,29 @@ describe("handleWithACP", () => {
     expect(asset.hit.served_format).toBe("other");
   });
 
+  it("never relabels an SPA host's HTML fallback as an ACO", async () => {
+    const spa = async () =>
+      new Response("<html>app shell</html>", { headers: { "content-type": "Text/HTML; charset=utf-8" } });
+    const hits: Hit[] = [];
+    const agent = await handleWithACP(get("/contact", { "user-agent": UA.chatgptUser }), {
+      fetchPage: spa,
+      onHit: (h) => void hits.push(h),
+    });
+    expect(agent.headers.get("content-type")?.toLowerCase()).toContain("text/html");
+    expect(hits[0]).toMatchObject({ served_format: "html", aco_available: false });
+    const direct = await handleWithACP(get("/contact.md", { "user-agent": UA.chatgptUser }), { fetchPage: spa });
+    expect(direct.status).toBe(404);
+  });
+
+  it("only claims an ACO exists after finding it", async () => {
+    const { hit } = await run(get("/about", { "user-agent": UA.chrome }));
+    expect(hit.aco_available).toBeUndefined();
+  });
+
+  it("treats dot segments as not a page", () => {
+    expect(acoPathFor("/a/../../etc/passwd")).toBeNull();
+  });
+
   it("doesn't report people unless asked", async () => {
     const onHit = vi.fn();
     await handleWithACP(get("/about", { "user-agent": UA.chrome }), { fetchPage: site, onHit });

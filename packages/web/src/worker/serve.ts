@@ -27,8 +27,11 @@ export interface Hit {
   served_format: "html" | "aco" | "other";
   /** Why the ACO was served, when it was. */
   acp_reason?: "md_url" | "accept" | "agent";
-  /** Whether this page has an ACO at all (false = we couldn't have served one). */
-  aco_available: boolean;
+  /**
+   * Whether this page's ACO was found. Undefined when nobody looked (a person or
+   * search crawler got the page, so the ACO was never fetched).
+   */
+  aco_available?: boolean;
 }
 
 export interface ACPOptions {
@@ -55,6 +58,8 @@ export interface ACPOptions {
 
 /** The `.md` URL for a page path, or null when the path isn't a page (assets, APIs). */
 export function acoPathFor(pathname: string): string | null {
+  // URL parsing already resolves dot segments; anything left is not a page.
+  if (pathname.split("/").some((segment) => segment === ".." || segment === ".")) return null;
   if (pathname.endsWith(".md")) return pathname;
   if (/^\/(_next|api|cdn-cgi|\.well-known)\//.test(pathname)) return null;
   const last = pathname.split("/").pop() ?? "";
@@ -94,7 +99,8 @@ export async function handleWithACP(request: Request, options: ACPOptions): Prom
 
   // 1. An explicit .md URL.
   if (acoPath && url.pathname.endsWith(".md")) {
-    const response = asACO(await fetchACO(url, request), url);
+    const found = await fetchACO(url, request);
+    const response = isACO(found) ? asACO(found, url) : new Response("Not found", { status: 404 });
     report({
       response,
       served_format: response.ok ? "aco" : "other",
@@ -113,23 +119,35 @@ export async function handleWithACP(request: Request, options: ACPOptions): Prom
         : wantsACO(agent, options.serveTo ?? "ai")
           ? "agent"
           : undefined;
+  let looked: boolean | undefined;
   if (acoPath && reason) {
     const acoUrl = new URL(acoPath, url);
     const aco = await fetchACO(acoUrl, request);
-    if (aco.ok) {
+    if (isACO(aco)) {
       const response = asACO(aco, url);
       report({ response, served_format: "aco", acp_reason: reason, aco_available: true });
       return response;
     }
+    looked = false;
   }
 
   // 4. The page as people see it, with the ACO advertised.
   const page = await options.fetchPage(request);
-  const isHtml = (page.headers.get("content-type") ?? "").includes("text/html");
+  const isHtml = isHtmlResponse(page);
   const response = isHtml && acoPath ? advertise(page, acoPath) : page;
-  report({ response, served_format: isHtml ? "html" : "other", aco_available: Boolean(acoPath && isHtml) });
+  report({ response, served_format: isHtml ? "html" : "other", aco_available: looked });
   return response;
 }
+
+const isHtmlResponse = (response: Response) =>
+  (response.headers.get("content-type") ?? "").toLowerCase().includes("text/html");
+
+/**
+ * A real ACO, not a host's fallback. Single-page apps and some static hosts answer
+ * every unknown path with 200 and their HTML shell; relabelling that as Markdown
+ * would hand agents a broken page, so HTML never counts as an ACO.
+ */
+const isACO = (response: Response) => response.ok && !isHtmlResponse(response);
 
 function wantsACO(agent: Agent, serveTo: "ai" | "ai_user" | "none") {
   if (serveTo === "none") return false;

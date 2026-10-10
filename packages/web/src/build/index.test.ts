@@ -1,9 +1,9 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseACO, validateACO } from "@atomic-content-protocol/core";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildSiteACOs, MANIFEST_PATH, type SitePage } from "./index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { buildSiteACOs, MANIFEST_PATH, pagesFromSitemap, type SitePage } from "./index.js";
 
 const story = (extra = "") =>
   `Harbor Bakery has baked sourdough on the harbour front since 1987. ${extra}` +
@@ -73,5 +73,49 @@ describe("buildSiteACOs", () => {
     expect(changedAco.frontmatter.created).toBe(firstAco.frontmatter.created);
     expect(changedAco.frontmatter.modified).toBeTypeOf("string");
     expect(changedAco.body).toContain("gluten-free");
+  });
+
+  it("rebuilds when only the title changes", async () => {
+    await build([{ path: "/", html: page("Harbor Bakery", story()) }]);
+    const renamed = await build([{ path: "/", html: page("Harbor Bakery & Café", story()) }]);
+    expect(renamed.pages[0].status).toBe("changed");
+    expect(parseACO(await readFile(path.join(dir, "index.md"), "utf8")).frontmatter.title).toBe("Harbor Bakery & Café");
+  });
+
+  it("removes the ACO of a page that is gone, and never writes outside outDir", async () => {
+    await build([
+      { path: "/", html: page("Harbor Bakery", story()) },
+      { path: "/menu", html: page("Menu", story("Croissants every day.")) },
+    ]);
+    await access(path.join(dir, "menu.md"));
+    const after = await build([
+      { path: "/", html: page("Harbor Bakery", story()) },
+      { path: "/../escape", html: page("Escape", story()) },
+    ]);
+    await expect(access(path.join(dir, "menu.md"))).rejects.toThrow();
+    expect(after.pages.map((p) => p.path)).toEqual(["/"]);
+    await expect(access(path.join(dir, "..", "escape.md"))).rejects.toThrow();
+  });
+});
+
+describe("pagesFromSitemap", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("skips bad entries, resolves relative ones and reads pages from the given base", async () => {
+    const fetched: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      fetched.push(url);
+      if (url.endsWith("/sitemap.xml"))
+        return new Response(
+          "<urlset><url><loc>https://live.test/</loc></url><url><loc>/about?x=1&amp;y=2</loc></url><url><loc>http://[bad</loc></url></urlset>"
+        );
+      return new Response("<html>ok</html>", { headers: { "content-type": "text/html" } });
+    });
+    const pages = [];
+    for await (const p of pagesFromSitemap("http://localhost:3000")) pages.push(p.path);
+    expect(pages).toEqual(["/", "/about"]);
+    expect(fetched).toContain("http://localhost:3000/about");
   });
 });
