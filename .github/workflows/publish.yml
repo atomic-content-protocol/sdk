@@ -37,7 +37,7 @@ jobs:
       - name: Verify tag matches package versions
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          for p in packages/core packages/enrichment packages/mcp apps/cli; do
+          for p in packages/core packages/enrichment packages/mcp packages/web apps/cli; do
             V=$(node -p "require('./$p/package.json').version")
             if [ "$V" != "$TAG" ]; then echo "::error::$p is $V but tag is $TAG"; exit 1; fi
           done
@@ -59,6 +59,11 @@ jobs:
 
       - name: Publish @atomic-content-protocol/enrichment
         run: cd packages/enrichment && npm publish --access public
+
+      # First release of web (0.3.0) is published by hand: npm only lets a trusted
+      # publisher be configured on a package that already exists.
+      - name: Publish @atomic-content-protocol/web
+        run: cd packages/web && npm publish --access public
 
       - name: Publish @atomic-content-protocol/mcp
         run: cd packages/mcp && npm publish --access public

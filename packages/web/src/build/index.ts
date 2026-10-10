@@ -27,7 +27,7 @@ import {
 import { acoPathFor } from "../worker/serve.js";
 
 /** Stamped into enrichment provenance and the manifest, per ACP §3.13. */
-export const TOOL = "@atomic-content-protocol/web@0.2.1";
+export const TOOL = "@atomic-content-protocol/web@0.3.0";
 
 export interface SitePage {
   /** URL path on the site, e.g. "/about". */
