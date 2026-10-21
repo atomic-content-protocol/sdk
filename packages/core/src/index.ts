@@ -45,7 +45,7 @@ import { ACOFrontmatterSchema } from "./schema/aco.schema.js";
 import type { ACO } from "./types/aco.js";
 import { FetchError, type FetchStatus, ValidationError } from "./utils/errors.js";
 import { fetchPageForUrl, isExtractionTooThin } from "./utils/fetch-url.js";
-import { computeContentHash, normalizeBody } from "./utils/hash.js";
+import { computeContentHash } from "./utils/hash.js";
 import { generateId } from "./utils/id.js";
 import { MIN_BODY_LENGTH_FOR_ENRICHMENT, SOURCE_TYPE_MODALITY } from "./utils/source-type.js";
 import { computeTokenCounts } from "./utils/token-count.js";
@@ -186,7 +186,8 @@ export async function createACO(params: CreateACOParams): Promise<ACO> {
     source_type: resolvedSourceType,
     created: now,
     author: params.author,
-    ...(!omitContentHash ? { content_hash: computeContentHash(normalizeBody(body)) } : {}),
+    // computeContentHash normalises the body itself (line endings, trim, NFC).
+    ...(!omitContentHash ? { content_hash: computeContentHash(body) } : {}),
     ...(!omitTokenCounts ? { token_counts: await computeTokenCounts(body) } : {}),
     // fetch_status is SDK-generated — always wins over caller-supplied frontmatter.
     // Omitted entirely for body-only ACOs (no url provided).

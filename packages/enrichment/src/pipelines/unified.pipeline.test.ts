@@ -1,4 +1,5 @@
 import type { ACO } from "@atomic-content-protocol/core";
+import { MIN_BODY_LENGTH_FOR_ENRICHMENT } from "@atomic-content-protocol/core";
 import { describe, expect, it } from "vitest";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 import type { UnifiedEnrichmentOutput } from "../utils/prompts.js";
@@ -345,6 +346,92 @@ describe("UnifiedPipeline", () => {
       const result = await pipeline.enrich(aco, provider);
       expect(provider.callCount).toBe(1);
       expect(result.aco.frontmatter["classification"]).toBe(MOCK_OUTPUT.classification);
+    });
+  });
+
+  describe("thin text body: no LLM call, ACO returned untouched (LAB-1527)", () => {
+    // Ten characters: the kind of placeholder that produced title-only summaries in the wild.
+    const THIN_BODY = "TODO: body";
+
+    function makeThinACO(body: string, extra: Record<string, unknown> = {}): ACO {
+      return {
+        frontmatter: { id: "thin-id", title: "Growth Brings Pain", source_type: "manual", ...extra },
+        body,
+      };
+    }
+
+    it("makes zero provider calls and returns the input ACO: model skipped, no provenance", async () => {
+      const aco = makeThinACO(THIN_BODY);
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+      expect(result.aco).toBe(aco);
+      expect(result.aco.frontmatter["provenance"]).toBeUndefined();
+      for (const field of ["summary", "tags", "key_entities", "language", "classification"]) {
+        expect(result.aco.frontmatter[field]).toBeUndefined();
+      }
+    });
+
+    it("an empty body is gated the same way", async () => {
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(makeThinACO(""), provider);
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+    });
+
+    it("force: true does not bypass the gate", async () => {
+      const aco = makeThinACO(THIN_BODY);
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider, { force: true });
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+      expect(result.aco).toBe(aco);
+    });
+
+    it("does not call the model for classification alone when other fields are human-authored", async () => {
+      const aco = makeThinACO(THIN_BODY, {
+        tags: ["human"],
+        summary: "human summary",
+        key_entities: [{ type: "concept", name: "x", confidence: 0.5 }],
+        language: "en",
+      });
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+      expect(result.aco.frontmatter["classification"]).toBeUndefined();
+    });
+
+    it("a document body under the threshold is gated too", async () => {
+      const aco: ACO = {
+        frontmatter: { id: "pdf-id", title: "scan.pdf", source_type: "converted_pdf" },
+        body: THIN_BODY,
+      };
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+    });
+
+    it("whitespace padding does not lift a short body over the threshold", async () => {
+      const padded = `${" ".repeat(60)}${THIN_BODY}${" ".repeat(60)}`;
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(makeThinACO(padded), provider);
+      expect(provider.callCount).toBe(0);
+      expect(result.model).toBe("skipped");
+    });
+
+    it("a body of exactly MIN_BODY_LENGTH_FOR_ENRICHMENT characters still enriches", async () => {
+      const aco = makeThinACO("x".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT));
+      const provider = makeMockProvider();
+      const result = await pipeline.enrich(aco, provider);
+      expect(provider.callCount).toBe(1);
+      expect(result.model).toBe("mock-model");
+      expect(result.aco.frontmatter["summary"]).toBe(MOCK_OUTPUT.summary);
+      expect(result.aco.frontmatter["tags"]).toEqual(MOCK_OUTPUT.tags);
+      expect(result.aco.frontmatter["classification"]).toBe(MOCK_OUTPUT.classification);
+      expect(result.aco.frontmatter["language"]).toBe(MOCK_OUTPUT.language);
     });
   });
 });

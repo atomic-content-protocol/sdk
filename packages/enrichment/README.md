@@ -41,6 +41,8 @@ Enrichment never overwrites a field that already has a value unless `force: true
 
 `UnifiedPipeline` runs tags + summary + entities + classification + language in a single LLM call — the cheapest path to a fully enriched ACO.
 
+A text or document body under 50 characters (`MIN_BODY_LENGTH_FOR_ENRICHMENT`, after trimming) is not sent to the model at all: it gets no summary, tags, key entities or language, the same way a video without a transcript does, and the ACO comes back unchanged. Give it a real body and the next run enriches it.
+
 ## Links
 
 - Protocol spec: [atomiccontentprotocol.org](https://atomiccontentprotocol.org)

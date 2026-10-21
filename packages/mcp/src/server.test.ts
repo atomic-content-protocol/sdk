@@ -20,6 +20,9 @@ const UNIFIED = {
   language: "en",
 };
 
+/** Long enough to clear MIN_BODY_LENGTH_FOR_ENRICHMENT; a shorter body is not sent to the model at all. */
+const ENRICHABLE_BODY = "Alpha body: long enough to clear the fifty-character enrichment gate.";
+
 /** Deterministic fake provider: structured output + a toy 3-d embedding derived from the text. */
 function fakeProvider(
   opts: { embed?: boolean } = { embed: true }
@@ -204,7 +207,7 @@ describe("ACO CRUD tools", () => {
 describe("enrichment tools", () => {
   it("enrich_aco fills empty fields, preserves human values, and is idempotent", async () => {
     const { server, provider } = await makeServer();
-    const a = await create(server, "Alpha", "Alpha body", { tags: ["human-tag"] });
+    const a = await create(server, "Alpha", ENRICHABLE_BODY, { tags: ["human-tag"] });
 
     const first = await server.callTool("enrich_aco", { id: a });
     expect(first.success).toBe(true);
@@ -311,7 +314,7 @@ describe("enrichment tools", () => {
 
   it("enrich_batch reports skipped, missing, and failed items", async () => {
     const { server, provider, storage } = await makeServer();
-    const a = await create(server, "Alpha", "a");
+    const a = await create(server, "Alpha", ENRICHABLE_BODY);
     const b = await create(server, "Beta", "b", { tags: ["t"] });
     // Fully filled ACO — every unified field already has a value.
     const full = (await storage.getACO(b))!;

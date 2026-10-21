@@ -29,70 +29,79 @@ export const SOURCE_TYPE_MODALITY: Record<SourceType, ContentModality> = {
 };
 
 /**
- * EnrichmentStrategy — per-field enrichment contract for a given modality.
+ * EnrichmentStrategy: per-field enrichment contract for a given modality.
  *
- * Each boolean indicates whether a pipeline MAY run inference for that field.
- * A false value means the field MUST NOT be inferred from the body (it either
- * has no body, or the body is not reliable signal for that field).
+ * Each base boolean (`language`, `summary`, `textEnrichment`) indicates
+ * whether a pipeline MAY run inference for that field. A false value means
+ * the field MUST NOT be inferred from the body (it either has no body, or the
+ * body is not reliable signal for that field).
  *
  * `classificationDefault`:
  *   - null  → pipeline should infer from body content.
  *   - string → pipeline should set this value without running inference.
  *
- * `summaryConditional` / `languageConditional`:
- *   true means the field may be inferred ONLY IF the body is non-empty
- *   and passes a minimum length threshold (recommended: ≥ 50 chars).
- *   Pipelines MUST check body length before running inference for these.
+ * `languageConditional` / `summaryConditional` / `textEnrichmentConditional`:
+ *   true gates the matching base flag on the body. The field may then be
+ *   inferred ONLY IF the base flag is true AND the trimmed body is at least
+ *   MIN_BODY_LENGTH_FOR_ENRICHMENT characters long. A conditional flag never
+ *   enables a field whose base flag is false. `getEnrichmentStrategy` applies
+ *   this rule; pipelines MUST go through it rather than read the table.
  */
 export interface EnrichmentStrategy {
   /** Whether language detection may run against the body. */
   language: boolean;
-  /** Whether language inference is gated on body content being present. */
+  /** Whether `language` is additionally gated on the body meeting the length threshold. */
   languageConditional: boolean;
   /** null = infer; string = use as fixed default, skip inference. */
   classificationDefault: string | null;
   /** Whether a summary may be generated from the body. */
   summary: boolean;
-  /** Whether summary generation is gated on body content being present. */
+  /** Whether `summary` is additionally gated on the body meeting the length threshold. */
   summaryConditional: boolean;
   /** Whether key_entities and tags may be inferred from the body. */
   textEnrichment: boolean;
-  /** Whether textEnrichment is gated on body content being present. */
+  /** Whether `textEnrichment` is additionally gated on the body meeting the length threshold. */
   textEnrichmentConditional: boolean;
 }
 
 /**
  * Enrichment strategy per ContentModality.
  *
- * "document" is identical to "text" — once a PDF/Doc has been extracted to
+ * "text" enables every field but gates each on body length. A body under
+ * MIN_BODY_LENGTH_FOR_ENRICHMENT characters (empty, or a placeholder such as
+ * "TODO") carries no signal of its own, and a model handed only the title
+ * writes a confident summary from the title alone. Such a body therefore gets
+ * no summary, tags, key_entities or language from inference.
+ *
+ * "document" is identical to "text": once a PDF/Doc has been extracted to
  * plain text the body is treated the same as any other text ACO.
  *
- * "video" uses conditional flags throughout because converted_video ACOs may
- * carry a full transcript (body = text) or no transcript at all (body = "").
- * Pipelines must inspect body length before running any inference.
+ * "video" is gated the same way because converted_video ACOs may carry a
+ * full transcript (body = text) or no transcript at all (body = ""). Its
+ * classification is fixed either way.
  *
  * @important Do not read this table directly in pipeline code. Use
- * `getEnrichmentStrategy(sourceType, body)` instead — it resolves conditional
+ * `getEnrichmentStrategy(sourceType, body)` instead: it resolves conditional
  * flags and applies the body-length threshold automatically.
  */
 export const MODALITY_ENRICHMENT: Record<ContentModality, EnrichmentStrategy> = {
   text: {
     language: true,
-    languageConditional: false,
+    languageConditional: true, // only if the body meets the length threshold
     classificationDefault: null,
     summary: true,
-    summaryConditional: false,
+    summaryConditional: true, // only if the body meets the length threshold
     textEnrichment: true,
-    textEnrichmentConditional: false,
+    textEnrichmentConditional: true, // only if the body meets the length threshold
   },
   document: {
     language: true,
-    languageConditional: false,
+    languageConditional: true, // only if the body meets the length threshold
     classificationDefault: null,
     summary: true,
-    summaryConditional: false,
+    summaryConditional: true, // only if the body meets the length threshold
     textEnrichment: true,
-    textEnrichmentConditional: false,
+    textEnrichmentConditional: true, // only if the body meets the length threshold
   },
   image: {
     language: false,
@@ -104,25 +113,29 @@ export const MODALITY_ENRICHMENT: Record<ContentModality, EnrichmentStrategy> = 
     textEnrichmentConditional: false,
   },
   video: {
-    language: false,
-    languageConditional: true, // only if transcript body is present
+    language: true,
+    languageConditional: true, // only if a transcript body is present
     classificationDefault: "video",
-    summary: false,
-    summaryConditional: true, // only if transcript body is present
-    textEnrichment: false,
-    textEnrichmentConditional: true, // only if transcript body is present
+    summary: true,
+    summaryConditional: true, // only if a transcript body is present
+    textEnrichment: true,
+    textEnrichmentConditional: true, // only if a transcript body is present
   },
 };
 
-/** Minimum body length (characters) for conditional enrichment to run. */
+/** Minimum trimmed body length (characters) for conditional enrichment to run. */
 export const MIN_BODY_LENGTH_FOR_ENRICHMENT = 50;
 
 /**
- * getEnrichmentStrategy — resolve the concrete enrichment strategy for a
+ * getEnrichmentStrategy: resolve the concrete enrichment strategy for a
  * given source_type and body string.
  *
- * Handles the conditional cases for "video" automatically: if the body meets
- * the minimum length threshold the conditional flags are promoted to true.
+ * A conditional flag gates its base flag on the body: the resolved field is
+ * true when the base flag is true and either the flag is unconditional or the
+ * trimmed body is at least MIN_BODY_LENGTH_FOR_ENRICHMENT characters. A text
+ * ACO with a ten-character placeholder body and a video without a transcript
+ * therefore both resolve to no summary, no tags or entities and no language.
+ * `classificationDefault` passes through unchanged.
  *
  * @param sourceType  The ACO's source_type value.
  * @param body        The ACO's content body (may be empty string).
@@ -137,11 +150,12 @@ export function getEnrichmentStrategy(
   const modality = SOURCE_TYPE_MODALITY[sourceType] ?? "text";
   const base = MODALITY_ENRICHMENT[modality];
   const hasBody = body.trim().length >= MIN_BODY_LENGTH_FOR_ENRICHMENT;
+  const resolve = (enabled: boolean, conditional: boolean): boolean => enabled && (!conditional || hasBody);
 
   return {
-    language: base.language || (base.languageConditional && hasBody),
+    language: resolve(base.language, base.languageConditional),
     classificationDefault: base.classificationDefault,
-    summary: base.summary || (base.summaryConditional && hasBody),
-    textEnrichment: base.textEnrichment || (base.textEnrichmentConditional && hasBody),
+    summary: resolve(base.summary, base.summaryConditional),
+    textEnrichment: resolve(base.textEnrichment, base.textEnrichmentConditional),
   };
 }
