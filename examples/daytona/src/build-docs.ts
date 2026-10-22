@@ -190,7 +190,7 @@ async function fetchDoc(docPath: string): Promise<{ text: string; lastModified: 
   };
 }
 
-async function main(): Promise<void> {
+export async function buildDocs(): Promise<void> {
   await mkdir(PAGES, { recursive: true });
   await mkdir(path.join(VAULT, ".acp"), { recursive: true });
   for (const name of await readdir(VAULT).catch(() => [] as string[])) {
@@ -286,7 +286,7 @@ async function main(): Promise<void> {
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (isMain) {
-  main().catch((err: unknown) => {
+  buildDocs().catch((err: unknown) => {
     console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   });

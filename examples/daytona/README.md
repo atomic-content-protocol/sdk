@@ -39,6 +39,8 @@ Daytona docs stay recorded. The raw page text is not in the page. `https://www.d
 
 Preview from this branch: [ACP offline benchmark](https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html). That host asks you to open the file once, then the page runs. `raw.githubusercontent.com` serves the same file as plain text, so it does not run as a page.
 
+The built HTML stays in the repository. raw.githack.com serves that path from the git tree. GitHub Pages is not enabled, so building the file only inside the workflow would drop this preview URL.
+
 `.github/workflows/benchmark-page.yml` builds `web/site` and deploys it with GitHub Pages on push to this branch. The build on this push succeeded. The deploy returned HTTP 404 because Pages is not enabled. The one step that enables it: repository Settings, Pages, Build and deployment, Source: GitHub Actions, then re-run the Benchmark page workflow. That site would be the benchmark page only. It does not replace atomiccontentprotocol.org.
 
 ## Wikipedia, N=100 cycles of 20 questions
@@ -102,25 +104,38 @@ Summary-first break-even against search-then-read on that corpus is 5 forks of m
 
 ## Live Daytona run
 
-`results/live.md` is pending. This environment did not have `DAYTONA_API_KEY` or a model key, so no sandbox was started and no live token or timing numbers exist. The harness does not fill those in with estimates.
+`results/live.md` and `results/live.json` are a real N=20 Wikipedia run (region eu, Claude Haiku 4.5, `ACP_LIVE_N=1,10,20`). Summary-first used 6,357 input tokens and 1,266 output tokens. Search-then-read used 783,559 input tokens and 1,788 output tokens. Both arms were correct on 20/20 questions, and both retrieval hit rates were 100%.
 
-When the keys are present:
+Offline cl100k for one cycle of the same 20 questions is 5,605 tokens (summary-first) and 691,753 (search-then-read). Live provider counts sit about 13% above those figures on both arms, because the provider used Anthropic's tokenizer. The ratio held: summary-first stayed about 0.8% of the search-then-read prompt.
+
+Recorded usage at this benchmark's published Haiku 4.5 rates ($1 per million input tokens, $5 per million output tokens) is about $0.81. `live.json` has no cost field. The operator's total spend for the run was about $0.95.
+
+Limits of that run:
+
+- The account has no Linux VM runners in eu or us, so there were no real forks. The recorded fallback is: No runners are configured in region 'eu' for sandbox class 'linux-vm'. The harness used container sandboxes started from a snapshot, with the corpus on the shared volume `acp-daytona-corpus`.
+- Sandbox create time was 869 ms minimum, 1.18 s median, 4.67 s maximum.
+- About 58 s per sandbox, dominated by reading the corpus from that S3-backed volume.
+- Wikipedia only. Naive full-read was not sent.
+
+The volume is mountpoint-s3. Each file write takes about 2 s, existing files cannot be overwritten, and `cp -a` fails while preserving times. Seeding now copies 16 files at a time without preserving attributes, skips files that already exist, writes a `.seeded` marker, and allows 900 s.
+
+Question sandboxes no longer read that volume on the normal path. Wikipedia is already baked into the container image at `/opt/acp`, and those sandboxes read that local disk. A docs run fetches pages with `src/build-docs.ts` when the gitignored cache is missing (the fetch is not committed), uploads them into one sandbox, and captures `sandbox.createSnapshot`. Children read `/opt/acp`. The volume seed, followed by one parallel copy onto local disk per sandbox, runs only if that snapshot fails. `ACP_LIVE_DELETE_VOLUME=1` deletes `acp-daytona-corpus` after the sandboxes are gone.
 
 ```bash
 export DAYTONA_API_KEY=...
 export ANTHROPIC_API_KEY=...   # or OPENAI_API_KEY
-npm run live -w @atomic-content-protocol/example-daytona
+ACP_LIVE_CORPUS=docs ACP_LIVE_N=1,10,20 npm run live -w @atomic-content-protocol/example-daytona
 ```
 
-The ACP arm is summary-first, using the same coverage rule as the offline measurement, sent as one model call. The default comparison arm is search-then-read. `ACP_LIVE_BASELINE=naive` sends the full-read upper bound. `ACP_LIVE_BASELINE=both` sends both. `ACP_LIVE_N=1,10,50,100` is the default row set. The harness runs the largest N once and reports smaller rows as prefixes.
+`ACP_LIVE_CORPUS` is `wikipedia` (default) or `docs`. `ACP_LIVE_POLICY` is `summary-first` (default) or `legacy` (the `mcp-find-similar-top3` catalog prompt: `list_acos`, `find_similar`, and `read_aco`). `ACP_LIVE_BASELINE` still defaults to search-then-read. `naive` and `both` are unchanged. `ACP_LIVE_N` defaults to `1,10,50,100`. The harness runs the largest N once and reports smaller rows as prefixes.
+
+The ACP arm is one model call. Summary-first uses the same coverage rule as the offline measurement. Legacy sends the pretty-printed MCP JSON the offline legacy arm counts. The live agent calls `claude-haiku-4-5` when `ANTHROPIC_API_KEY` is set, otherwise `gpt-5.6-luna`. Usage tokens are copied from the provider response. Missing usage stays empty.
 
 SDK calls follow `@daytonaio/sdk` 0.226.0:
 
-- Container snapshot: `daytona.snapshot.create({ name, image: Image.fromDockerfile(...) })`. The image installs `@atomic-content-protocol/cli@0.3.2`. At runtime the agent talks to `acp serve` on stdio.
+- Container snapshot: `daytona.snapshot.create({ name, image: Image.fromDockerfile(...) })`. The image installs `@atomic-content-protocol/cli@0.3.2` and the Wikipedia corpus. At runtime the agent talks to `acp serve` on stdio.
 - Linux VM snapshot: `daytona.snapshot.create({ name, image: "node:22-bookworm-slim", sandboxClass: SandboxClass.LINUX_VM })`, then `sandbox.createSnapshot` and `sandbox.fork`. Container sandboxes cannot fork.
-- If the VM path fails, the harness records the error and continues with parallel sandboxes on volume `acp-daytona-corpus` mounted at `/home/daytona/corpus`.
-
-The live agent calls `claude-haiku-4-5` when `ANTHROPIC_API_KEY` is set, otherwise `gpt-5.6-luna`. Usage tokens are copied from the provider response. Missing usage stays empty. Provider usage on the concatenated prompt can differ slightly from the offline sum of two encodings.
+- If the VM path fails, question sandboxes are created from the container snapshot and read `/opt/acp`. Docs are uploaded and captured with `sandbox.createSnapshot` first. The volume path is the fallback after that.
 
 ## Layout
 
@@ -133,7 +148,7 @@ The live agent calls `claude-haiku-4-5` when `ANTHROPIC_API_KEY` is set, otherwi
 | `src/bench.ts` | `npm run bench` entry |
 | `src/live.ts` | Daytona harness |
 | `docs-demo/` | Docs questions, source list, and committed offline results |
-| `results/` | Wikipedia offline report and the pending live report |
+| `results/` | Wikipedia offline report and the recorded N=20 live report |
 | `.devcontainer/devcontainer.json` | Codespaces setup for the offline benchmark |
 
 ## Checks

@@ -425,6 +425,8 @@ npm run bench
 
 The same offline measurement runs in a phone browser with `npm run web` (no API key). Wikipedia is measured in the browser and matches the Node bench. Daytona docs stay as recorded results, because that raw text is not in the repo and the docs host does not allow a browser fetch. Preview from this branch (one confirm step on the host, then the page): https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html
 
+A live N=20 Wikipedia run (region eu, Claude Haiku 4.5, container sandboxes because that account had no VM runners) is in `examples/daytona/results/live.md`. Summary-first used 6,357 input and 1,266 output tokens. Search-then-read used 783,559 and 1,788. Both arms were 20/20.
+
 **Package structure:**
 
 ```

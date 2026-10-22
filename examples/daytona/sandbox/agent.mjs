@@ -7,10 +7,14 @@
  *
  * Keep `contentQuery` in sync with src/policy-logic.ts. Both read policy.json.
  *
- * The ACP arm is summary-first. `list_acos` is used only to read frontmatter
- * (title, summary, tags). That catalog is not placed in the model prompt.
- * The offline coverage rule decides which markdown bodies to open. A live
- * model call, when a key is set, receives that same context in one prompt.
+ * The ACP arm defaults to summary-first. `list_acos` is used only to read
+ * frontmatter (title, summary, tags). That catalog is not placed in the model
+ * prompt. The offline coverage rule decides which markdown bodies to open. A
+ * live model call, when a key is set, receives that same context in one prompt.
+ *
+ * ACP_LIVE_POLICY=legacy switches the ACP arm to the catalog prompt: pretty
+ * `list_acos` JSON, `find_similar`, and `read_aco` JSON for the top 3. Hit
+ * slugs are the pages find_similar opened. The default stays summary-first.
  */
 
 import { spawn } from "node:child_process";
@@ -94,7 +98,7 @@ async function callTool(client, name, args) {
   if (typeof text !== "string") throw new Error(`${name} returned no text`);
   const parsed = JSON.parse(text);
   if (!parsed.success) throw new Error(`${name} failed: ${parsed.error ?? "unknown"}`);
-  return { text, data: parsed.data };
+  return { text, parsed, data: parsed.data };
 }
 
 async function callModel(prompt) {
@@ -174,34 +178,78 @@ function loadPages() {
   });
 }
 
+function wire(result) {
+  return JSON.stringify(result, null, 2);
+}
+
 async function answerQuestion(client, question, pages) {
   const query = contentQuery(question.question, policy.stopwords);
   const prefix = `${policy.instruction}Question: ${question.question}\n\n`;
+  const acpPolicy = process.env.ACP_LIVE_POLICY ?? "summary-first";
+  if (acpPolicy !== "summary-first" && acpPolicy !== "legacy") {
+    throw new Error(`ACP_LIVE_POLICY must be summary-first or legacy, got ${acpPolicy}`);
+  }
   const list = await callTool(client, "list_acos", {
     limit: policy.catalog_limit,
     sortBy: "title",
     order: "asc",
   });
-  const metaBySlug = new Map();
-  for (const item of list.data.items ?? []) {
-    const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [];
-    metaBySlug.set(String(item.corpus_slug), {
-      summary: typeof item.summary === "string" ? item.summary : "",
-      tags,
+  let acpPrompt;
+  let candidateSlugs;
+  let openedSlugs;
+  let decision;
+  if (acpPolicy === "legacy") {
+    const slugById = new Map();
+    for (const item of list.data.items ?? []) {
+      slugById.set(String(item.id), String(item.corpus_slug));
+    }
+    const similar = await callTool(client, "find_similar", {
+      text: query,
+      limit: policy.limit,
+      threshold: policy.threshold,
     });
+    if (similar.data.method !== "content_overlap") {
+      throw new Error(`find_similar used ${String(similar.data.method)}, expected content_overlap`);
+    }
+    const results = similar.data.results;
+    if (!Array.isArray(results)) throw new Error("find_similar returned no results array");
+    const openedIds = results.map((row) => String(row.id));
+    const legacySlugs = openedIds.map((id) => {
+      const slug = slugById.get(id);
+      if (!slug) throw new Error(`find_similar returned unknown id ${id}`);
+      return slug;
+    });
+    const reads = [];
+    for (const id of openedIds) reads.push(await callTool(client, "read_aco", { id }));
+    acpPrompt = `${prefix}${policy.sections.catalog}${wire(list.parsed)}\n\n${policy.sections.ranking}${wire(similar.parsed)}\n\n${policy.sections.opened}${reads.map((row) => wire(row.parsed)).join("\n\n")}`;
+    candidateSlugs = legacySlugs;
+    openedSlugs = legacySlugs;
+    decision = "legacy";
+  } else {
+    const metaBySlug = new Map();
+    for (const item of list.data.items ?? []) {
+      const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [];
+      metaBySlug.set(String(item.corpus_slug), {
+        summary: typeof item.summary === "string" ? item.summary : "",
+        tags,
+      });
+    }
+    const enriched = pages.map((page) => {
+      const meta = metaBySlug.get(page.slug);
+      if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
+      return { ...page, summary: meta.summary, tags: meta.tags };
+    });
+    const triage = summaryFirst(enriched, question.question, policy.stopwords, {
+      summaryK: policy.summary_k,
+      maxBodies: policy.max_bodies,
+      coverFraction: policy.cover_fraction,
+    });
+    const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+    acpPrompt = triage.bodyMaterial.length === 0 ? decisionPrompt : `${decisionPrompt}${triage.bodyMaterial}`;
+    candidateSlugs = triage.candidate_slugs;
+    openedSlugs = triage.opened_slugs;
+    decision = triage.decision;
   }
-  const enriched = pages.map((page) => {
-    const meta = metaBySlug.get(page.slug);
-    if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
-    return { ...page, summary: meta.summary, tags: meta.tags };
-  });
-  const triage = summaryFirst(enriched, question.question, policy.stopwords, {
-    summaryK: policy.summary_k,
-    maxBodies: policy.max_bodies,
-    coverFraction: policy.cover_fraction,
-  });
-  const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
-  const acpPrompt = triage.bodyMaterial.length === 0 ? decisionPrompt : `${decisionPrompt}${triage.bodyMaterial}`;
   const hits = bm25Search(pages, question.question, policy.stopwords, policy.limit);
   const searchPrompt = `${prefix}${searchMaterial(pages, hits, policy.sections)}`;
   const mode = process.env.SMOKE === "1" ? "search" : (process.env.ACP_LIVE_BASELINE ?? "search");
@@ -219,9 +267,10 @@ async function answerQuestion(client, question, pages) {
   return {
     question_id: question.id,
     content_query: query,
-    candidate_slugs: triage.candidate_slugs,
-    opened_slugs: triage.opened_slugs,
-    decision: triage.decision,
+    candidate_slugs: candidateSlugs,
+    opened_slugs: openedSlugs,
+    decision,
+    acp_policy: acpPolicy,
     search_opened_slugs: hits.map((hit) => hit.slug),
     baseline_mode: mode,
     acp,

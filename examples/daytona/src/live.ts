@@ -10,18 +10,35 @@
  * corpus, `sandbox.createSnapshot`, then `sandbox.fork` once per question.
  * Docs: container sandboxes cannot fork.
  *
- * Fallback: one container snapshot from the Dockerfile, the corpus copied
- * onto a Daytona volume, then N sandboxes created from that snapshot with
- * the volume mounted. The result records which path ran.
+ * Fallback: container sandboxes from the Dockerfile snapshot. Wikipedia is
+ * already baked into that image at `/opt/acp`, so question sandboxes read
+ * local disk and do not mount a volume. A docs run uploads the fetched
+ * corpus into one sandbox and captures it with `sandbox.createSnapshot`.
+ * Children read that snapshot's `/opt/acp`.
+ *
+ * The S3 volume (`acp-daytona-corpus`) is only the next fallback, used when
+ * that snapshot-from-sandbox fails. Seeding copies 16 files at a time, skips
+ * files that already exist, and writes `.seeded`. Each question sandbox then
+ * copies the volume onto local disk once and the agent reads the copy.
  *
  * ACP_LIVE_N (default `1,10,50,100`) selects the rows. The harness runs the
  * largest N once. Smaller rows are prefixes of that sequence.
  *
- * The ACP arm is summary-first: compact summaries, then markdown bodies only
- * when the coverage rule opens them. The model receives that context in one
- * call. The offline benchmark counts the decision prompt and the bodies as
- * two cl100k encodings. Provider usage here is whatever the API returns for
- * the concatenated prompt.
+ * ACP_LIVE_CORPUS (default `wikipedia`) is `wikipedia` or `docs`. Docs page
+ * text is fetched with build-docs when the gitignored cache is missing. That
+ * fetch is not committed.
+ *
+ * ACP_LIVE_POLICY (default `summary-first`) is `summary-first` or `legacy`.
+ * Legacy sends the catalog prompt (list_acos, find_similar, read_aco).
+ *
+ * ACP_LIVE_DELETE_VOLUME=1 deletes the shared volume after the sandboxes
+ * are gone.
+ *
+ * The ACP arm is summary-first unless ACP_LIVE_POLICY=legacy: compact
+ * summaries, then markdown bodies only when the coverage rule opens them.
+ * The model receives that context in one call. The offline benchmark counts
+ * the decision prompt and the bodies as two cl100k encodings. Provider usage
+ * here is whatever the API returns for the concatenated prompt.
  *
  * ACP_LIVE_BASELINE (default `search`) chooses the non-ACP arm:
  * - `search`: BM25 search-then-read, top 3. This fits a normal context window.
@@ -32,8 +49,13 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Daytona, type Sandbox } from "@daytonaio/sdk";
+import { buildDocs } from "./build-docs.js";
 import { containerImage, SandboxClass, VM_BASE_IMAGE, VOLUME_MOUNT, VOLUME_NAME } from "./image.js";
+import { docsPagesPresent } from "./measure-docs.js";
 import { EXAMPLE_ROOT, type Question } from "./policy.js";
+
+const DOCS_ROOT = path.join(EXAMPLE_ROOT, "docs-demo");
+const LOCAL_CORPUS = "/tmp/acp-live";
 
 interface ModelBlock {
   answer: string | null;
@@ -60,10 +82,17 @@ interface QuestionRun {
   naive: ModelBlock | null;
 }
 
+type CorpusName = "wikipedia" | "docs";
+type PolicyName = "summary-first" | "legacy";
+type CorpusRead = "snapshot-disk" | "volume-local-copy";
+
 interface LiveReport {
   status: "completed" | "partial" | "failed";
-  mode: "vm-fork" | "volume-parallel" | null;
+  mode: "vm-fork" | "snapshot-parallel" | "volume-parallel" | null;
   fallback_reason: string | null;
+  corpus?: CorpusName;
+  policy?: PolicyName;
+  corpus_read?: CorpusRead | null;
   requested_n: number[];
   ran: number;
   enrich_once_ms: number | null;
@@ -92,6 +121,22 @@ interface LiveReport {
 function redact(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
   return message.replace(/sk-[A-Za-z0-9_-]{8,}/g, "[redacted]").slice(0, 1200);
+}
+
+function corpusName(): CorpusName {
+  const raw = process.env.ACP_LIVE_CORPUS ?? "wikipedia";
+  if (raw !== "wikipedia" && raw !== "docs") {
+    throw new Error(`ACP_LIVE_CORPUS must be wikipedia or docs, got ${raw}`);
+  }
+  return raw;
+}
+
+function policyName(): PolicyName {
+  const raw = process.env.ACP_LIVE_POLICY ?? "summary-first";
+  if (raw !== "summary-first" && raw !== "legacy") {
+    throw new Error(`ACP_LIVE_POLICY must be summary-first or legacy, got ${raw}`);
+  }
+  return raw;
 }
 
 function requestedSizes(): number[] {
@@ -172,6 +217,7 @@ async function runAgent(
     ACP_POLICY: paths.policy,
   };
   env.ACP_LIVE_BASELINE = process.env.ACP_LIVE_BASELINE ?? "search";
+  env.ACP_LIVE_POLICY = process.env.ACP_LIVE_POLICY ?? "summary-first";
   if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (process.env.OPENAI_API_KEY) env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const started = Date.now();
@@ -242,11 +288,21 @@ function scaleRows(questions: QuestionRun[], sizes: number[]): LiveReport["scale
 
 function renderLive(report: LiveReport): string {
   const lines = ["# Live Daytona run", "", `Status: ${report.status}.`, "", `Mode: ${report.mode ?? "none"}.`];
+  if (report.corpus || report.policy || report.corpus_read) {
+    lines.push(
+      "",
+      `Corpus: ${report.corpus ?? "wikipedia"}. ACP policy: ${report.policy ?? "summary-first"}. Read path: ${report.corpus_read ?? "unrecorded"}.`
+    );
+  }
   if (report.fallback_reason) lines.push("", `Fork fallback reason: ${report.fallback_reason}`);
   if (report.error) lines.push("", `Error: ${report.error}`);
+  const arm =
+    report.policy === "legacy"
+      ? "The ACP arm is the legacy catalog policy (list_acos, find_similar, read_aco). Retrieval hit means the gold page was opened. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both."
+      : "The ACP arm is summary-first. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.";
   lines.push(
     "",
-    "The ACP arm is summary-first. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.",
+    arm,
     "Token columns are the provider's reported usage. A null means that call did not return usage. Nothing here is estimated.",
     ""
   );
@@ -280,6 +336,47 @@ function renderLive(report: LiveReport): string {
   return `${lines.join("\n")}\n`;
 }
 
+interface CorpusPaths {
+  vault: string;
+  pages: string;
+  manifest: string;
+  questions: string;
+  policy: string;
+  agent: string;
+}
+
+function pathsAt(root: string): CorpusPaths {
+  return {
+    vault: `${root}/vault`,
+    pages: `${root}/pages`,
+    manifest: `${root}/manifest.json`,
+    questions: `${root}/questions.json`,
+    policy: `${root}/policy.json`,
+    agent: `${root}/agent.mjs`,
+  };
+}
+
+function corpusUploads(root: string): Array<{ source: string; destination: string }> {
+  return [
+    ...walk(path.join(root, "corpus", "vault"), "/opt/acp/vault"),
+    ...walk(path.join(root, "corpus", "pages"), "/opt/acp/pages"),
+    { source: path.join(root, "corpus", "manifest.json"), destination: "/opt/acp/manifest.json" },
+    { source: path.join(root, "corpus", "questions.json"), destination: "/opt/acp/questions.json" },
+    { source: path.join(root, "policy.json"), destination: "/opt/acp/policy.json" },
+    { source: path.join(EXAMPLE_ROOT, "sandbox", "agent.mjs"), destination: "/opt/acp/agent.mjs" },
+    { source: path.join(EXAMPLE_ROOT, "sandbox", "bm25.mjs"), destination: "/opt/acp/bm25.mjs" },
+  ];
+}
+
+async function installCorpus(sandbox: Sandbox, root: string, replace: boolean): Promise<void> {
+  if (replace) {
+    await exec(sandbox, "rm -rf /opt/acp/vault /opt/acp/pages && mkdir -p /opt/acp/vault /opt/acp/pages");
+  } else {
+    await exec(sandbox, "mkdir -p /opt/acp/vault /opt/acp/pages");
+  }
+  await sandbox.fs.uploadFiles(corpusUploads(root));
+}
+
 async function waitReady(daytona: Daytona): Promise<{ id: string; name: string }> {
   const deadline = Date.now() + 120_000;
   let volume = await daytona.volume.get(VOLUME_NAME, true);
@@ -293,6 +390,37 @@ async function waitReady(daytona: Daytona): Promise<{ id: string; name: string }
   return { id: volume.id, name: volume.name };
 }
 
+async function seedVolume(sandbox: Sandbox): Promise<void> {
+  // The volume is mountpoint-s3: each file write costs ~2 s, existing files
+  // cannot be overwritten, and `cp -a` fails on preserving times. Copy files
+  // in parallel without preserving attributes, skip files that already
+  // exist, and mark the volume once seeded so reruns skip the copy.
+  await exec(
+    sandbox,
+    `sh -c 'M=${VOLUME_MOUNT}; [ -f "$M/.seeded" ] && exit 0; cd /opt/acp && find vault pages -type d -exec mkdir -p "$M/{}" \\; && find vault pages manifest.json questions.json policy.json agent.mjs bm25.mjs -type f | xargs -P 16 -I{} sh -c "[ -e \\"$M/{}\\" ] || cp \\"{}\\" \\"$M/{}\\"" && touch "$M/.seeded"'`,
+    900
+  );
+}
+
+async function stageVolumeLocally(sandbox: Sandbox): Promise<void> {
+  await exec(
+    sandbox,
+    `sh -c 'M=${VOLUME_MOUNT}; D=${LOCAL_CORPUS}; rm -rf "$D"; mkdir -p "$D"; cd "$M" && find vault pages -type d -exec mkdir -p "$D/{}" \\; && find vault pages manifest.json questions.json policy.json agent.mjs bm25.mjs -type f | xargs -P 16 -I{} cp "{}" "$D/{}"'`,
+    900
+  );
+}
+
+async function deleteVolumeIfRequested(daytona: Daytona): Promise<void> {
+  if (process.env.ACP_LIVE_DELETE_VOLUME !== "1") return;
+  try {
+    const volume = await daytona.volume.get(VOLUME_NAME);
+    await daytona.volume.delete(volume);
+    process.stderr.write(`deleted volume ${VOLUME_NAME}\n`);
+  } catch (err) {
+    process.stderr.write(`volume delete skipped: ${redact(err)}\n`);
+  }
+}
+
 async function main(): Promise<void> {
   if (!process.env.DAYTONA_API_KEY) {
     console.log("DAYTONA_API_KEY is not set. Live numbers are pending. No sandbox was created.");
@@ -303,9 +431,12 @@ async function main(): Promise<void> {
     return;
   }
 
+  const corpus = corpusName();
+  const policy = policyName();
   const sizes = requestedSizes();
   const largest = Math.max(...sizes);
-  const questions = JSON.parse(readFileSync(path.join(EXAMPLE_ROOT, "corpus", "questions.json"), "utf8")) as Question[];
+  const corpusRoot = corpus === "docs" ? DOCS_ROOT : EXAMPLE_ROOT;
+  const questions = JSON.parse(readFileSync(path.join(corpusRoot, "corpus", "questions.json"), "utf8")) as Question[];
   const assigned = Array.from({ length: largest }, (_, index) => questions[index % questions.length] as Question);
   const stamp = Date.now().toString(36);
   const daytona = new Daytona();
@@ -315,6 +446,9 @@ async function main(): Promise<void> {
     status: "failed",
     mode: null,
     fallback_reason: null,
+    corpus,
+    policy,
+    corpus_read: null,
     requested_n: sizes,
     ran: 0,
     enrich_once_ms: null,
@@ -324,27 +458,15 @@ async function main(): Promise<void> {
     error: null,
   };
 
-  const imagePaths = {
-    vault: "/opt/acp/vault",
-    pages: "/opt/acp/pages",
-    manifest: "/opt/acp/manifest.json",
-    questions: "/opt/acp/questions.json",
-    policy: "/opt/acp/policy.json",
-    agent: "/opt/acp/agent.mjs",
-  };
-  const volumePaths = {
-    vault: `${VOLUME_MOUNT}/vault`,
-    pages: `${VOLUME_MOUNT}/pages`,
-    manifest: `${VOLUME_MOUNT}/manifest.json`,
-    questions: `${VOLUME_MOUNT}/questions.json`,
-    policy: `${VOLUME_MOUNT}/policy.json`,
-    agent: `${VOLUME_MOUNT}/agent.mjs`,
-  };
+  const imagePaths = pathsAt("/opt/acp");
+  const localPaths = pathsAt(LOCAL_CORPUS);
 
   try {
+    if (corpus === "docs" && !docsPagesPresent(DOCS_ROOT)) {
+      process.stderr.write("docs cache missing; fetching Daytona docs. Output stays gitignored.\n");
+      await buildDocs();
+    }
     const enrichStarted = Date.now();
-    const volume = await waitReady(daytona);
-    report.volume = volume.name;
     const containerName = `acp-container-${stamp}`;
     snapshotNames.push(containerName);
     process.stderr.write(`building container snapshot ${containerName}\n`);
@@ -352,26 +474,10 @@ async function main(): Promise<void> {
       { name: containerName, image: containerImage() },
       { onLogs: (chunk) => process.stderr.write(chunk), timeout: 0 }
     );
-    const seeder = await daytona.create(
-      {
-        name: `acp-seed-${stamp}`,
-        snapshot: containerSnapshot.name,
-        volumes: [{ volumeId: volume.id, mountPath: VOLUME_MOUNT }],
-        autoStopInterval: 15,
-        ttlMinutes: 60,
-        language: "typescript",
-        labels: { project: "acp-daytona-benchmark", role: "seed" },
-      },
-      { timeout: 0 }
-    );
-    created.push(seeder);
-    await exec(
-      seeder,
-      `mkdir -p ${VOLUME_MOUNT}/vault ${VOLUME_MOUNT}/pages && cp -a /opt/acp/vault/. ${VOLUME_MOUNT}/vault/ && cp -a /opt/acp/pages/. ${VOLUME_MOUNT}/pages/ && cp /opt/acp/manifest.json /opt/acp/questions.json /opt/acp/policy.json /opt/acp/agent.mjs /opt/acp/bm25.mjs ${VOLUME_MOUNT}/`
-    );
-    report.enrich_once_ms = Date.now() - enrichStarted;
 
     let parent: Sandbox | null = null;
+    let questionSnapshot = containerSnapshot.name;
+    let volumeId: string | null = null;
     try {
       const vmName = `acp-vmbase-${stamp}`;
       snapshotNames.push(vmName);
@@ -387,32 +493,77 @@ async function main(): Promise<void> {
           autoStopInterval: 30,
           ttlMinutes: 90,
           language: "typescript",
-          labels: { project: "acp-daytona-benchmark", role: "parent" },
+          labels: { project: "acp-daytona-benchmark", role: "parent", corpus },
         },
         { timeout: 0 }
       );
       created.push(parent);
       await exec(parent, "npm install -g @atomic-content-protocol/cli@0.3.2", 0);
-      await exec(parent, "mkdir -p /opt/acp/vault /opt/acp/pages");
-      const uploads = [
-        ...walk(path.join(EXAMPLE_ROOT, "corpus", "vault"), "/opt/acp/vault"),
-        ...walk(path.join(EXAMPLE_ROOT, "corpus", "pages"), "/opt/acp/pages"),
-        { source: path.join(EXAMPLE_ROOT, "corpus", "manifest.json"), destination: "/opt/acp/manifest.json" },
-        { source: path.join(EXAMPLE_ROOT, "corpus", "questions.json"), destination: "/opt/acp/questions.json" },
-        { source: path.join(EXAMPLE_ROOT, "policy.json"), destination: "/opt/acp/policy.json" },
-        { source: path.join(EXAMPLE_ROOT, "sandbox", "agent.mjs"), destination: "/opt/acp/agent.mjs" },
-        { source: path.join(EXAMPLE_ROOT, "sandbox", "bm25.mjs"), destination: "/opt/acp/bm25.mjs" },
-      ];
-      await parent.fs.uploadFiles(uploads);
+      await installCorpus(parent, corpusRoot, false);
       const enriched = `acp-enriched-${stamp}`;
       snapshotNames.push(enriched);
       await parent.createSnapshot(enriched, 0);
       report.mode = "vm-fork";
+      report.corpus_read = "snapshot-disk";
     } catch (err) {
       report.fallback_reason = redact(err);
-      report.mode = "volume-parallel";
-      process.stderr.write(`vm fork unavailable, using volume parallel: ${report.fallback_reason}\n`);
+      process.stderr.write(`vm fork unavailable: ${report.fallback_reason}\n`);
+      parent = null;
+      if (corpus === "wikipedia") {
+        report.mode = "snapshot-parallel";
+        report.corpus_read = "snapshot-disk";
+        questionSnapshot = containerSnapshot.name;
+        process.stderr.write("question sandboxes will read the Wikipedia corpus baked into the container snapshot\n");
+      } else {
+        try {
+          const baker = await daytona.create(
+            {
+              name: `acp-bake-${stamp}`,
+              snapshot: containerSnapshot.name,
+              autoStopInterval: 15,
+              ttlMinutes: 60,
+              language: "typescript",
+              labels: { project: "acp-daytona-benchmark", role: "bake", corpus },
+            },
+            { timeout: 0 }
+          );
+          created.push(baker);
+          await installCorpus(baker, corpusRoot, true);
+          const baked = `acp-baked-${stamp}`;
+          snapshotNames.push(baked);
+          await baker.createSnapshot(baked, 0);
+          questionSnapshot = baked;
+          report.mode = "snapshot-parallel";
+          report.corpus_read = "snapshot-disk";
+          process.stderr.write(`baked docs corpus into snapshot ${baked}\n`);
+        } catch (bakeErr) {
+          const bakeReason = redact(bakeErr);
+          report.fallback_reason = `${report.fallback_reason} Snapshot bake failed: ${bakeReason}`;
+          process.stderr.write(`snapshot bake failed, seeding volume: ${bakeReason}\n`);
+          const volume = await waitReady(daytona);
+          volumeId = volume.id;
+          report.volume = volume.name;
+          const seeder = await daytona.create(
+            {
+              name: `acp-seed-${stamp}`,
+              snapshot: containerSnapshot.name,
+              volumes: [{ volumeId: volume.id, mountPath: VOLUME_MOUNT }],
+              autoStopInterval: 15,
+              ttlMinutes: 60,
+              language: "typescript",
+              labels: { project: "acp-daytona-benchmark", role: "seed", corpus },
+            },
+            { timeout: 0 }
+          );
+          created.push(seeder);
+          await installCorpus(seeder, corpusRoot, true);
+          await seedVolume(seeder);
+          report.mode = "volume-parallel";
+          report.corpus_read = "volume-local-copy";
+        }
+      }
     }
+    report.enrich_once_ms = Date.now() - enrichStarted;
 
     const concurrency = 4;
     let cursor = 0;
@@ -424,25 +575,40 @@ async function main(): Promise<void> {
         if (!question) return;
         const forkStarted = Date.now();
         let sandbox: Sandbox;
+        let paths = imagePaths;
         if (report.mode === "vm-fork" && parent) {
           sandbox = await parent.fork({ name: `acp-fork-${stamp}-${index}` }, 180);
+        } else if (report.corpus_read === "volume-local-copy") {
+          if (!volumeId) throw new Error("volume id missing");
+          sandbox = await daytona.create(
+            {
+              name: `acp-par-${stamp}-${index}`,
+              snapshot: containerSnapshot.name,
+              volumes: [{ volumeId, mountPath: VOLUME_MOUNT }],
+              autoStopInterval: 15,
+              ttlMinutes: 60,
+              language: "typescript",
+              labels: { project: "acp-daytona-benchmark", role: "parallel", corpus },
+            },
+            { timeout: 0 }
+          );
+          await stageVolumeLocally(sandbox);
+          paths = localPaths;
         } else {
           sandbox = await daytona.create(
             {
               name: `acp-par-${stamp}-${index}`,
-              snapshot: containerName,
-              volumes: [{ volumeId: volume.id, mountPath: VOLUME_MOUNT }],
+              snapshot: questionSnapshot,
               autoStopInterval: 15,
               ttlMinutes: 60,
               language: "typescript",
-              labels: { project: "acp-daytona-benchmark", role: "parallel" },
+              labels: { project: "acp-daytona-benchmark", role: "parallel", corpus },
             },
             { timeout: 0 }
           );
         }
         created.push(sandbox);
         const forkMs = Date.now() - forkStarted;
-        const paths = report.mode === "vm-fork" ? imagePaths : volumePaths;
         const row = await runAgent(sandbox, question, paths);
         row.fork_ms = forkMs;
         report.questions[index] = row;
@@ -473,6 +639,7 @@ async function main(): Promise<void> {
     for (const name of snapshotNames) {
       await daytona.snapshot.delete(name).catch(() => undefined);
     }
+    await deleteVolumeIfRequested(daytona);
     const resultsDir = path.join(EXAMPLE_ROOT, "results");
     mkdirSync(resultsDir, { recursive: true });
     writeFileSync(path.join(resultsDir, "live.json"), `${JSON.stringify(report, null, 2)}\n`);
