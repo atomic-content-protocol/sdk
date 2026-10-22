@@ -1,0 +1,171 @@
+Voyager 1 is a space probe launched by NASA on September 5, 1977, as part of the Voyager program, to study the outer Solar System and the interstellar space beyond the Sun's heliosphere. It was launched 16 days after its twin, Voyager 2. It communicates through the NASA Deep Space Network (DSN) to receive routine commands and to transmit data to Earth. Real-time distance and velocity data are provided by NASA and JPL. At a distance of 172.52 AU (25.8 billion km; 16.0 billion mi) as of October 2026, it is the most distant human-made object from Earth. Voyager 1 is projected to reach a distance of one light day from Earth on November 18, 2026. 
+The probe made flybys of Jupiter, Saturn, and Saturn's largest moon, Titan. NASA had a choice of either conducting a Pluto or Titan flyby. Exploration of Titan took priority because it was known to have a substantial atmosphere. Voyager 1 studied the weather, magnetic fields, and rings of the two gas giants and was the first probe to provide detailed images of their moons.
+As part of the Voyager program and like its sister craft Voyager 2, the spacecraft's extended mission is to locate and study the regions and boundaries of the outer heliosphere and to begin exploring the interstellar medium. Voyager 1 crossed the heliopause and entered interstellar space on August 25, 2012, making it the first spacecraft to do so. Two years later, Voyager 1 began experiencing a third wave of coronal mass ejections from the Sun that continued to at least December 15, 2014, further confirming that the probe is in interstellar space.
+In 2017, the Voyager team successfully fired the spacecraft's trajectory correction maneuver (TCM) thrusters for the first time since 1980, enabling the mission to be extended by two to three years. Voyager 1 experienced successful revivals of several thrusters in 2018, 2019, and 2025. 
+Voyager 1's extended mission is expected to continue to return scientific data for several more years. Its radioisotope thermoelectric generators (RTGs) may supply enough electric power to return engineering data until 2036. As of 2026, only two instruments are operational, the Plasma Wave Subsystem and magnetometer.
+
+
+== Mission background ==
+A 1960s proposal for a Grand Tour to study the outer planets led NASA to begin work on a mission during the early 1970s. Initially, Voyager 1 was planned as Mariner 11 of the Mariner program. Due to budget cuts, the mission was reduced to a flyby of Jupiter and Saturn and renamed the Mariner Jupiter-Saturn probes. The name was changed to Voyager when the probe designs began to differ substantially from Mariner missions.
+
+
+=== Spacecraft components ===
+
+Voyager 1 was built by the Jet Propulsion Laboratory (JPL). It has a bus shaped like a decagonal (ten-sided) prism. It has 16 hydrazine thrusters, three-axis stabilization gyroscopes, and referencing instruments to keep the probe's radio antenna pointed toward Earth. Collectively, these instruments are part of the Attitude and Articulation Control Subsystem (AACS), along with redundant units of most instruments and eight backup thrusters. The spacecraft also included 11 scientific instruments to study celestial objects such as planets as it travels through space.
+
+
+==== Communication system ====
+The radio communication system of Voyager 1 was designed to be used up to and beyond the limits of the Solar System. It has a 3.7-meter (12 ft) diameter high-gain Cassegrain antenna to send and receive radio waves via the three Deep Space Network stations on the Earth. The spacecraft normally transmits data to Earth over Deep Space Network Channel 18, using a frequency of either 2.3 GHz or 8.4 GHz, while signals from Earth to Voyager are transmitted at 2.1 GHz.
+When Voyager 1 is unable to communicate with the Earth, its digital tape recorder (DTR) can record about 64 megabytes of data for later transmission. As of 2025, signals from Voyager 1 took more than 23 hours to reach Earth.
+
+
+==== Power ====
+
+Voyager 1 has three radioisotope thermoelectric generators (RTGs) mounted on a boom. Each MHW-RTG contains 24 pressed plutonium-238 PuO2 oxide spheres. The RTGs generated about 470 W of electric power at the time of launch, with the remainder being dissipated as waste heat. The power output of the RTGs declines over time due to the 87.7-year half-life of the fuel and degradation of the thermocouples. According to current plans, they may continue operating with at least one science instrument into the 2030s.
+
+
+==== Computers ====
+Unlike Voyager's other instruments, the operation of the cameras for visible light is not autonomous, but is controlled by an imaging parameter table contained in one of the digital computers, the Flight Data Subsystem (FDS). Since the 1990s, most space probes have been equipped with completely autonomous cameras.
+The computer command subsystem (CCS) controls the cameras. The CCS contains fixed computer programs, such as command decoding, fault-detection and fault-correction routines, antenna pointing routines, and spacecraft sequencing routines. This computer is an improved version of the one that was used in the 1970s Viking orbiters.
+The Attitude and Articulation Control Subsystem (AACS) controls the spacecraft orientation. It keeps the high-gain antenna pointing towards Earth, controls attitude changes, and points the scan platform. The custom-built AACS systems on both Voyagers are the same.
+
+
+==== Scientific instruments ====
+
+
+== Mission profile ==
+
+
+=== Timeline of travel ===
+
+
+=== Launch and trajectory ===
+
+The Voyager 1 probe was launched on September 5, 1977, from Launch Complex 41 at the Cape Canaveral Air Force Station, aboard a Titan IIIE launch vehicle. The Voyager 2 probe had been launched two weeks earlier, on August 20, 1977. Despite being launched later, Voyager 1 reached both Jupiter and Saturn sooner, following a shorter trajectory.
+Voyager 1's launch almost failed because Titan's LR-91 second stage shut down prematurely, leaving 1,200 pounds (540 kg) of propellant unburned. Recognizing the deficiency, the Centaur stage's on-board computers ordered a burn that was far longer than planned in order to compensate. Centaur extended its own burn and was able to give Voyager 1 the additional velocity it needed. 
+At cutoff, the Centaur was only 3.4 seconds from propellant exhaustion. If the same failure had occurred during Voyager 2's launch a few weeks earlier, the Centaur would have run out of propellant before the probe reached the correct trajectory. Jupiter was in a more favorable position vis-à-vis Earth during the launch of Voyager 1 than during the launch of Voyager 2.
+Voyager 1's initial orbit had an aphelion of 8.9 AU (830 million mi), just a little short of Saturn's orbit of 9.5 AU (880 million mi). Voyager 2's initial orbit had an aphelion of 6.2 AU (580 million mi), well short of Saturn's orbit.
+
+
+=== Flyby of Jupiter ===
+
+Voyager 1 began photographing Jupiter in January 1979. Its closest approach to Jupiter was on March 5, 1979, at a distance of about 349,000 kilometers (217,000 miles) from the planet's center. Because of the greater photographic resolution allowed by a closer approach, most observations of the moons, rings, magnetic fields, and the radiation belt environment of the Jovian system were made during the 48-hour period that bracketed the closest approach. Voyager 1 finished photographing the Jovian system in April 1979.
+Information gathered by the Pioneer 10 spacecraft helped engineers design Voyager to better cope with the intense radiation around Jupiter. Still, shortly before launch, strips of kitchen-grade aluminium foil were applied to certain cables to improve radiation shielding.
+The discovery of ongoing volcanic activity on the moon Io was probably the greatest surprise. It was the first time active volcanoes had been seen on another body in the Solar System. It appears that activity on Io affects the entire Jovian system. Io appears to be the primary source of matter that pervades the Jovian magnetosphere – the region of space that surrounds the planet influenced by the planet's strong magnetic field. Sulfur, oxygen, and sodium, apparently erupted by Io's volcanoes and sputtered off the surface by the impact of high-energy particles, were detected at the outer edge of the magnetosphere of Jupiter. Once Voyager 1 passed within 5 RJ from the planet's center, it encountered the Io plasma torus. It received a radiation dosage one thousand times the lethal level for humans, the damage resulting in serious degradation of some high-resolution images of Io and Ganymede.
+The two Voyager space probes made a number of important discoveries about Jupiter, its satellites, its radiation belts, and its never-before-seen planetary rings. Voyager 1 also discovered two new moons of Jupiter, the first one being Metis, was discovered orbiting just outside the ring, making it the first of Jupiter's moons to be identified by a spacecraft. The second new satellite, Thebe, was discovered between the orbits of Amalthea and Io.
+On February 25, 1979, when Voyager 1 was 9.2 million kilometers from Jupiter it transmitted the first detailed image of the Great Red Spot back to Earth. Cloud details as small as 160 km across were visible. The colorful, wavy cloud pattern seen to the west (left) of the GRS is the spot's wake region, where extraordinarily complex and variable cloud motions are observed.
+
+
+=== Flyby of Saturn ===
+
+The gravitational assist trajectories at Jupiter were successfully carried out by both Voyagers, and the two spacecraft went on to visit Saturn and its system of moons and rings. Voyager 1 encountered Saturn in November 1980, with the closest approach on November 12, 1980, when the space probe came within 124,000 kilometers (77,000 mi) of Saturn's cloud-tops. The space probe's cameras detected complex structures in the rings of Saturn, and its remote sensing instruments studied the atmospheres of Saturn and its giant moon Titan.
+Voyager 1 found that about seven percent of the volume of Saturn's upper atmosphere is helium (compared with 11 percent of Jupiter's atmosphere), while almost all the rest is hydrogen. Since Saturn's internal helium abundance was expected to be the same as Jupiter's and the Sun's, the lower abundance of helium in the upper atmosphere may imply that the heavier helium may be slowly sinking through Saturn's hydrogen; that might explain the excess heat that Saturn radiates over energy it receives from the Sun. Winds blow at high speeds on Saturn. Near the equator, the Voyagers measured winds about 500 m/s (1,100 mph). The wind blows mostly in an easterly direction.
+
+The Voyagers found aurora-like ultraviolet emissions of hydrogen at mid-latitudes in the atmosphere, and auroras at polar latitudes (above 65 degrees). The high-level auroral activity may lead to the formation of complex hydrocarbon molecules that are carried toward the equator. The mid-latitude auroras, which occur only in sunlit regions, remain a puzzle, since bombardment by electrons and ions, known to cause auroras on Earth, occurs primarily at high latitudes. Both Voyagers measured the rotation of Saturn (the length of a day) at 10 hours, 39 minutes, 24 seconds.
+Voyager 1's mission included a flyby of Titan, Saturn's largest moon, which had long been known to have an atmosphere. Images taken by Pioneer 11 in 1979 had indicated the atmosphere was substantial and complex, further increasing interest. The Titan flyby occurred as the spacecraft entered the system to avoid any possibility of damage closer to Saturn compromising observations, and approached to within 6,400 km (4,000 mi), passing behind Titan as seen from Earth and the Sun.
+Voyager's measurement of the atmosphere's effect on sunlight and Earth-based measurement of its effect on the probe's radio signal were used to determine the atmosphere's composition, density, and pressure. Titan's mass was also measured by observing its effect on the probe's trajectory. The thick haze prevented any visual observation of the surface, but the measurement of the atmosphere's composition, temperature, and pressure led to speculation that lakes of liquid hydrocarbons could exist on the surface.
+Because observations of Titan were considered vital, the trajectory chosen for Voyager 1 was designed around the optimum Titan flyby, which took it below the south pole of Saturn and out of the plane of the ecliptic, ending its planetary science mission. Had Voyager 1 failed or been unable to observe Titan, Voyager 2's trajectory would have been altered to incorporate the Titan flyby, precluding any visit to Uranus and Neptune. The trajectory Voyager 1 was launched into would not have allowed it to continue on to Uranus and Neptune, but could have been altered to avoid a Titan flyby and travel from Saturn to Pluto, arriving in 1986.
+
+
+=== Exit from the heliosphere ===
+
+On February 14, 1990, Voyager 1 took the first "family portrait" of the Solar System as seen from outside, which includes the image of planet Earth known as Pale Blue Dot. Soon afterward, its cameras were deactivated to conserve energy and computer resources for other equipment. The camera software has been removed from the spacecraft, so it would now be complex to get them working again. Earth-side software and computers for reading the images are also no longer available.
+On February 17, 1998, Voyager 1 reached a distance of 69 AU (6.4 billion mi; 10.3 billion km) from the Sun and overtook Pioneer 10 as the most distant spacecraft from Earth. Traveling at about 17 km/s (11 mi/s), it has the fastest heliocentric recession speed of any spacecraft.
+As Voyager 1 headed for interstellar space, its instruments continued to study the Solar System. Jet Propulsion Laboratory scientists used the plasma wave experiments aboard Voyager 1 and 2 to look for the heliopause, the boundary at which the solar wind transitions into the interstellar medium. As of 2013, the probe was moving with a relative velocity to the Sun of about 61,197 kilometers per hour (38,026 mph).With the velocity the probe is currently maintaining, Voyager 1 is traveling about 523 million km (325 million mi) per year, or about one light-year per 18,000 years.
+As of 2026, Voyager 1 is more than 160 astronomical units from the Sun, the most distant human-made object, moving at about 61,000 km/h relative to the Sun.
+
+
+==== Termination shock ====
+
+Scientists at the Johns Hopkins University Applied Physics Laboratory believe that Voyager 1 entered the termination shock in February 2003. This marks the point where the solar wind slows to subsonic speeds. Some other scientists expressed doubt and discussed this in the journal Nature of November 6, 2003. The issue would not be resolved until other data became available, since Voyager 1's solar-wind detector ceased functioning in 1990. This failure meant that termination shock detection would have to be inferred from the data from the other instruments on board.
+In May 2005, a NASA press release said that the consensus was that Voyager 1 was then in the heliosheath. In a scientific session at the American Geophysical Union meeting in New Orleans, Louisiana, on May 25, 2005, Ed Stone presented evidence that the craft crossed the termination shock in late 2004. This event is estimated to have occurred on December 15, 2004, at a distance of 94 AU (8,700 million mi) from the Sun.
+
+
+==== Heliosheath ====
+On March 31, 2006, amateur radio operators from AMSAT in Germany tracked and received radio waves from Voyager 1 using the 20-meter (66 ft) dish at Bochum with a long integration technique. Retrieved data was checked and verified against data from the Deep Space Network station at Madrid, Spain. This seems to be the first such amateur tracking of Voyager 1.
+It was confirmed on December 13, 2010, that Voyager 1 had passed the reach of the radial outward flow of the solar wind, as measured by the Low Energy Charged Particle device. It is suspected that solar wind at this distance turns sideways because of interstellar wind pushing against the heliosphere. Since June 2010, detection of solar wind had been consistently at zero, providing conclusive evidence of the event. On this date, the spacecraft was approximately 116 AU (17.4 billion km; 10.8 billion mi) from the Sun.
+Voyager 1 was commanded to change its orientation to measure the sideways motion of the solar wind at that location in space in March 2011 (~33 years 6 months from launch). A test roll in February had confirmed the spacecraft's ability to maneuver and reorient itself. The course of the spacecraft was not changed. It rotated 70 degrees counterclockwise with respect to Earth to detect the solar wind. This was the first time the spacecraft had done any major maneuvering since the Family Portrait photograph of the planets was taken in 1990. After the first roll the spacecraft had no problem in reorienting itself with Alpha Centauri, Voyager 1's guide star, and it resumed sending transmissions back to Earth. Voyager 1 was expected to enter interstellar space "at any time". Voyager 2 was still detecting outward flow of solar wind at that point but it was estimated that in the following months or years it would experience the same conditions as Voyager 1.
+The spacecraft was reported at 12.44° declination and 17.163 hours right ascension, and at an ecliptic latitude of 34.9° (the ecliptic latitude changes very slowly), placing it in the constellation Ophiuchus as observed from the Earth on May 21, 2011.
+On December 1, 2011, it was announced that Voyager 1 had detected the first Lyman-alpha radiation originating from the Milky Way galaxy. Lyman-alpha radiation had previously been detected from other galaxies, but because of interference from the Sun, the radiation from the Milky Way was not detectable.
+NASA announced on December 5, 2011, that Voyager 1 had entered a new region referred to as a "cosmic purgatory". Within this stagnation region, charged particles streaming from the Sun slow and turn inward, and the Solar System's magnetic field is doubled in strength as interstellar space appears to be applying pressure. Energetic particles originating in the Solar System decline by nearly half, while the detection of high-energy electrons from outside increases 100-fold. The inner edge of the stagnation region is located approximately 113 AU from the Sun.
+
+
+==== Heliopause ====
+NASA announced in June 2012 that the probe was detecting changes in the environment that were suspected to correlate with arrival at the heliopause. Voyager 1 had reported a marked increase in its detection of charged particles from interstellar space, which are normally deflected by the solar winds within the heliosphere from the Sun. The craft thus began to enter the interstellar medium at the edge of the Solar System.
+Voyager 1 became the first spacecraft to cross the heliopause in August 2012, then at a distance of 121 AU (1.12×1010 mi; 1.81×1010 km) from the Sun, although this was not confirmed for another year.
+As of September 2012, sunlight took 16.89 hours to reach Voyager 1, which was at a distance of 121 AU. The apparent magnitude of the Sun from the spacecraft was −16.3 (about 30 times brighter than the full Moon). The spacecraft was traveling at 17.043 km/s (10.590 mi/s) relative to the Sun. At this rate, it would need about 17,565 years to travel a single light-year. To compare, Proxima Centauri, the closest star to the Sun, is about 4.2 light-years (2.65×105 AU) distant. If the spacecraft was traveling in the direction of that star, it would take 73,775 years to reach it. Voyager 1 is heading in the direction of the constellation Ophiuchus.
+In late 2012, researchers reported that particle data from the spacecraft suggested that the probe had passed through the heliopause. Measurements from the spacecraft revealed a steady rise since May in collisions with high energy particles (above 70 MeV), which are thought to be cosmic rays emanating from supernova explosions far beyond the Solar System, with a sharp increase in these collisions in late August. At the same time, in late August, there was a dramatic drop in collisions with low-energy particles, which are thought to originate from the Sun.
+Ed Roelof, a space scientist at Johns Hopkins University and principal investigator for the Low-Energy Charged Particle instrument on the spacecraft, declared that "most scientists involved with Voyager 1 would agree that [these two criteria] have been sufficiently satisfied". However, the last criterion for officially declaring that Voyager 1 had crossed the boundary, the expected change in magnetic field direction (from that of the Sun to that of the interstellar field beyond), had not been observed (the field had changed direction by only 2 degrees), which suggested to some that the nature of the edge of the heliosphere had been misjudged.
+On December 3, 2012, Voyager project scientist Ed Stone of the California Institute of Technology said, "Voyager has discovered a new region of the heliosphere that we had not realized was there. We're still inside, apparently. But the magnetic field now is connected to the outside. So it's like a highway letting particles in and out." The magnetic field in this region was 10 times more intense than Voyager 1 encountered before the termination shock. It was expected to be the last barrier before the spacecraft exited the Solar System completely and entered interstellar space.
+
+
+=== Interstellar medium ===
+In March 2013, it was announced that Voyager 1 might have become the first spacecraft to enter interstellar space, having detected a marked change in the plasma environment on August 25, 2012. However, until September 12, 2013, it was still an open question as to whether the new region was interstellar space or an unknown region of the Solar System. At that time, the former alternative was officially confirmed.
+In 2013, Voyager 1 was exiting the Solar System at a speed of about 3.6 AU (330 million mi; 540 million km) per year, which is 61,602 km/h, 4.83 times the diameter of Earth (12,742 km) per hour; whereas Voyager 2 is going slower, leaving the Solar System at 3.3 AU (310 million mi; 490 million km) per year. 
+Voyager 1 reached a distance of 135 AU (12.5 billion mi; 20.2 billion km) from the Sun on May 18, 2016. On September 5, 2017, that had increased to about 139.64 AU (12.980 billion mi; 20.890 billion km) from the Sun, or just over 19 light-hours; at that time, Voyager 2 was 115.32 AU (10.720 billion mi; 17.252 billion km) from the Sun.
+Its progress can be monitored at NASA's website.
+
+On September 12, 2013, NASA confirmed that Voyager 1 had reached the interstellar medium in August 2012 as previously observed. The generally accepted date of arrival is August 25, 2012 (approximately 10 days before the 35th anniversary of its launch), the date durable changes in the density of energetic particles were first detected. By this point, most space scientists had abandoned the hypothesis that a change in magnetic field direction must accompany a crossing of the heliopause; a new model of the heliopause predicted that no such change would be found.
+A key finding that persuaded many scientists that the heliopause had been crossed was an indirect measurement of an 80-fold increase in electron density, based on the frequency of plasma oscillations observed beginning on April 9, 2013, triggered by a solar outburst that had occurred in March 2012. Electron density is expected to be two orders of magnitude higher outside the heliopause than within.
+Weaker sets of oscillations measured in October and November 2012 provided additional data. An indirect measurement was required because Voyager 1's plasma spectrometer had stopped working in 1980. In September 2013, NASA released recordings of audio transductions of these plasma waves, the first to be measured in interstellar space.
+While Voyager 1 is commonly spoken of as having left the Solar System simultaneously with having left the heliosphere, the two are not the same. The Solar System is usually defined as the vastly larger region of space populated by bodies that orbit the Sun. The craft is presently less than one-seventh the distance to the aphelion of Sedna, and it has not yet entered the postulated position of the Oort cloud, the hypothetical source region of long-period comets, regarded by astronomers as the outermost zone of the Solar System.
+In October 2020, astronomers reported a significant unexpected increase in density in the space beyond the Solar System as detected by the Voyager 1 and Voyager 2 space probes. According to the researchers, this implies that "the density gradient is a large-scale feature of the VLISM (very local interstellar medium) in the general direction of the heliospheric nose".
+In May 2021, NASA reported on the continuous measurement, for the first time, of the density of material in interstellar space and, as well, the detection of interstellar sounds for the first time.
+
+
+== Future of the probe ==
+
+
+=== Remaining lifespan ===
+
+In December 2017, NASA fired all four of Voyager 1's trajectory correction maneuver (TCM) thrusters for the first time since 1980. The TCM thrusters were used in the place of a degraded set of jets to help keep the probe's antenna pointed towards Earth. Using the TCM thrusters allowed Voyager 1 to continue transmitting data to NASA for two to three more years.
+Due to the diminishing electrical power available, the Voyager team has prioritized which instruments to keep on and which to turn off. Heaters and other spacecraft systems have been turned off one by one as part of power management. The fields and particles instruments that are the most likely to send back key data about the heliosphere and interstellar space have been prioritized to keep operating. In 2023, engineers expected the spacecraft to continue operating at least one science instrument until around 2025. As of late April 2026, two instruments remain in operation.
+
+
+=== Concerns with the orientation thrusters ===
+Some thrusters needed to control the attitude of the spacecraft and point its high-gain antenna in the direction of Earth are out of use due to clogging problems in their hydrazine lines. The spacecraft no longer has a backup available for its thruster system and "everything onboard is single-string," according to Suzanne Dodd, Voyager project manager at JPL, in an interview with Ars Technica. NASA has accordingly decided to modify the spacecraft's computer software in order to reduce the rate at which the hydrazine lines clog. NASA will first deploy the modified software on Voyager 2, which is less distant from Earth, before deploying it on Voyager 1.
+In September 2024, NASA performed a "thruster swap", switching from a clogged set of thrusters to less clogged ones that had not been used since 2018.
+In May 2025, the team was able to revive the backup thrusters used for roll motion that were unusable since 2004.
+
+
+=== Communication issues ===
+In May 2022, NASA reported that Voyager 1 had begun transmitting "mysterious" and "peculiar" telemetric data to the Deep Space Network (DSN). It confirmed that the operational status of the craft remained unchanged, but that the issue stemmed from the Attitude Articulation and Control System (AACS). NASA's Jet Propulsion Laboratory published a statement on May 18, 2022, that the AACS was functional but sending invalid data. 
+The problem was eventually traced to the AACS sending its telemetry through a computer that had been non-operational for years, resulting in data corruption. In August 2022, NASA transmitted a command to the AACS to use another computer, which resolved the problem. An investigation into what caused the initial switch is underway, though engineers have hypothesized that the AACS had executed a bad command from another onboard computer.
+Voyager 1 began transmitting unreadable data on November 14, 2023. On December 12, 2023, NASA announced that Voyager 1's flight data system was unable to use its telemetry modulation unit, preventing it from transmitting scientific data. On March 24, 2024, NASA announced that they had made significant progress on interpreting the data being received from the spacecraft. Engineers reported in April 2024 that the failure was likely in a memory bank of the Flight Data Subsystem (FDS), one of the three onboard computer systems, probably from being struck by a high-energy particle or that it simply wore out due to age. The FDS was not communicating properly with the telemetry modulation unit (TMU), which began transmitting a repeating sequence of ones and zeros indicating that the system was in a stuck condition. After a reboot of the FDS, communications remained unusable. 
+The probe still received commands from Earth, and was sending a carrier tone indicating it was operational. Commands sent to alter the modulation of the tone succeeded, confirming that the probe was still responsive. The Voyager team began developing a workaround, and on April 20 communication of health and status was restored by rearranging code away from the defective FDS memory chip, three percent of which was corrupted beyond repair. 
+Because the memory is corrupt, the code needed to be relocated, but there was no place for an extra 256 bits; the spacecraft's total memory is only 68 kilobytes. To make it work, the engineers deleted unused code, for example the code used to transmit the data from Jupiter, that cannot be used at the current transmission rate. All the data from the "anomaly period" is lost. On May 22, NASA announced that Voyager 1 "resumed returning science data from two of its four instruments", with work towards the others ongoing. On June 13, NASA confirmed that the probe returns data from all four instruments.
+In October 2024, the probe turned off its X-band radio transmitter that was used for communications with the DSN. It was caused by the probe's fault protection system that was activated after NASA turned on one of the heaters on October 16. The fault protection system lowered the transmission rate, but the engineers were able to find the signal. Later, on October 19, the transmission stopped; the fault protection system was triggered once again and switched to the S-band transmitter, that was previously used in 1981. NASA reported that the team reactivated the X-band transmitter and then resumed collecting data in mid-November.
+
+Between May 2025 and February 2026, Deep Space Station 43 in Canberra, Australia—the only antenna capable of sending commands to Voyager 1 and 2—was offline for major upgrades, with only limited operational windows in August and December 2025. This created a critical deadline for engineers to revive backup roll thrusters before full loss of communication.
+
+
+=== Far future ===
+Provided Voyager 1 does not collide with anything and is not retrieved, it is expected to reach the theorized Oort cloud in about 300 years and take about 30,000 years to pass through it. 
+Though it is not heading towards any particular star, in about 40,000 years, it will pass within 1.6 light-years (0.49 parsecs; 100,000 astronomical units) of the star Gliese 445, which is in the constellation Camelopardalis and 17.1 light-years from Earth (as of 2010). That star is generally moving towards the Solar System at about 119 km/s (430,000 km/h; 270,000 mph).
+In 300,000 years, it will pass within less than 1 light-year of the M3V star TYC 3135–52–1.
+The New Horizons space probe will never pass it, despite being launched from Earth at a higher speed than either Voyager spacecraft. The Voyager spacecraft benefited from multiple planetary flybys to increase their heliocentric velocities, whereas New Horizons received only one such boost, from its Jupiter flyby in 2007. As of 2018, New Horizons is traveling at about 14 km/s (8.7 mi/s), 3 km/s (1.9 mi/s) slower than Voyager 1, and New Horizons, being closer to the Sun, is slowing more rapidly. NASA says that: "The Voyagers are destined – perhaps eternally – to wander the Milky Way."
+
+
+== Golden record ==
+
+Both Voyager space probes carry a gold-plated audio-visual disc, a compilation meant to showcase the diversity of life and culture on Earth in the event that either spacecraft is ever found by any extraterrestrial discoverer. The record, made under the direction of a team including Carl Sagan and Timothy Ferris, includes photos of the Earth and its lifeforms, a range of scientific information, spoken greetings from people such as the Secretary-General of the United Nations (Kurt Waldheim) and a medley, "Sounds of Earth". 
+It includes the sounds of whales, a baby crying, waves breaking on a shore, and a collection of music spanning different cultures and eras including works by Wolfgang Amadeus Mozart, Blind Willie Johnson, Chuck Berry and Valya Balkanska. Other Eastern and Western classics are included, as well as performances of indigenous and folk music from around the world. The record also contains greetings in 55 different languages. The project aimed to portray the richness of life on Earth and stand as a testament to human creativity and the desire to connect with the cosmos.
+
+
+== See also ==
+
+
+== References ==
+
+
+== External links ==
+
+NASA Voyager website
+Voyager 1 Mission Profile by NASA's Solar System Exploration
+Where is Voyager? – Powered by NASA's Eyes on the Solar System – NASA/JPL
+Position of Voyager 1 (Live-Counter)
+Voyager 1 (NSSDC Master Catalog) Archived January 30, 2017, at the Wayback Machine
+Heavens-above.com: Spacecraft Escaping the Solar System – current positions and diagrams
+JPL Voyager Telecom Manual
+Voyager 1 Has Outdistanced the Solar Wind
+Gray, Meghan. "Voyager and Interstellar Space". Deep Space Videos. Brady Haran.

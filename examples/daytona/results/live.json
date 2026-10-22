@@ -1,0 +1,829 @@
+{
+  "status": "completed",
+  "mode": "volume-parallel",
+  "fallback_reason": "No runners are configured in region 'eu' for sandbox class 'linux-vm'. Try a different region or sandbox class.",
+  "requested_n": [
+    1,
+    10,
+    20
+  ],
+  "ran": 20,
+  "enrich_once_ms": 42757,
+  "volume": "acp-daytona-corpus",
+  "questions": [
+    {
+      "id": "q01",
+      "sandbox_id": "a6ba20b9-80b6-4e35-84a8-bfe584d67ef5",
+      "fork_ms": 1279,
+      "agent_ms": 62054,
+      "candidate_slugs": [
+        "alan-turing",
+        "printing-press",
+        "ada-lovelace"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "alan-turing",
+        "public-key-cryptography",
+        "rsa"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Alan Turing** helped the Allies decipher messages encrypted by the German Enigma machine.\n\nSupporting quote: \"his contributions to cryptanalysis helped the Allies of World War II decipher messages encrypted by the German Enigma machine.\"",
+        "input_tokens": 333,
+        "output_tokens": 64,
+        "latency_ms": 1013,
+        "error": null,
+        "prompt_chars": 1351,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Alan Turing** was the mathematician who helped the Allies decipher messages encrypted by the German Enigma machine.\n\nSupporting quote: \"his contributions to cryptanalysis helped the Allies of World War II decipher messages encrypted by the German Enigma machine.\"\n\nAdditionally, the text notes that during World War II, Turing \"was a leading participant in the breaking of German ciphers at Bletchley Park\" and that \"Turing's work was the biggest factor in Hut 8's success,\" where he focused on \"decrypting German naval messages as the head of Hut 8.\"",
+        "input_tokens": 36939,
+        "output_tokens": 146,
+        "latency_ms": 2535,
+        "error": null,
+        "prompt_chars": 146400,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q02",
+      "sandbox_id": "0f2e40a6-d061-4ddf-8e2b-698362af6fbd",
+      "fork_ms": 2420,
+      "agent_ms": 60451,
+      "candidate_slugs": [
+        "ada-lovelace",
+        "voyager-1",
+        "tcp"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "ada-lovelace",
+        "alan-turing",
+        "turing-machine"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material provided, **Ada Lovelace** recognised that Charles Babbage's analytical engine had applications beyond pure calculation.\n\nSupporting quote: \"She was the first to recognise the machine had applications beyond pure calculation.\"",
+        "input_tokens": 336,
+        "output_tokens": 52,
+        "latency_ms": 850,
+        "error": null,
+        "prompt_chars": 1367,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Ada Lovelace** recognised that Charles Babbage's analytical engine had applications beyond pure calculation.\n\nThe text states: \"She was the first to recognise the machine had applications beyond pure calculation.\"\n\nFurther supporting this, it explains: \"She developed a vision of the capability of computers to go beyond mere calculating or number-crunching, while many others, including Babbage, focused only on those capabilities.\"",
+        "input_tokens": 39373,
+        "output_tokens": 98,
+        "latency_ms": 2007,
+        "error": null,
+        "prompt_chars": 157070,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q03",
+      "sandbox_id": "ed9cdf3c-7832-4b6b-8ae5-09f01c8e18d2",
+      "fork_ms": 2257,
+      "agent_ms": 59876,
+      "candidate_slugs": [
+        "grace-hopper",
+        "tim-berners-lee",
+        "quicksort"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "grace-hopper",
+        "apollo-11",
+        "antikythera"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Grace Hopper** was a United States Navy rear admiral.\n\nSupporting quote: \"Grace Brewster Hopper (née Murray; December 9, 1906 – January 1, 1992) was an American computer scientist, mathematician, and **United States Navy rear admiral**.\"",
+        "input_tokens": 278,
+        "output_tokens": 73,
+        "latency_ms": 1279,
+        "error": null,
+        "prompt_chars": 1062,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Grace Hopper** was the computer scientist who was a United States Navy rear admiral.\n\nThe supporting quote is: \"Grace Brewster Hopper (née Murray; December 9, 1906 – January 1, 1992) was an American computer scientist, mathematician, and United States Navy rear admiral.\"",
+        "input_tokens": 42727,
+        "output_tokens": 79,
+        "latency_ms": 1559,
+        "error": null,
+        "prompt_chars": 173495,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q04",
+      "sandbox_id": "a62a170e-ded4-4a32-9cdf-e63f7d8290a7",
+      "fork_ms": 1543,
+      "agent_ms": 61057,
+      "candidate_slugs": [
+        "margaret-hamilton",
+        "apollo-11",
+        "go-game"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "margaret-hamilton",
+        "apollo-11",
+        "james-webb"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "According to the corpus material, **Margaret Hamilton** led development of the on-board flight software for the Apollo Guidance Computer. \n\nThe supporting span states: \"She directed the Software Engineering Division at the MIT Instrumentation Laboratory, where she led the development of the on-board flight software for NASA's Apollo Guidance Computer for the Apollo program.\"",
+        "input_tokens": 334,
+        "output_tokens": 75,
+        "latency_ms": 1065,
+        "error": null,
+        "prompt_chars": 1355,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Margaret Hamilton led the development of the on-board flight software for the Apollo Guidance Computer. According to the corpus, she \"directed the Software Engineering Division at the MIT Instrumentation Laboratory, where she led the development of the on-board flight software for NASA's Apollo Guidance Computer for the Apollo program.\"",
+        "input_tokens": 41732,
+        "output_tokens": 66,
+        "latency_ms": 1452,
+        "error": null,
+        "prompt_chars": 171440,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q05",
+      "sandbox_id": "3a3e256c-e45f-404b-b59b-d6faa628f000",
+      "fork_ms": 953,
+      "agent_ms": 57240,
+      "candidate_slugs": [
+        "tim-berners-lee",
+        "rsa",
+        "sahara"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "tim-berners-lee",
+        "postgresql",
+        "antikythera"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material provided, **Tim Berners-Lee** is described as the inventor of the World Wide Web.\n\nSupporting quote: \"Sir Timothy John Berners-Lee (born 8 June 1955), also known as TimBL, is an English computer scientist best known as the inventor of the World Wide Web, HTML, the URL system, and HTTP.\"",
+        "input_tokens": 334,
+        "output_tokens": 84,
+        "latency_ms": 1076,
+        "error": null,
+        "prompt_chars": 1234,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "According to the corpus material, **Tim Berners-Lee** is described as the inventor of the World Wide Web.\n\nThe supporting quote is: \"Sir Timothy John Berners-Lee (born 8 June 1955), also known as TimBL, is an English computer scientist best known as **the inventor of the World Wide Web, HTML, the URL system, and HTTP.**\"",
+        "input_tokens": 29442,
+        "output_tokens": 87,
+        "latency_ms": 1577,
+        "error": null,
+        "prompt_chars": 119414,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q06",
+      "sandbox_id": "7c3479c0-34af-40b8-acf6-b7c0b78b5043",
+      "fork_ms": 1161,
+      "agent_ms": 55715,
+      "candidate_slugs": [
+        "linus-torvalds",
+        "tcp",
+        "chess"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "linus-torvalds",
+        "rust",
+        "kubernetes"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "According to the corpus material, **Linus Torvalds** created Git.\n\nSupporting quote: \"He also created the distributed version control system Git.\"",
+        "input_tokens": 302,
+        "output_tokens": 36,
+        "latency_ms": 863,
+        "error": null,
+        "prompt_chars": 1278,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Linus Torvalds** created Git.\n\nThe supporting quote from the Linus Torvalds Wikipedia article states: \"He also created the distributed version control system Git.\"\n\nAdditionally, the article provides more detail in its Git section: \"On 3 April 2005, Torvalds began development on Git, version control software that later became widely used.\"",
+        "input_tokens": 21057,
+        "output_tokens": 91,
+        "latency_ms": 1849,
+        "error": null,
+        "prompt_chars": 88179,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q07",
+      "sandbox_id": "b0e95309-5554-43e4-8845-b07dba46403e",
+      "fork_ms": 992,
+      "agent_ms": 58040,
+      "candidate_slugs": [
+        "python",
+        "rust",
+        "library-of-alexandria"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "python",
+        "rust",
+        "grace-hopper"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Python** emphasizes readability through significant indentation.\n\nSupporting quote: \"Python is a high-level, general-purpose programming language that emphasizes code readability, simplicity, and ease-of-writing with the use of significant indentation.\"",
+        "input_tokens": 262,
+        "output_tokens": 62,
+        "latency_ms": 1043,
+        "error": null,
+        "prompt_chars": 1227,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, **Python** is the programming language that emphasizes readability through significant indentation.\n\nThe Python article states: \"Python uses whitespace indentation, rather than curly brackets or keywords, to delimit blocks. An increase in indentation comes after certain statements; a decrease in indentation signifies the end of the current block. Thus, the program's visual structure accurately represents its semantic structure.\"\n\nThe article also notes that Python \"emphasizes code readability, simplicity, and ease-of-writing with the use of significant indentation.\"",
+        "input_tokens": 26969,
+        "output_tokens": 121,
+        "latency_ms": 2354,
+        "error": null,
+        "prompt_chars": 110761,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q08",
+      "sandbox_id": "f8dcc387-484d-4862-92a6-ea82934e3e53",
+      "fork_ms": 1151,
+      "agent_ms": 55827,
+      "candidate_slugs": [
+        "rust",
+        "python",
+        "haiku"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "rust",
+        "python",
+        "postgresql"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Rust** is the programming language that emphasizes performance, type safety, concurrency, and memory safety.\n\nSupporting quote: \"Rust is a general-purpose programming language that emphasizes performance, type safety, concurrency, and memory safety.\"",
+        "input_tokens": 303,
+        "output_tokens": 61,
+        "latency_ms": 972,
+        "error": null,
+        "prompt_chars": 1238,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Rust** is the programming language that emphasizes performance, type safety, concurrency, and memory safety.\n\nThe opening statement from the Rust Wikipedia article states: \"Rust is a general-purpose programming language that **emphasizes performance, type safety, concurrency, and memory safety**.\"",
+        "input_tokens": 28918,
+        "output_tokens": 72,
+        "latency_ms": 1351,
+        "error": null,
+        "prompt_chars": 121767,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q09",
+      "sandbox_id": "46e1b22c-545e-4b14-8b69-2ce011cd3816",
+      "fork_ms": 869,
+      "agent_ms": 57608,
+      "candidate_slugs": [
+        "postgresql",
+        "rsa",
+        "olympic-games"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "postgresql",
+        "hubble",
+        "python"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "**Answer: PostgreSQL**\n\nPostgreSQL is described as featuring materialized views and stored procedures. The supporting quote from the corpus is: \"PostgreSQL features transactions with atomicity, consistency, isolation, durability (ACID) properties, automatically updatable views, materialized views, triggers, foreign keys, and stored procedures.\"",
+        "input_tokens": 324,
+        "output_tokens": 70,
+        "latency_ms": 1081,
+        "error": null,
+        "prompt_chars": 1331,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, **PostgreSQL** is described as featuring materialized views and stored procedures.\n\nThe supporting quote from the PostgreSQL article states: \"PostgreSQL features transactions with atomicity, consistency, isolation, durability (ACID) properties, automatically updatable views, materialized views, triggers, foreign keys, and stored procedures.\"",
+        "input_tokens": 41185,
+        "output_tokens": 74,
+        "latency_ms": 1534,
+        "error": null,
+        "prompt_chars": 174035,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q10",
+      "sandbox_id": "76b2f4bc-7495-4be3-b45b-a850e0d8daa7",
+      "fork_ms": 954,
+      "agent_ms": 55216,
+      "candidate_slugs": [
+        "kubernetes",
+        "turing-machine",
+        "quicksort"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "kubernetes",
+        "postgresql",
+        "linus-torvalds"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "**Kubernetes**\n\nAccording to the corpus material, \"the trademark is held by the Cloud Native Computing Foundation.\"",
+        "input_tokens": 253,
+        "output_tokens": 26,
+        "latency_ms": 781,
+        "error": null,
+        "prompt_chars": 1128,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Kubernetes** is the container orchestration system whose trademark is held by the Cloud Native Computing Foundation.\n\nThe supporting quote from the Kubernetes Wikipedia article states: \"the trademark is held by the Cloud Native Computing Foundation.\"",
+        "input_tokens": 22012,
+        "output_tokens": 55,
+        "latency_ms": 1232,
+        "error": null,
+        "prompt_chars": 92752,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q11",
+      "sandbox_id": "716e0268-8d41-4a67-a35c-85788c33b065",
+      "fork_ms": 970,
+      "agent_ms": 56961,
+      "candidate_slugs": [
+        "tcp",
+        "kyoto-protocol",
+        "periodic-table"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "tcp",
+        "rust",
+        "public-key-cryptography"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "The answer is **TCP (Transmission Control Protocol)**.\n\nAccording to the corpus material: \"The Transmission Control Protocol (TCP) is one of the main protocols of the Internet protocol suite, providing **reliable, ordered, and error-checked delivery of a stream of octets (bytes)** between applications running on hosts communicating via an IP network.\"",
+        "input_tokens": 356,
+        "output_tokens": 76,
+        "latency_ms": 1051,
+        "error": null,
+        "prompt_chars": 1526,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "# Answer\n\nBased on the corpus material, **TCP (Transmission Control Protocol)** provides reliable, ordered, and error-checked delivery of a stream of octets.\n\nSupporting quote: \"The Transmission Control Protocol (TCP) is one of the main protocols of the Internet protocol suite, providing reliable, ordered, and error-checked delivery of a stream of octets (bytes) between applications running on hosts communicating via an IP network.\"",
+        "input_tokens": 32554,
+        "output_tokens": 94,
+        "latency_ms": 1853,
+        "error": null,
+        "prompt_chars": 134305,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q12",
+      "sandbox_id": "d8e4c1fa-fc22-44ab-a132-0a459a18e2da",
+      "fork_ms": 1039,
+      "agent_ms": 65639,
+      "candidate_slugs": [
+        "quicksort",
+        "tim-berners-lee",
+        "alan-turing"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "quicksort",
+        "alan-turing",
+        "pi"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Quicksort** was developed by British computer scientist Tony Hoare in 1959.\n\nSupporting quote: \"Quicksort was developed by British computer scientist Tony Hoare in 1959 and published in 1961.\"",
+        "input_tokens": 330,
+        "output_tokens": 61,
+        "latency_ms": 1197,
+        "error": null,
+        "prompt_chars": 1290,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Quicksort** was the sorting algorithm developed by British computer scientist Tony Hoare in 1959.\n\nAs stated in the Quicksort article: \"Quicksort was developed by British computer scientist Tony Hoare in 1959 and published in 1961.\"",
+        "input_tokens": 60086,
+        "output_tokens": 72,
+        "latency_ms": 1674,
+        "error": null,
+        "prompt_chars": 239682,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q13",
+      "sandbox_id": "cdb2d2dc-2f03-4645-ac04-1721a6c7b1b5",
+      "fork_ms": 1381,
+      "agent_ms": 64782,
+      "candidate_slugs": [
+        "turing-machine",
+        "periodic-table",
+        "pi"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "turing-machine",
+        "ada-lovelace",
+        "go-game"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "**Answer: Turing machine**\n\n**Supporting quote:** \"A Turing machine is a mathematical model of computation describing an abstract machine that manipulates symbols on a strip of tape according to a table of rules.\"",
+        "input_tokens": 283,
+        "output_tokens": 48,
+        "latency_ms": 877,
+        "error": null,
+        "prompt_chars": 1256,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, a **Turing machine** is the mathematical model that manipulates symbols on a strip of tape according to a table of rules.\n\nAs stated in the opening of the Turing machine article: \"A Turing machine is a mathematical model of computation describing an abstract machine that **manipulates symbols on a strip of tape according to a table of rules**.\"",
+        "input_tokens": 39441,
+        "output_tokens": 84,
+        "latency_ms": 1784,
+        "error": null,
+        "prompt_chars": 163496,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q14",
+      "sandbox_id": "53322d92-37b5-41aa-adf2-9cd79179c9d2",
+      "fork_ms": 1184,
+      "agent_ms": 57789,
+      "candidate_slugs": [
+        "public-key-cryptography",
+        "rsa",
+        "postgresql"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "public-key-cryptography",
+        "rsa",
+        "tcp"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, the answer is **public-key cryptography** (also called asymmetric cryptography).\n\nSupporting quote: \"Public-key cryptography, or asymmetric cryptography, is the field of cryptographic systems that use pairs of related keys. Each key pair consists of a public key and a corresponding private key.\"",
+        "input_tokens": 322,
+        "output_tokens": 74,
+        "latency_ms": 1208,
+        "error": null,
+        "prompt_chars": 1275,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "# Answer\n\n**Public-key cryptography** is the field of cryptographic systems that uses pairs of related keys, one public and one private.\n\n**Supporting quote:** \"Public-key cryptography, or asymmetric cryptography, is the field of cryptographic systems that use pairs of related keys. Each key pair consists of a public key and a corresponding private key.\"",
+        "input_tokens": 38303,
+        "output_tokens": 80,
+        "latency_ms": 1741,
+        "error": null,
+        "prompt_chars": 152770,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q15",
+      "sandbox_id": "ddc363be-ec83-429f-bb96-f27d2ced299f",
+      "fork_ms": 1363,
+      "agent_ms": 58544,
+      "candidate_slugs": [
+        "rsa",
+        "public-key-cryptography",
+        "sourdough"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "rsa",
+        "public-key-cryptography",
+        "quicksort"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "According to the corpus material, Rivest, Shamir, and Adleman publicly described their public-key algorithm in **1977**.\n\nSupporting quote: \"who publicly described the algorithm in 1977.\"",
+        "input_tokens": 296,
+        "output_tokens": 48,
+        "latency_ms": 903,
+        "error": null,
+        "prompt_chars": 1105,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, specifically from the RSA cryptosystem article:\n\n**1977**\n\nThe supporting quote is: \"Ron Rivest, Adi Shamir and Leonard Adleman at the Massachusetts Institute of Technology made several attempts over the course of a year to create a function that was hard to invert... In April 1977, they spent Passover at the house of a student and drank a good deal of wine before returning to their homes at around midnight.\"\n\nMore directly, the article states: \"The initialism 'RSA' comes from the last-names of Ron Rivest, Adi Shamir and Leonard Adleman, who **publicly described the algorithm in 1977**.\"",
+        "input_tokens": 38537,
+        "output_tokens": 161,
+        "latency_ms": 2840,
+        "error": null,
+        "prompt_chars": 150018,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q16",
+      "sandbox_id": "03f888aa-6354-4c4e-8b8c-7c330ddd3321",
+      "fork_ms": 1170,
+      "agent_ms": 55444,
+      "candidate_slugs": [
+        "voyager-1",
+        "hubble",
+        "perseverance"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "voyager-1",
+        "hubble",
+        "james-webb"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Voyager 1** was launched on September 5, 1977.\n\nSupporting quote: \"Voyager 1 is a space probe launched by NASA on September 5, 1977, as part of the Voyager program, to study the outer Solar System and the interstellar space beyond the Sun's heliosphere.\"",
+        "input_tokens": 355,
+        "output_tokens": 83,
+        "latency_ms": 1138,
+        "error": null,
+        "prompt_chars": 1304,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Voyager 1** was the NASA space probe launched on September 5, 1977.\n\nThe supporting quote: \"Voyager 1 is a space probe launched by NASA on September 5, 1977, as part of the Voyager program, to study the outer Solar System and the interstellar space beyond the Sun's heliosphere.\"",
+        "input_tokens": 46683,
+        "output_tokens": 89,
+        "latency_ms": 1950,
+        "error": null,
+        "prompt_chars": 191911,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q17",
+      "sandbox_id": "b6d332d6-fc37-4b93-b43c-0f02ef8c0b81",
+      "fork_ms": 1188,
+      "agent_ms": 56263,
+      "candidate_slugs": [
+        "apollo-11",
+        "perseverance",
+        "voyager-1"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "apollo-11",
+        "perseverance",
+        "margaret-hamilton"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **Apollo 11** was the NASA mission that first landed humans on the Moon.\n\nSupporting quote: \"Apollo 11 (July 16–24, 1969) was the American spaceflight that **first landed humans on the Moon**, and the fifth crewed mission of NASA's Apollo program.\"",
+        "input_tokens": 362,
+        "output_tokens": 73,
+        "latency_ms": 1130,
+        "error": null,
+        "prompt_chars": 1325,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, **Apollo 11** was the NASA mission that first landed humans on the Moon.\n\nThe supporting text states: \"Apollo 11 (July 16–24, 1969) was **the American spaceflight that first landed humans on the Moon**, and the fifth crewed mission of NASA's Apollo program.\"",
+        "input_tokens": 33416,
+        "output_tokens": 76,
+        "latency_ms": 1764,
+        "error": null,
+        "prompt_chars": 136360,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q18",
+      "sandbox_id": "2a3f8aa8-4689-4102-beab-89a0c73f50ad",
+      "fork_ms": 1162,
+      "agent_ms": 58412,
+      "candidate_slugs": [
+        "hubble",
+        "james-webb",
+        "voyager-1"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "hubble",
+        "james-webb",
+        "apollo-11"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\n**The Hubble Space Telescope** was launched into low Earth orbit in 1990.\n\nSupporting quote: \"The Hubble Space Telescope (HST or Hubble) is a space telescope that was launched into low Earth orbit in 1990 and remains in operation.\"",
+        "input_tokens": 317,
+        "output_tokens": 67,
+        "latency_ms": 1049,
+        "error": null,
+        "prompt_chars": 1223,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, the Hubble Space Telescope was launched into low Earth orbit in 1990.\n\nAs stated in the Hubble Space Telescope article: \"The Hubble Space Telescope (HST or Hubble) is a space telescope that **was launched into low Earth orbit in 1990** and remains in operation.\"",
+        "input_tokens": 57500,
+        "output_tokens": 79,
+        "latency_ms": 1676,
+        "error": null,
+        "prompt_chars": 239450,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q19",
+      "sandbox_id": "69d8b8d3-74b6-460b-a0b4-be26ed149c1e",
+      "fork_ms": 4665,
+      "agent_ms": 66982,
+      "candidate_slugs": [
+        "james-webb",
+        "hubble",
+        "voyager-1"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "james-webb",
+        "hubble",
+        "apollo-11"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, the **James Webb Space Telescope** is designed to conduct infrared astronomy.\n\nSupporting quote: \"The James Webb Space Telescope (JWST) is a space telescope designed to conduct infrared astronomy.\"",
+        "input_tokens": 314,
+        "output_tokens": 52,
+        "latency_ms": 1016,
+        "error": null,
+        "prompt_chars": 1223,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, the **James Webb Space Telescope (JWST)** is designed to conduct infrared astronomy.\n\nAs stated directly in the opening of the James Webb article: \"The James Webb Space Telescope (JWST) is a space telescope designed to conduct infrared astronomy.\"",
+        "input_tokens": 57497,
+        "output_tokens": 67,
+        "latency_ms": 1615,
+        "error": null,
+        "prompt_chars": 239449,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "q20",
+      "sandbox_id": "cbaa50ab-5161-48e0-8b39-551d149238e4",
+      "fork_ms": 1277,
+      "agent_ms": 58446,
+      "candidate_slugs": [
+        "perseverance",
+        "apollo-11",
+        "voyager-1"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "perseverance",
+        "apollo-11",
+        "hubble"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "**Answer: Perseverance**\n\nAccording to the corpus material: \"Perseverance is a NASA rover that has been exploring Mars since February 18, 2021, as part of the Mars 2020 mission... and **landed in Jezero Crater**, a site chosen for its ancient river delta that may preserve evidence of past microbial life.\"",
+        "input_tokens": 363,
+        "output_tokens": 81,
+        "latency_ms": 1120,
+        "error": null,
+        "prompt_chars": 1315,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "# Answer\n\nBased on the corpus material, **Perseverance** is the NASA rover that landed in Jezero Crater.\n\nThe supporting quote from the material states: \"the car-sized rover was launched on July 30, 2020, from Cape Canaveral aboard an Atlas V rocket and **landed in Jezero Crater**, a site chosen for its ancient river delta that may preserve evidence of past microbial life.\"",
+        "input_tokens": 49188,
+        "output_tokens": 97,
+        "latency_ms": 2157,
+        "error": null,
+        "prompt_chars": 204380,
+        "answer_supported": true
+      },
+      "naive": null
+    }
+  ],
+  "scale": [
+    {
+      "n": 1,
+      "complete": true,
+      "acp_input_tokens": 333,
+      "acp_output_tokens": 64,
+      "search_input_tokens": 36939,
+      "search_output_tokens": 146,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
+      "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 1279,
+      "sum_agent_ms": 62054
+    },
+    {
+      "n": 10,
+      "complete": true,
+      "acp_input_tokens": 3059,
+      "acp_output_tokens": 603,
+      "search_input_tokens": 330354,
+      "search_output_tokens": 889,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
+      "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 13579,
+      "sum_agent_ms": 583084
+    },
+    {
+      "n": 20,
+      "complete": true,
+      "acp_input_tokens": 6357,
+      "acp_output_tokens": 1266,
+      "search_input_tokens": 783559,
+      "search_output_tokens": 1788,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
+      "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 28978,
+      "sum_agent_ms": 1182346
+    }
+  ],
+  "error": null
+}

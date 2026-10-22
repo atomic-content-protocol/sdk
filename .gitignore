@@ -5,6 +5,15 @@ dist/
 .env
 .env.local
 .acp/
+!examples/daytona/corpus/vault/.acp/
+!examples/daytona/corpus/vault/.acp/**
+!examples/daytona/docs-demo/corpus/vault/.acp/
+!examples/daytona/docs-demo/corpus/vault/.acp/**
+# Daytona product docs are copyright Daytona. Regenerate with
+# `npm run build-docs -w @atomic-content-protocol/example-daytona`.
+examples/daytona/docs-demo/corpus/pages/
+examples/daytona/docs-demo/corpus/leads.json
+examples/daytona/docs-demo/corpus/vault/*.md
 .DS_Store
 coverage/
 demo-vault/

@@ -1,0 +1,190 @@
+Haiku (俳句; English: , Japanese: [hä̀í.kɯ̈́] ) is a type of short-form poetry that originated in Japan. Traditional Japanese haiku consist of three phrases composed of 17 morae (called on in Japanese) in a 5, 7, 5 pattern that include a kireji or "cutting word" and a kigo or seasonal reference. However, haiku by classical Japanese poets, such as Matsuo Bashō, also deviate from the 17-on pattern and sometimes do not contain a kireji. Similar poems that do not adhere to these rules are generally classified as senryū.
+Haiku originated as an opening part of a larger Japanese genre of poetry called renga. These haiku, written as opening stanzas, were known as hokku and over time they began to be written as stand-alone poems. Haiku was given its current name by the Japanese writer Masaoka Shiki at the end of the 19th century.
+Originally from Japan, haiku today are written by authors worldwide. Haiku in English and haiku in other languages have different styles and traditions while still incorporating aspects of the traditional haiku form. Non-Japanese language haiku vary widely on how closely they follow traditional elements. Additionally, a minority movement within modern Japanese haiku (現代俳句, gendai-haiku), supported by Ogiwara Seisensui and his disciples, has varied from the tradition of 17 on as well as taking nature as their subject.
+In Japanese, haiku are traditionally printed as a single line, while haiku in English often appear as three lines, although variations exist. There are several other forms of Japanese poetry related to haiku, such as tanka, as well as other art forms that incorporate haiku, such as haibun and haiga. A haijin (俳人) is a master or practitioner of haiku.
+
+
+== Traditional elements ==
+
+
+=== Kiru and kireji ===
+
+In Japanese haiku, a kireji, or cutting word, typically appears at the end of one of the verse's three phrases. A kireji fills a role analogous to that of a caesura in classical Western poetry or to a volta in sonnets. A kireji helps mark rhythmic divisions. Depending on which kireji is chosen and its position within the verse, it may briefly cut the stream of thought, suggesting a parallel between the preceding and following phrases, or it may provide a dignified ending, concluding the verse with a heightened sense of closure.
+The kireji lends the verse structural support, allowing it to stand as an independent poem. The use of kireji distinguishes haiku and hokku from second and subsequent verses of renku, which may employ semantic and syntactic disjuncture, even to the point of occasionally end-stopping a phrase with a sentence-ending particle (終助詞, shūjoshi).  However, renku typically employ kireji as well.
+In English, since kireji have no direct equivalent, poets sometimes use punctuation such as a dash or ellipsis, or an implied break to create a juxtaposition intended to prompt the reader to reflect on the relationship between the two parts.
+The kireji in the Bashō examples "old pond" and "the wind of Mt Fuji" are both "ya" (や). Neither the remaining Bashō example nor the Issa example contain a kireji. However, they do both balance a fragment in the first five on against a phrase in the remaining 12 on (it may not be apparent from the English translation of the Issa that the first five on mean "Edo's rain").
+
+
+=== On ===
+
+In comparison with English verse typically characterized by syllabic meter, Japanese verse counts sound units known as on or morae. Traditional haiku is usually fixed verse that consists of 17 on, in three phrases of five, seven, and five on, respectively. Among modern poems, traditionalist haiku continue to use the 5-7-5 pattern while free form haiku do not. However, one of the examples below illustrates that traditional haiku masters were not always constrained by the 5-7-5 pattern either. The free form haiku was advocated for by Ogiwara Seisensui and his disciples.
+Although the word on is sometimes translated as "syllable", the true meaning is more nuanced. One on in Japanese is counted for a short syllable, two for an elongated vowel or doubled consonant, and one for an "n" at the end of a syllable. Thus, the word "haibun", though counted as two syllables in English, is counted as four on in Japanese (ha-i-bu-n); and the word "on" itself, which English-speakers would view as a single syllable, comprises two on: the short vowel o and the moraic nasal n. This is illustrated by the Issa haiku below, which contains 17 on but only 15 syllables. Conversely, some sounds, such as "kyo" (きょ) may look like two syllables to English speakers but are in fact a single on (as well as a single syllable) in Japanese.
+In 1973, the Haiku Society of America noted that the norm for writers of haiku in English was to use 17 syllables, but they also noted a trend toward shorter haiku. According to the society, about 12 syllables in English approximates the duration of 17 Japanese on.
+
+
+=== Kigo ===
+
+A haiku traditionally contains a kigo, a word or phrase that symbolizes or implies the season of the poem and is drawn from a saijiki, an extensive but prescriptive list of such words. Season words evoke images that are associated with the same time of year, making it a kind of logopoeia. Kigo are not always included in non-Japanese haiku or by modern writers of Japanese free-form haiku.
+
+
+== Examples ==
+One of the best-known Japanese haiku is Matsuo Bashō's "old pond":
+
+Translated:
+
+This separates into on as:
+
+Another haiku by Bashō:
+
+Translated:
+
+As another example, this haiku by Bashō illustrates that he was not always constrained to a 5-7-5 on pattern. It contains 18 on in the pattern 6-7-5.
+
+Translated:
+
+This separates into on as:
+
+This haiku example was written by Kobayashi Issa:
+
+Translated:
+
+This separates into on as,
+
+
+== Origin and development ==
+
+
+=== From hokku to haiku ===
+
+Hokku is the opening stanza of an orthodox collaborative linked poem, or renga, and of its later derivative, renku (or haikai no renga). By the time of Matsuo Bashō (1644–1694), the hokku had begun to appear as an independent poem, and was also incorporated in haibun (a combination of prose and hokku), and haiga (a combination of painting with hokku). In the late 19th century, Masaoka Shiki (1867–1902) renamed the standalone hokku to haiku. The latter term is now generally applied retrospectively to all hokku appearing independently of renku or renga, irrespective of when they were written, and the use of the term hokku to describe a stand-alone poem is considered obsolete.
+
+
+=== Bashō ===
+
+In the 17th century, two masters arose who elevated haikai and gave it a new popularity. They were Matsuo Bashō (1644–1694) and Uejima Onitsura (1661–1738). Hokku is the first verse of the collaborative haikai or renku, but its position as the opening verse made it the most important, setting the tone for the whole composition. Even though hokku had sometimes appeared individually, they were always understood in the context of renku. The Bashō school promoted standalone hokku by including many in their anthologies, thus giving birth to what is now called "haiku".  Bashō also used his hokku as torque points within his short prose sketches and longer travel diaries. This subgenre of haikai is known as haibun. His best-known work, Oku no Hosomichi, or Narrow Roads to the Interior, is counted as one of the classics of Japanese literature and has been translated into English.
+Bashō was deified by both the imperial government and Shinto religious headquarters one hundred years after his death because he raised the haikai genre from a playful game of wit to sublime poetry. He continues to be revered as a saint of poetry in Japan, and is the one name from classical Japanese literature that is familiar throughout the world.
+
+
+=== Buson ===
+
+The next famous style of haikai to arise was that of Yosa Buson (1716–1784) and others such as Takai Kitō, who wrote in the so-called Tenmei style named after the Tenmei Era (1781–1789) in which it was created.
+Buson is recognized as one of the greatest masters of haiga (an art form where the painting is combined with haiku or haikai prose). His affection for painting can be seen in the painterly style of his haiku.
+
+
+=== Issa ===
+
+No new popular style followed Buson. However, a very individualistic, and at the same time humanistic, approach to writing haiku was demonstrated by the poet Kobayashi Issa (1763–1827), whose miserable childhood, poverty, sad life, and devotion to the Pure Land sect of Buddhism are evident in his poetry. Issa made the genre immediately accessible to wider audiences.
+
+
+=== Shiki ===
+
+Masaoka Shiki (1867–1902) was a reformer and modernizer. A prolific writer, even though chronically ill during a significant part of his life, Shiki disliked the 'stereotype' of haikai writers of the 19th century who were known by the deprecatory term tsukinami, meaning 'monthly', after the monthly or twice-monthly haikai gatherings of the end of the 18th century (in regard to this period of haikai, it came to mean 'trite' and 'hackneyed'). Shiki also sometimes criticized Bashō. Like the Japanese intellectual world in general at that time, Shiki was strongly influenced by Western culture. He favored the painterly style of Buson and particularly the European concept of plein-air painting, which he adapted to create a style of haiku as a kind of nature sketch in words, an approach called shasei (写生, sketching from life). He popularized his views by verse columns and essays in newspapers.
+Hokku up to the time of Shiki, even when appearing independently, were written in the context of renku. Shiki formally separated his new style of verse from the context of collaborative poetry. Being agnostic, he also separated it from the influence of Buddhism. Further, he discarded the term "hokku" and proposed the term haiku as an abbreviation of the phrase "haikai no ku" meaning a verse of haikai, although the term predates Shiki by some two centuries, when it was used to mean any verse of haikai. Since then, "haiku" has been the term usually applied in both Japanese and English to all independent haiku, irrespective of their date of composition. Shiki's revisionism dealt a severe blow to renku and surviving haikai schools. The term "hokku" is now used chiefly in its original sense of the opening verse of a renku, and rarely to distinguish haiku written before Shiki's time.
+
+
+== Exposure to the West ==
+The earliest Westerner known to have written haiku was the Dutchman Hendrik Doeff (1764–1837), who was the Dutch commissioner in the Dejima trading post in Nagasaki during the first years of the 19th century. One of his haiku is the following:
+
+Although there were further attempts outside Japan to imitate the "hokku" in the early 20th century, there was little understanding of its principles. Early Western scholars such as Basil Hall Chamberlain (1850–1935) and William George Aston were mostly dismissive of hokku's poetic value.
+
+
+=== Blyth ===
+
+R. H. Blyth was an Englishman who lived in Japan. He produced a series of works on Zen, haiku, senryū, and on other forms of Japanese and Asian literature. In 1949, with the publication in Japan of the first volume of Haiku, the four-volume work by Blyth, haiku were introduced to the post-war English-speaking world. This four-volume series (1949–52) described haiku from the pre-modern period up to and including Shiki. Blyth's History of Haiku (1964) in two volumes is regarded as a classical study of haiku. Today Blyth is best known as a major interpreter of haiku to English speakers. His works have stimulated the writing of haiku in English.
+
+
+=== Shimoi ===
+
+The Japanese-Italian translator and poet Harukichi Shimoi introduced haiku to Italy in the 1920s, through his work with the magazine Sakura as well as his close personal relationships within the Italian literati. Two notable influences are the haiku of his close friend Gabriele d'Annunzio, and to a lesser extent, those of Ezra Pound, to whom he was introduced in the early 1930s. An early example of his work appears in the 1919 novella La guerra italiana vista da un giapponese, which features a haiku by the Japanese feminist poet Yosano Akiko:
+
+
+=== Yasuda ===
+
+The Japanese-American scholar and translator Kenneth Yasuda published The Japanese Haiku: Its Essential Nature, History, and Possibilities in English, with Selected Examples in 1957. The book includes both translations from Japanese and original poems of his own in English, which had previously appeared in his book titled A Pepper-Pod: Classic Japanese Poems together with Original Haiku. In these books Yasuda presented a critical theory about haiku, to which he added comments on haiku poetry by early 20th-century poets and critics. His translations apply a 5–7–5 syllable count in English, with the first and third lines end-rhymed. Yasuda considered that haiku translated into English should utilize all of the poetic resources of the language. Yasuda's theory also includes the concept of a "haiku moment"  based in personal experience, and provides the motive for writing a haiku: "'an aesthetic moment' of a timeless feeling of enlightened harmony as the poet's nature and the environment are unified". This notion of the haiku moment has resonated with haiku writers in English, even though the notion is not widely promoted in Japanese haiku.
+
+
+=== Henderson ===
+
+In 1958, An Introduction to Haiku: An Anthology of Poems and Poets from Bashô to Shiki by Harold G. Henderson was published by Doubleday Anchor Books. This book was a revision of Henderson's earlier book titled The Bamboo Broom (Houghton Mifflin, 1934). After World War II, Henderson and Blyth worked for the American Occupation in Japan and for the Imperial Household, respectively, and their shared appreciation of haiku helped form a bond between the two.
+Henderson translated every hokku and haiku into a rhymed tercet (ABA), whereas the Japanese originals never used rhyme. Unlike Yasuda, however, he recognized that 17 syllables in English are generally longer than the 17 on of a traditional Japanese haiku. Because the normal modes of English poetry depend on accentual meter rather than on syllabics, Henderson chose to emphasize the order of events and images in the originals. Nevertheless, many of Henderson's translations were in the five-seven-five pattern.
+
+
+== Haiku in other languages ==
+
+
+=== English-language haiku ===
+
+Paul-Louis Couchoud's articles on haiku in French were read by early Imagist theoretician F. S. Flint, who passed on Couchoud's ideas to other members of the proto-Imagist Poets' Club such as Ezra Pound. Amy Lowell made a trip to London to meet Pound and learn about haiku. She returned to the United States, where she worked to interest others in this "new" form. Haiku subsequently had a considerable influence on Imagists in the 1910s, notably Pound's "In a Station of the Metro" of 1913, but, notwithstanding several efforts by Yone Noguchi to explain "the hokku spirit", there was as yet little understanding of the form and its history.
+One of the first advocates of English-language hokku was the Japanese poet Yone Noguchi. In "A Proposal to American Poets," published in the Reader magazine in February 1904, Noguchi gave a brief outline of the hokku and some of his English efforts, ending with the exhortation, "Pray, you try Japanese Hokku, my American poets!"  At about the same time the poet Sadakichi Hartmann was publishing original English-language hokku, as well as other Japanese forms in both English and French.
+Scholar Richard Iadonisi writes in his article, "I Am Nobody" that novelist Richard Wright is considered, "the first noteworthy American minority writer" to produce haiku. There is much scholarly debate over why Wright became interested with the haiku form. It is known that he had begun to study haiku while battling dysentery. While Wright was purportedly an avid reader of Ezra Pound— whose Imagist poetry was based on the haiku form— Iadonisi suggests that Wright was not interested in American style haiku. Instead, Wright opted to study the techniques of British writer Reginald Horace Blyth. He also studied classical haiku poets such as Kobayashi Issa and Matsuo Bashō. Wright began writing a series of haiku in the summer of 1959, completing it in 1960. He had written thousands of haiku during that time span. Wright titled his work Haiku: This Other World and submitted it to William Targ of World Publishing, who rejected it. In 1998, thirty-eight years after Wright's death, This Other World was finally published.
+
+
+=== Italian-language haiku ===
+Probably one of the first Italian encounters with Japanese poetry took place through the literary magazine L'Eco della Cultura (founded in 1914), which published texts of Japanese poetry edited by Vincenzo Siniscalchi. From 1920 to 1921, the University of Naples published a magazine, Sakura, on the study of Japanese culture, with the collaboration of the Japanese scholar Harukichi Shimoi. An Italian translation of a haiku by Akiko Yosano is included in Shimoi's 1919 novella La guerra italiana vista da un giapponese. Gabriele D'Annunzio also experimented with the haiku in the early twentieth century.
+In 1921 the magazine La Ronda published a negative critique of the Japanese "Hai-kai" fashion that was spreading in France and Spain, while in the following years many futurists appreciated the fast haiku style. In Italy, the national haiku association was founded in Rome in 1987 by Sono Uchida, the well-known Japanese haijin and the ambassador of Japan in Vatican. Soon after, the national association called Italian Friends of the Haiku (Associazione Italiana Amici dell'Haiku) was established, and then the Italian Haiku Association. The poet Mario Chini (1876–1959) published the book of haiku titled "Moments" (Rome, 1960). Later, Edoardo Sanguineti published some of his haiku. Andrea Zanzotto also published a collection of haiku in English, which he translated back into his native Italian (Haiku for a Season / Haiku per una stagione, Chicago: U. of Chicago Press, 2021).
+
+
+=== Spanish-language haiku ===
+In Spain, several prominent poets experimented with haiku, including Joan Alcover, Antonio Machado, Juan Ramón Jiménez and Luis Cernuda. Federico García Lorca also experimented with and learned conciseness from the form while still a student in 1921. The most persistent, however, was Isaac del Vando, whose La Sombrilla Japonesa (1924) went through several editions. The form was also used in Catalan by the avant-garde writers Josep Maria Junoy  (1885–1955) and Joan Salvat-Papasseit, by the latter notably in his sequence Vibracions (1921).
+The Mexican poet José Juan Tablada is credited with popularising haiku in his country, reinforced by the publication of two collections composed entirely in that form: Un dia (1919), and El jarro de flores (1922). In the introduction to the latter, Tablada noted that two young Mexicans, Rafael Lozano and Carlos Gutiérrez Cruz, had also begun writing them. They were followed soon after by Carlos Pellicer, Xavier Villaurrutia, and by Jaime Torres Bodet in his collection Biombo (1925). Much later, Octavio Paz included many haiku in Piedras Sueltas (1955).
+Elsewhere the Ecuadorian poet and diplomat Jorge Carrera Andrade included haiku among the 31 poems contained in Microgramas (Tokio 1940) and the Argentine Jorge Luis Borges in the collection La cifra (1981).
+
+
+=== Haiku in southeast Asia ===
+In the early 20th century, Nobel laureate Rabindranath Tagore composed haiku in Bengali. He also translated some from Japanese. In Gujarati, Snehrashmi popularized haiku and remained a popular haiku writer. In February 2008, the World Haiku Festival was held in Bangalore, gathering haijin from all over India and Bangladesh, as well as from Europe and the United States. In South Asia, some other poets also write Haiku from time to time, most notably including the Pakistani poet Omer Tarin, who is also active in the movement for global nuclear disarmament and some of his 'Hiroshima Haiku' have been read at various peace conferences in Japan and the UK. Indian writer in Malayalam language, Ashitha, wrote several Haiku poems which have been published as a book. Her poems helped popularise haiku among the readers of Malayalam literature.
+
+
+=== Other ===
+In France, haiku was introduced by Paul-Louis Couchoud around 1906.
+In 1992 Nobel laureate Czesław Miłosz published the volume Haiku in which he translated from English to Polish haiku of Japanese masters and American and Canadian contemporary haiku authors.
+The former president of the European Council, Herman Van Rompuy, is a haiku writer and known as "Haiku Herman". He published a book of haiku in April 2010.
+
+
+== Women haijin ==
+In the early 18th century, several female poets learned haiku from Bashō or his disciples; notable among them are names such as Chiyo-ni, Den Sute-jo, Sonome, Shushiki, Sono-jo, Shokyu-ni, and Kawai Chigetsu. Prominent women haiku poets from the 20th century include Teijo Nakamura, Tatsuko Hoshino, Kakimoto Tae, Masajo Suzuki, Kamegaya Chie, and Nishiguchi Sachiko.
+The following is an example haiku from Chiyo-ni:
+
+
+== Related forms ==
+
+
+=== Haibun ===
+
+Haibun is a combination of prose and haiku, often autobiographical or written in the form of a travel journal. Well-known examples of haibun include Oku no Hosomichi by Bashō and Ora ga Haru by Issa.
+
+
+=== Haiga ===
+
+Haiga is a style of Japanese painting based on the aesthetics of haikai, and usually including a haiku. Today, haiga artists combine haiku with paintings, photographs and other art.
+
+
+=== Kuhi ===
+The carving of famous haiku on natural stone to make poem monuments known as kuhi (句碑) has been a popular practice for many centuries. The city of Matsuyama has more than two hundred kuhi.
+
+
+== Famous writers ==
+
+
+=== Pre-Shiki period ===
+
+
+=== Shiki and later ===
+
+
+== See also ==
+
+
+== Notes ==
+
+
+== References ==
+
+
+== External links ==
+
+Shiki Haikusphere and NOBO list
+Haiku International Association Archived 2009-05-14 at the Wayback Machine
+Museum of Haiku Literature, Tokyo
+Haiku Society of America
+The Heron's Nest A quarterly online Haiku journal, founded in 1999
+Nippoem Journal of Japanese Poetry Translation, publishing translations of haiku in bilingual format

@@ -1,0 +1,177 @@
+Perseverance is a NASA rover that has been exploring Mars since February 18, 2021, as part of the Mars 2020 mission. Built and managed by the Jet Propulsion Laboratory, the car-sized rover was launched on July 30, 2020, from Cape Canaveral aboard an Atlas V rocket and landed in Jezero Crater, a site chosen for its ancient river delta that may preserve evidence of past microbial life.
+The rover's main goals are to search for signs of ancient life, study the planet's geology and climate, and collect rock and regolith samples for possible return to Earth by a future mission. Perseverance also tests technologies intended to support later human exploration, including an experiment that successfully produced oxygen from the thin carbon-dioxide atmosphere.
+Perseverance carries seven primary scientific instruments, 19 cameras, and two microphones. It also deployed the experimental helicopter Ingenuity, which in April 2021 performed the first powered and controlled flight on another planet. Originally intended for up to five flights, Ingenuity completed dozens of sorties before being retired in 2024.
+Powered by a radioisotope thermoelectric generator, Perseverance has an expected mission duration of over a decade. It has provided high-resolution panoramas, drilled and cached samples for later retrieval, and identified rocks which may have been habitable for ancient microbial life in Jezero Crater. In July 2024, it discovered the Cheyava Falls rock containing "possible biosignature." As of 21 October 2026, Perseverance has been active on Mars for 2016 sols (2071 total days; 5 years, 245 days) since its landing.
+
+
+== Mission ==
+Despite the high-profile success of the Curiosity rover landing in August 2012, NASA's Mars Exploration Program was in a state of uncertainty in the early 2010s. Budget cuts forced NASA to pull out of a planned collaboration with the European Space Agency which included a rover mission. By the summer of 2012, the program that had been launching a mission to Mars every two years suddenly found itself with no missions approved after 2013.
+In 2011, the Planetary Science Decadal Survey, a report from the National Academies of Sciences, Engineering, and Medicine containing an influential set of recommendations made by the planetary science community, stated that the top priority of NASA's planetary exploration program in the decade between 2013 and 2022 should be to begin a NASA-ESA Mars Sample Return campaign, a four-mission project to cache, retrieve, launch, and safely return samples of the Martian surface to Earth. The report stated that NASA should invest in a sample-caching rover as the first step in this effort, with the goal of keeping costs under US$2.5 billion.
+After the success of the Curiosity rover and in response to the recommendations of the decadal survey, NASA announced its intent to launch a new Mars rover mission by 2020 at the American Geophysical Union conference in December 2012.
+Though initially hesitant to commit to an ambitious sample-caching capability (and subsequent follow-on missions), a NASA-convened science definition team for the Mars 2020 project released a report in July 2013 that the mission should "select and store a compelling suite of samples in a returnable cache."
+
+
+=== Science objectives ===
+The Perseverance rover has four main science objectives that support the Mars Exploration Program's science goals:
+
+Looking for habitability: identify past environments that were capable of supporting microbial life.
+Seeking biosignatures: seek signs of possible past microbial life in those habitable environments, particularly in specific rock types known to preserve signs over time.
+Caching samples: collect core rock and regolith (unconsolidated and loose "soil") samples and store them within the rover and on the Martian surface (as a backup) for delivery to a future sample return rocket.
+Preparing for humans: test oxygen production from the Martian atmosphere.
+In the first science campaign, dubbed "Crater Floor", Perseverance performed an arching drive southward from its landing site to the Séítah unit to perform a "toe dip" into the unit to collect remote-sensing measurements of geologic targets. After that it returned to the Crater Floor Fractured Rough to collect the first core sample there. Passing by the Octavia E. Butler landing site concluded the first science campaign.
+The second campaign, "Fan Front", included several months of travel towards the "Three Forks" where Perseverance accessed geologic locations at the base of the ancient delta of Neretva river, as well as ascending the delta by driving up a valley wall to the northwest.
+The third and fourth campaigns were called "Upper Fan", and "Margin Unit", and the fifth campaign, "Northern Rim", in progress as of December 2024, is exploring "the northern part of the southwestern section of Jezero's rim" to study "rocks from deep down inside Mars that were thrown upward to form the crater rim" after the impact 3.9 billion years ago that formed Jezero Crater.
+
+
+==== Results ====
+The scientific results, as of 2025, are as follows. According to NASA, the mission has made "discoveries about the volcanic history, habitability, and role of water in Jezero Crater." Specifically, they reported that instead of all the rocks in Jezero crater being sedimentary, being "transported into the crater by wind or water," "several types of igneous rock" were discovered, which "showed evidence of interaction with water." Additionally, At a rock named "Wildcat Ridge" located within Jezero's well-preserved sedimentary fan deposit, Perseverance found evidence for an ancient lake environment. Not only were these sediments likely deposited in a standing body of water, but they also continued to interact with water long after they were formed. The environments recorded within the rocks at Wildcat Ridge would have been habitable for ancient microbial life, and this type of rock is ideal for preserving possible signs of ancient life.
+They also found that "sediments entering Jezero's lake were deposited in a delta" and  "evidence for late-stage, high-energy flooding that carried large boulders into the crater." The MOXIE experiment produced 122 grams of oxygen from carbon dioxide. The microphone studies showed that the speed of sound is slower and the volumes of sounds transmitted through the atmosphere is lower, than on Earth. 
+PIXL found that the Seitah formation and a rock at "Otis Peak" contained olivine, phosphates, sulfates, clays, carbonate minerals, silicate minerals, "augite pyroxene, feldspathic mesostasis, various Fe,Cr,Ti-spinels, and merrillite", perchlorate, feldspar, magnesite, siderite, oxides, as well as minerals with composition including magnesium, iron, chlorine, and sodium. SHERLOC revealed findings of high concentrations of macromolecules filled with carbon on the Cheyava Falls and Apollo Temple rocks, though it was incapable of determining whether they were of biotic origin or not.
+RIMFAX revealed findings "consistent with a subsurface dominated by solid rock and mafic material" and that "the crater floor experienced a period of erosion before the deposition of the overlying delta strata. The regularity and horizontality of the basal delta sediments observed in the radar cross sections indicate that they were deposited in a low-energy lake environment."
+
+
+== Design ==
+
+The Perseverance design evolved from its predecessor, the Curiosity rover. The two rovers share a similar body plan, landing system, cruise stage, and power system, but the design was improved in several ways for Perseverance. Engineers designed the rover wheels to be more robust than Curiosity's wheels, which had sustained some damage. Perseverance has thicker, more durable aluminum wheels, with reduced width and a greater diameter, 52.5 cm (20.7 in), than Curiosity's 50 cm (20 in) wheels. The aluminum wheels are covered with cleats for traction and curved titanium spokes for springy support. The heat shield for the rover was made out of phenolic-impregnated carbon ablator (PICA), to allow it to withstand up to 2,400 °F (1,320 °C) of heat. Like Curiosity, the rover includes a robotic arm, although Perseverance's arm is longer and stronger, measuring 2.1 m (6 ft 11 in). The arm hosts an elaborate rock-coring and sampling mechanism to store geologic samples from the Martian surface in sterile caching tubes. There is also a secondary arm hidden below the rover that helps store the chalk-sized samples. This arm is known as the Sample Handling Assembly (SHA), and is responsible for moving the soil samples to various stations within the Adaptive Caching Assembly (ACA) on the underside of the rover. These stations include volume assessment (measuring the length of sample), imaging, seal dispensing, and hermetic seal station, among others. Owing to the small space in which the SHA must operate, as well as load requirements during sealing activities, the Sample Caching System "is the most complicated, most sophisticated mechanism that we have ever built, tested and readied for spaceflight."
+The combination of larger instruments, new sampling and caching system, and modified wheels makes Perseverance heavier, weighing 1,025 kg (2,260 lb) compared to Curiosity at 899 kg (1,982 lb), a 14% increase.
+The rover's multi-mission radioisotope thermoelectric generator (MMRTG) has a mass of 45 kg (99 lb) and uses 4.8 kg (11 lb) of plutonium-238 oxide as its power source. The radioactive decay of plutonium-238, which has a half-life of 87.7 years, gives off heat which is converted to electricity—approximately 110 watts at launch. This will decrease over time as its power source decays. The MMRTG charges two lithium-ion rechargeable batteries which power the rover's activities, and must be recharged periodically. Unlike solar panels, the MMRTG provides engineers with significant flexibility in operating the rover's instruments even at night, during dust storms, and through winter.
+The rover's computer uses the BAE Systems RAD750 radiation-hardened single board computer based on a ruggedized PowerPC G3 microprocessor (PowerPC 750). The computer contains 128 megabytes of volatile DRAM, and runs at 133 MHz. The flight software runs on the VxWorks operating system, is written in C and is able to access 4 gigabytes of NAND non-volatile memory on a separate card. Perseverance relies on three antennas for telemetry, all of which are relayed through craft currently in orbit around Mars. The primary UHF antenna can send data from the rover at a maximum rate of two megabits per second. Having multiple antennas provides communications redundancy.
+
+
+== Instruments ==
+
+NASA considered nearly 60 proposals for rover instrumentation. On July 31, 2014, NASA announced the seven instruments that would make up the payload for the rover:
+
+Mars Oxygen ISRU Experiment (MOXIE), an exploration technology investigation to produce a small amount of oxygen (O2) from Martian atmospheric carbon dioxide (CO2). On April 20, 2021, 5.37 grams of oxygen were produced in an hour, with nine more extractions planned over the course of two Earth years to further investigate the instrument. This technology could be scaled up in the future for human life support or to make the rocket fuel for return missions.
+Planetary Instrument for X-Ray Lithochemistry (PIXL), an X-ray fluorescence spectrometer to determine the fine scale elemental composition of Martian surface materials.
+Radar Imager for Mars' subsurface experiment (RIMFAX), a ground-penetrating radar to image different ground densities, structural layers, buried rocks, meteorites, and detect underground water ice and salty brine at 10 m (33 ft) depth. The RIMFAX is being provided by the Norwegian Defence Research Establishment (FFI).
+Mars Environmental Dynamics Analyzer (MEDA), a set of sensors that measure temperature, wind speed and direction, pressure, relative humidity, radiation, and dust particle size and shape. It is provided by Spain's Centro de Astrobiología.
+SuperCam, an instrument suite that can provide imaging, chemical composition analysis, and mineralogy in rocks and regolith from a distance. It is an upgraded version of the ChemCam on the Curiosity rover but with two lasers and four spectrometers that will allow it to remotely identify biosignatures and assess the past habitability. SuperCam is used in conjunction with the AEGIS targeting system. Los Alamos National Laboratory, the Research Institute in Astrophysics and Planetology (IRAP) in France, the French Space Agency (CNES), the University of Hawaii, and the University of Valladolid in Spain cooperated in the SuperCam's development and manufacture.
+Mastcam-Z, a stereoscopic imaging system with the ability to zoom. Many photos were included in the published NASA photogallery. (Including Raw)
+Scanning Habitable Environments with Raman and Luminescence for Organics and Chemicals (SHERLOC), an ultraviolet Raman spectrometer that uses fine-scale imaging and an ultraviolet (UV) laser to determine fine-scale mineralogy and detect organic compounds.
+There are additional cameras and two audio microphones (the first working microphones on Mars), that will be used for engineering support during landing, driving, and collecting samples. 
+
+
+=== Mars Ingenuity helicopter experiment ===
+The Ingenuity helicopter, powered by solar-charged batteries, was sent to Mars in the same bundle with Perseverance. With a mass of 1.8 kg (4.0 lb), the helicopter demonstrated the reality of flight in the rarefied Martian atmosphere and the potential usefulness of aerial scouting for rover missions. It carried two cameras but no scientific instruments and communicated with Earth via a base station onboard Perseverance. Its pre-launch experimental test plan was three flights in 45 days, but it far exceeded expectations and made 72 flights in nearly three years. After its first few flights, it made incrementally more ambitious ones, several of which were recorded by Perseverance's cameras. The first flight was April 19, 2021, at 07:15 UTC, with confirmation from data reception at 10:15 UTC. It was the first powered flight by any aircraft on another planet. On January 18, 2024 (UTC), it made its 72nd and final flight, suffering the loss of a rotor blade (imaged, by Perseverance, lying on the sand roughly 15 m (49 ft) distant from the upright body of Ingenuity), causing NASA to retire it.
+
+
+=== Name ===
+
+Associate Administrator of NASA's Science Mission Directorate Thomas Zurbuchen selected the name Perseverance following a nationwide K-12 student "name the rover" contest that attracted more than 28,000 proposals. A seventh-grade student, Alexander Mather from Lake Braddock Secondary School in Burke, Virginia, submitted the winning entry at the Jet Propulsion Laboratory. In addition to the honor of naming the rover, Mather and his family were invited to NASA's Kennedy Space Center to watch the rover's July 2020 launch from Cape Canaveral Air Force Station (CCAFS) in Florida. He was also joined at the launch by 11th grade student Vaneeza Rupani from Tuscaloosa County High School in Northport, Alabama, who named the Ingenuity helicopter that would fly with Perseverance.
+
+Mather wrote in his winning essay:Curiosity. InSight. Spirit. Opportunity. If you think about it, all of these names of past Mars rovers are qualities we possess as humans. We are always curious, and seek opportunity. We have the spirit and insight to explore the Moon, Mars, and beyond. But, if rovers are to be the qualities of us as a race, we missed the most important thing: Perseverance. We as humans evolved as creatures who could learn to adapt to any situation, no matter how harsh. We are a species of explorers, and we will meet many setbacks on the way to Mars. However, we can persevere. We, not as a nation but as humans, will not give up. The human race will always persevere into the future.
+
+
+=== Twin rover ===
+
+JPL built a copy of the Perseverance; a twin rover used for testing and problem solving, OPTIMISM (Operational Perseverance Twin for Integration of Mechanisms and Instruments Sent to Mars), a vehicle system test bed (VSTB). It is housed at the JPL Mars Yard and is used to test operational procedures and to aid in problem solving should any issues arise with Perseverance.
+In June 2026, it was reported that NASA is considering launching the spare rover to the Moon. The mission is called Polar Rover for Observation, Mapping and In-Situ Exploration, or PROMISE.
+
+
+== Operational history ==
+
+
+=== Mars transit ===
+The Perseverance rover lifted off successfully on July 30, 2020, at 11:50:00 UTC aboard a United Launch Alliance Atlas V launch vehicle from Space Launch Complex 41, at Cape Canaveral Air Force Station (CCAFS) in Florida.
+The rover took 29 weeks to travel to Mars and made its landing in Jezero Crater on February 18, 2021, to begin its science phase.
+After May 17, 2022, the rover moved uphill and examined rocks on the surface for evidence of past life on Mars. On its return downhill, it will collect sample rocks to be retrieved and examined by future expeditions.
+
+
+=== Landing ===
+
+The successful landing of Perseverance in Jezero Crater was announced at 20:55 UTC on February 18, 2021, the signal from Mars taking 11 minutes to arrive at Earth. The rover touched down at 18.4446°N 77.4509°E﻿ / 18.4446; 77.4509, roughly 1 km (0.62 mi) southeast of the center of its 7.7 km × 6.6 km (4.8 mi × 4.1 mi) wide landing ellipse. It came down pointed almost directly to the southeast, with the RTG on the back of the vehicle pointing northwest. The descent stage ("sky crane"), parachute and heat shield all came to rest within 1.5 km of the rover (see satellite image). Having come within five meters (16 ft) of its target, the landing was more accurate than any previous Mars landing; a feat enabled by the experience gained from Curiosity's landing and the use of new steering technology.
+One such new technology is Terrain Relative Navigation (TRN), a technique in which the rover compares images of the surface taken during its descent with reference maps, allowing it to make last minute adjustments to its course. The rover also uses the images to select a safe landing site at the last minute, allowing it to land in relatively unhazardous terrain. This enables it to land much closer to its science objectives than previous missions, which all had to use a landing ellipse devoid of hazards.
+The landing occurred in the late afternoon, with the first images taken at 15:53:58 on the mission clock (local mean solar time). The landing took place shortly after Mars passed through its northern vernal equinox (Ls = 5.2°), at the start of the astronomical spring, the equivalent of the end of March on Earth.
+The parachute descent of the Perseverance rover was photographed by the HiRISE high-resolution camera on the Mars Reconnaissance Orbiter (MRO).
+Jezero Crater is a paleolake basin. It was selected as the landing site for this mission in part because paleolake basins tend to contain perchlorates. Astrobiologist Dr. Kennda Lynch's work in analog environments on Earth suggests that the composition of the crater, including the bottomset deposits accumulated from three different sources in the area, is a likely place to discover evidence of perchlorate-reducing microbes, if such bacteria are living or were formerly living on Mars.
+
+A few days after landing, Perseverance released the first audio recorded on the surface of Mars, capturing the sound of Martian wind.
+During its travels on Mars, NASA scientists had observed around Sol 341 (February 4, 2022) that a small rock had dropped into one of its wheels while the rover was studying the Máaz rock formation. The rock was visible from one of the hazard avoidance cameras, and was determined not to be harmful to the rover's mission. The rock has since stayed on Perseverance's wheel for around 427 sols (439 days) as the rover traveled over 6 miles (9.7 km) on the Martian surface. NASA deemed that Perseverance had adopted a pet rock for its journey. Later, by May 2024, the rover picked up another pet rock named "Dwayne".
+
+
+=== Traverse ===
+
+It is planned for Perseverance to visit the bottom and upper parts of the 3.4 to 3.8 billion-year-old Neretva Vallis delta, the smooth and etched parts of the Jezero Crater floor deposits interpreted as volcanic ash or aeolian airfall deposits, emplaced before the formation of the delta; the ancient shoreline covered with Transverse Aeolian Ridges (dunes) and mass wasting deposits, and finally, it is planned to climb onto the Jezero Crater rim.
+In its progressive commissioning and tests, Perseverance made its first test drive on Mars on March 4, 2021. NASA released photographs of the rover's first wheel tracks on the Martian soil.
+
+
+=== Samples cached for the Mars sample-return mission ===
+
+In support of the NASA-ESA Mars Sample Return, rock, regolith (Martian soil), and atmosphere samples are being cached by Perseverance. As of July 2025, 33 out of 43 sample tubes have been filled, including 8 igneous rock samples, 13 sedimentary rock sample tubes, 3 Igneous/Impactite rock sample tubes, a Serpentinite rock sample tube, a Silica-cemented carbonate rock sample tube, two regolith sample tubes, an atmosphere sample tube, and three witness tubes. Before launch, 5 of the 43 tubes were designated "witness tubes" and filled with materials that would capture particulates in the ambient environment of Mars. Out of 43 tubes, 3 witness sample tubes will not be returned to Earth and will remain on rover as the sample canister will only have 30 tube slots. Further, 10 of the 43 tubes are left as backups at the Three Forks Sample Depot.
+However, after a project review critical of its cost and complexity, NASA announced that the Mars Sample Return project was "paused" as of November 13, 2023. In a teleconference on April 15, 2024, NASA Administrator Bill Nelson emphasized continuing the commitment to retrieving the samples. However, the $11 billion cost was deemed infeasible. NASA turned to industry and the Jet Propulsion Laboratory (JPL) to form a new, more fiscally feasible mission profile to retrieve the samples.
+
+
+=== Possible biosignature ===
+
+In July 2024, Perseverance discovered "leopard spots" on a reddish rock nicknamed "Cheyava Falls" in Mars' Jezero Crater, that has some indications it may have hosted microbial life billions of years ago, but further research is needed. Some of the additional research using the SHERLOC instrument, which included comparisons with the nearby Apollo Temple rock, was summarized in a June 2026 paper, though the spots still could not be determined to be of biotic origin.
+
+
+== Cost ==
+NASA plans to invest roughly US$2.75 billion in the project over 11 years, including US$2.2 billion for the development and building of the hardware, US$243 million for launch services, and US$291 million for 2.5 years of mission operations.
+Adjusted for inflation, Perseverance is NASA's sixth-most expensive robotic planetary mission, though it is cheaper than its predecessor, Curiosity. Perseverance benefited from spare hardware and "build-to print" designs from the Curiosity mission, which helped reduce development costs and saved "probably tens of millions, if not 100 million dollars" according to Mars 2020 Deputy Chief Engineer Keith Comeaux.
+
+
+== Commemorative artifacts ==
+
+
+=== "Send Your Name to Mars" ===
+
+NASA's "Send Your Name to Mars" campaign invited people from around the world to submit their names to travel aboard the agency's next rover to Mars. 10,932,295 names were submitted. The names were etched by an electron beam onto three fingernail-sized silicon chips, along with the essays of the 155 finalists in NASA's "Name the Rover" contest. The three chips share space on an anodized plate with a laser engraved graphic representing Earth, Mars, and the Sun. The rays emanating from the Sun contain the phrase "Explore As One" written in Morse code. The plate was then mounted on the rover on March 26, 2020.
+
+
+=== Geocaching in Space Trackable ===
+
+Part of Perseverance's cargo is a geocaching trackable item viewable with the SHERLOC's WATSON camera.
+In 2016, NASA SHERLOC co-investigator Dr. Marc Fries — with help from his son Wyatt — was inspired by Geocaching's 2008 placement of a cache on the International Space Station to set out and try something similar with the rover mission. After floating the idea around mission management, it eventually reached NASA scientist Francis McCubbin, who would join the SHERLOC instrument team as a collaborator to move the project forward. The Geocaching inclusion was scaled-down to a trackable item that players could search for from NASA camera views and then log on to the site. In a manner similar to the "Send Your Name to Mars" campaign, the geocaching trackable code was carefully printed on a one-inch, polycarbonate glass disk serving as part of the rover's calibration target. It will serve as an optical target for the WATSON imager and a spectroscopic standard for the SHERLOC instrument. The disk is made of a prototype astronaut helmet visor material that will be tested for its potential use in crewed missions to Mars. Designs were approved by the mission leads at NASA's Jet Propulsion Laboratory (JPL), NASA Public Affairs, and NASA HQ, in addition to Groundspeak Geocaching HQ.
+
+
+=== Tribute to healthcare workers ===
+
+Perseverance launched during the COVID-19 pandemic, which began to affect the mission planning in March 2020. To show appreciation for healthcare workers who helped during the pandemic, an 8 cm × 13 cm (3.1 in × 5.1 in) plate with a staff-and-serpent symbol (a Greek symbol of medicine) was placed on the rover. The project manager, Matt Wallace, said he hoped that future generations going to Mars would be able to appreciate healthcare workers during 2020.
+
+
+=== Family portrait of NASA Mars rovers ===
+
+One of the external plates of Perseverance includes a simplified representation of all previous NASA Martian rovers, Sojourner, Spirit, Opportunity, Curiosity, as well as Perseverance and Ingenuity, similar to the trend of automobile window decals used to show a family's makeup.
+
+
+=== Parachute with coded message ===
+
+The orange-and-white parachute used to land the rover on Mars contained a coded message that was deciphered by Twitter users. NASA's systems engineer Ian Clark used binary code to hide the message "dare mighty things" in the parachute color pattern. The 21-meter-wide (70 ft) parachute consisted of 80 strips of fabric that form a hemisphere-shape canopy, and each strip consisted of four pieces. Dr. Clark thus had 320 pieces with which to encode the message. He also included the GPS coordinates for the Jet Propulsion Laboratory's headquarters in Pasadena, California (34°11'58" N 118°10'31" W). Clark said that only six people knew about the message before landing. The code was deciphered a few hours after the image was presented by Perseverance's team.
+"Dare mighty things" is a quote attributed to U.S. president Theodore Roosevelt and is the unofficial motto of the Jet Propulsion Laboratory. It adorns many of the JPL center's walls.
+
+
+=== NASA outreach to students ===
+
+In December 2021, the NASA team announced a program to students who have persevered with academic challenges. Those nominated will be rewarded with a personal message beamed back from Mars by the Perseverance rover.
+
+
+== Gallery ==
+
+On March 5, 2024, NASA released images of transits of Deimos, Phobos and Mercury as viewed by Perseverance on Mars.
+
+
+== See also ==
+
+
+== Notes ==
+
+
+== References ==
+
+
+== External links ==
+
+Mars 2020 and Perseverance rover official site at NASA
+Mars 2020: Overview (2:58; July 27, 2020; NASA) on YouTube
+Mars 2020: Launch of rover (6:40; July 30, 2020) on YouTube
+Mars 2020: Launch of rover (1:11; July 30, 2020; NASA) on YouTube
+Mars 2020: Landing of rover (3:25; February 18, 2021; NASA) on YouTube
+Mars 2020: Landing of rover (3:55pm/et/usa, 18 February 2021
+Mars 2020 Perseverance Launch Press Kit
+Video: Mars Perseverance rover/Ingenuity helicopter report (9 May 2021; CBS-TV, 60 Minutes; 13:33)
+Mars Guy. Short and concise weekly updates of NASA's Perseverance mission
+Official archive of all raw images taken by the rover's and helicopter's cameras
+Official archive of all Mastcam-Z images in two different calibrations
+Nonofficial archive of daily color-calibrated images in Ultra HDR taken by the rover's Navcam, Hazcam, Watson cam and the helicopter's RTE camera

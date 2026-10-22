@@ -1,0 +1,999 @@
+{
+  "tokenizer": "cl100k_base",
+  "tiktoken_version": "1.0.22",
+  "read_model": "claude-haiku-4-5",
+  "bm25": {
+    "k1": 1.2,
+    "b": 0.75
+  },
+  "input_usd_per_million": 1,
+  "output_usd_per_million": 5,
+  "policy": "summary-first",
+  "legacy_policy": "mcp-find-similar-top3",
+  "summary_first": {
+    "k": 3,
+    "max_bodies": 2,
+    "close_score_ratio": 0.85,
+    "runner_up_cover_fraction": 0.5,
+    "rank": "bm25-title-summary-tags",
+    "proxy": "open the top body unless every query term is in the top candidate's title, summary, and tags, the runner-up covers a smaller share than runner_up_cover_fraction, and the score ratio is below close_score_ratio; open the top 2 when the scores are that close; never more than max_bodies. The proxy does not read the expected answer."
+  },
+  "summary_first_v1": {
+    "name": "summary-first-v1",
+    "k": 3,
+    "max_bodies": 3,
+    "cover_fraction": 0.5
+  },
+  "pages": 54,
+  "questions": 15,
+  "per_question": [
+    {
+      "id": "d01",
+      "question": "Can a container sandbox be forked, and what should I use instead when I need its filesystem state?",
+      "gold_slugs": [
+        "sandboxes"
+      ],
+      "content_query": "container sandbox forked instead need filesystem state",
+      "candidate_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "opened_slugs": [
+        "windows-sandboxes",
+        "declarative-builder"
+      ],
+      "decision": "open",
+      "cover_need": 7,
+      "search_opened_slugs": [
+        "linux-sandboxes",
+        "sandboxes",
+        "windows-sandboxes"
+      ],
+      "legacy_opened_slugs": [
+        "windows-sandboxes",
+        "macos-sandboxes",
+        "snapshots"
+      ],
+      "v1_opened_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": false,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
+      "v1_retrieval_hit": false,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": false,
+      "legacy_answer_supported": false,
+      "v1_answer_supported": false,
+      "baseline_tokens": 283650,
+      "search_tokens": 54270,
+      "summary_decision_tokens": 280,
+      "summary_body_tokens": 16381,
+      "acp_tokens": 16661,
+      "legacy_tokens": 71138,
+      "v1_tokens": 27963,
+      "v1_decision_tokens": 238,
+      "v1_body_tokens": 27725,
+      "baseline_assembly_ms": 276.11,
+      "search_assembly_ms": 35.97,
+      "acp_assembly_ms": 33.25,
+      "legacy_assembly_ms": 48.44
+    },
+    {
+      "id": "d02",
+      "question": "Can I create a snapshot from a sandbox that is already stopped?",
+      "gold_slugs": [
+        "snapshots"
+      ],
+      "content_query": "create snapshot sandbox already stopped",
+      "candidate_slugs": [
+        "snapshots",
+        "windows-sandboxes",
+        "linux-sandboxes"
+      ],
+      "opened_slugs": [
+        "snapshots",
+        "windows-sandboxes"
+      ],
+      "decision": "open",
+      "cover_need": 5,
+      "search_opened_slugs": [
+        "persistence",
+        "troubleshooting",
+        "billing"
+      ],
+      "legacy_opened_slugs": [
+        "linux-sandboxes",
+        "windows-sandboxes",
+        "macos-sandboxes"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "legacy_retrieval_hit": false,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": false,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": false,
+      "v1_answer_supported": false,
+      "baseline_tokens": 283642,
+      "search_tokens": 20745,
+      "summary_decision_tokens": 264,
+      "summary_body_tokens": 21954,
+      "acp_tokens": 22218,
+      "legacy_tokens": 76715,
+      "v1_tokens": 214,
+      "v1_decision_tokens": 214,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 194.69,
+      "search_assembly_ms": 14.92,
+      "acp_assembly_ms": 17.32,
+      "legacy_assembly_ms": 52.03
+    },
+    {
+      "id": "d03",
+      "question": "When I mount a volume with a subpath, can that subpath start with a slash?",
+      "gold_slugs": [
+        "volumes"
+      ],
+      "content_query": "mount volume subpath subpath start slash",
+      "candidate_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "opened_slugs": [
+        "volumes"
+      ],
+      "decision": "open",
+      "cover_need": 5,
+      "search_opened_slugs": [
+        "volumes",
+        "persistence",
+        "isolation"
+      ],
+      "legacy_opened_slugs": [
+        "volumes",
+        "computer-use",
+        "scale"
+      ],
+      "v1_opened_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283648,
+      "search_tokens": 19104,
+      "summary_decision_tokens": 309,
+      "summary_body_tokens": 7420,
+      "acp_tokens": 7729,
+      "legacy_tokens": 81582,
+      "v1_tokens": 42177,
+      "v1_decision_tokens": 265,
+      "v1_body_tokens": 41912,
+      "baseline_assembly_ms": 192.71,
+      "search_assembly_ms": 13.74,
+      "acp_assembly_ms": 34.04,
+      "legacy_assembly_ms": 54.1
+    },
+    {
+      "id": "d04",
+      "question": "What does the API return if I set an allow list and block-all together on a new sandbox?",
+      "gold_slugs": [
+        "network-limits"
+      ],
+      "content_query": "api return set allow list block all together new sandbox",
+      "candidate_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "opened_slugs": [
+        "organizations",
+        "api-keys"
+      ],
+      "decision": "open",
+      "cover_need": 10,
+      "search_opened_slugs": [
+        "troubleshooting",
+        "network-limits",
+        "isolation"
+      ],
+      "legacy_opened_slugs": [
+        "troubleshooting",
+        "organizations",
+        "warm-pools"
+      ],
+      "v1_opened_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": false,
+      "legacy_answer_supported": false,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283649,
+      "search_tokens": 27649,
+      "summary_decision_tokens": 241,
+      "summary_body_tokens": 6458,
+      "acp_tokens": 6699,
+      "legacy_tokens": 64594,
+      "v1_tokens": 15924,
+      "v1_decision_tokens": 197,
+      "v1_body_tokens": 15727,
+      "baseline_assembly_ms": 193.27,
+      "search_assembly_ms": 28.39,
+      "acp_assembly_ms": 26.81,
+      "legacy_assembly_ms": 44.25
+    },
+    {
+      "id": "d05",
+      "question": "If DAYTONA_API_URL is only in a .env file, will the SDK use that URL?",
+      "gold_slugs": [
+        "authentication"
+      ],
+      "content_query": "daytona api url env file sdk url",
+      "candidate_slugs": [
+        "file-system-operations",
+        "authentication",
+        "preview"
+      ],
+      "opened_slugs": [
+        "file-system-operations"
+      ],
+      "decision": "open",
+      "cover_need": 6,
+      "search_opened_slugs": [
+        "vpn-connections",
+        "authentication",
+        "mount-external-storage"
+      ],
+      "legacy_opened_slugs": [
+        "file-system-operations",
+        "authentication",
+        "observability-otel-collection"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": false,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": false,
+      "baseline_tokens": 283650,
+      "search_tokens": 40109,
+      "summary_decision_tokens": 294,
+      "summary_body_tokens": 6416,
+      "acp_tokens": 6710,
+      "legacy_tokens": 61837,
+      "v1_tokens": 244,
+      "v1_decision_tokens": 244,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 194.22,
+      "search_assembly_ms": 25.93,
+      "acp_assembly_ms": 7.83,
+      "legacy_assembly_ms": 41.95
+    },
+    {
+      "id": "d06",
+      "question": "Which desktop operations can Computer Use drive inside a sandbox?",
+      "gold_slugs": [
+        "computer-use"
+      ],
+      "content_query": "desktop operations computer drive inside sandbox",
+      "candidate_slugs": [
+        "computer-use",
+        "vnc-access",
+        "file-system-operations"
+      ],
+      "opened_slugs": [
+        "computer-use"
+      ],
+      "decision": "open",
+      "cover_need": 6,
+      "search_opened_slugs": [
+        "macos-sandboxes",
+        "vnc-access",
+        "playground"
+      ],
+      "legacy_opened_slugs": [
+        "process-code-execution",
+        "computer-use",
+        "git-operations"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": false,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283640,
+      "search_tokens": 6226,
+      "summary_decision_tokens": 262,
+      "summary_body_tokens": 14992,
+      "acp_tokens": 15254,
+      "legacy_tokens": 81011,
+      "v1_tokens": 212,
+      "v1_decision_tokens": 212,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 193.08,
+      "search_assembly_ms": 4.16,
+      "acp_assembly_ms": 12.02,
+      "legacy_assembly_ms": 53.53
+    },
+    {
+      "id": "d07",
+      "question": "How does the declarative builder define sandbox images without pulling from a container registry?",
+      "gold_slugs": [
+        "declarative-builder"
+      ],
+      "content_query": "declarative builder define sandbox images without pulling container registry",
+      "candidate_slugs": [
+        "declarative-builder",
+        "gpu-sandboxes",
+        "file-system-operations"
+      ],
+      "opened_slugs": [
+        "declarative-builder"
+      ],
+      "decision": "open",
+      "cover_need": 9,
+      "search_opened_slugs": [
+        "declarative-builder",
+        "snapshots",
+        "architecture"
+      ],
+      "legacy_opened_slugs": [
+        "declarative-builder",
+        "git-operations",
+        "file-system-operations"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283645,
+      "search_tokens": 21264,
+      "summary_decision_tokens": 297,
+      "summary_body_tokens": 5841,
+      "acp_tokens": 6138,
+      "legacy_tokens": 68375,
+      "v1_tokens": 247,
+      "v1_decision_tokens": 247,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 192.97,
+      "search_assembly_ms": 14.24,
+      "acp_assembly_ms": 5.98,
+      "legacy_assembly_ms": 46
+    },
+    {
+      "id": "d08",
+      "question": "Does a create request still claim a warm-pool sandbox if I attach a volume or custom environment variables?",
+      "gold_slugs": [
+        "warm-pools"
+      ],
+      "content_query": "create request still claim warm pool sandbox attach volume custom environment variables",
+      "candidate_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
+      ],
+      "opened_slugs": [
+        "warm-pools"
+      ],
+      "decision": "open",
+      "cover_need": 12,
+      "search_opened_slugs": [
+        "troubleshooting",
+        "typescript-sdk",
+        "warm-pools"
+      ],
+      "legacy_opened_slugs": [
+        "macos-sandboxes",
+        "linux-sandboxes",
+        "warm-pools"
+      ],
+      "v1_opened_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283650,
+      "search_tokens": 17492,
+      "summary_decision_tokens": 328,
+      "summary_body_tokens": 2174,
+      "acp_tokens": 2502,
+      "legacy_tokens": 67155,
+      "v1_tokens": 12083,
+      "v1_decision_tokens": 283,
+      "v1_body_tokens": 11800,
+      "baseline_assembly_ms": 192.95,
+      "search_assembly_ms": 11.34,
+      "acp_assembly_ms": 11.01,
+      "legacy_assembly_ms": 46.49
+    },
+    {
+      "id": "d09",
+      "question": "How does SSH into a Daytona sandbox authenticate?",
+      "gold_slugs": [
+        "ssh-access"
+      ],
+      "content_query": "ssh daytona sandbox authenticate",
+      "candidate_slugs": [
+        "ssh-access",
+        "authentication",
+        "secrets"
+      ],
+      "opened_slugs": [
+        "ssh-access"
+      ],
+      "decision": "open",
+      "cover_need": 4,
+      "search_opened_slugs": [
+        "vpn-connections",
+        "git-operations",
+        "isolation"
+      ],
+      "legacy_opened_slugs": [
+        "macos-sandboxes",
+        "linux-sandboxes",
+        "api-keys"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "legacy_retrieval_hit": false,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": false,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283638,
+      "search_tokens": 23832,
+      "summary_decision_tokens": 278,
+      "summary_body_tokens": 1043,
+      "acp_tokens": 1321,
+      "legacy_tokens": 67282,
+      "v1_tokens": 228,
+      "v1_decision_tokens": 228,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 203.74,
+      "search_assembly_ms": 17.17,
+      "acp_assembly_ms": 2.82,
+      "legacy_assembly_ms": 48.4
+    },
+    {
+      "id": "d10",
+      "question": "Does a Daytona secret put the plaintext credential inside the sandbox?",
+      "gold_slugs": [
+        "secrets"
+      ],
+      "content_query": "daytona secret put plaintext credential inside sandbox",
+      "candidate_slugs": [
+        "secrets",
+        "file-system-operations",
+        "troubleshooting"
+      ],
+      "opened_slugs": [
+        "secrets"
+      ],
+      "decision": "open",
+      "cover_need": 7,
+      "search_opened_slugs": [
+        "secrets",
+        "isolation",
+        "tools-api"
+      ],
+      "legacy_opened_slugs": [
+        "git-operations",
+        "file-system-operations",
+        "macos-sandboxes"
+      ],
+      "v1_opened_slugs": [
+        "secrets",
+        "file-system-operations",
+        "troubleshooting"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": false,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283641,
+      "search_tokens": 18923,
+      "summary_decision_tokens": 284,
+      "summary_body_tokens": 6649,
+      "acp_tokens": 6933,
+      "legacy_tokens": 62279,
+      "v1_tokens": 24505,
+      "v1_decision_tokens": 240,
+      "v1_body_tokens": 24265,
+      "baseline_assembly_ms": 199.66,
+      "search_assembly_ms": 12.81,
+      "acp_assembly_ms": 23.04,
+      "legacy_assembly_ms": 43.14
+    },
+    {
+      "id": "d11",
+      "question": "How do webhooks tell my app that something happened, compared with my app polling Daytona?",
+      "gold_slugs": [
+        "webhooks"
+      ],
+      "content_query": "webhooks tell app something happened compared app polling daytona",
+      "candidate_slugs": [
+        "webhooks",
+        "limits",
+        "tools-cli"
+      ],
+      "opened_slugs": [
+        "webhooks"
+      ],
+      "decision": "open",
+      "cover_need": 8,
+      "search_opened_slugs": [
+        "webhooks",
+        "limits",
+        "acceptable-use"
+      ],
+      "legacy_opened_slugs": [
+        "webhooks",
+        "limits",
+        "linked-accounts"
+      ],
+      "v1_opened_slugs": [
+        "webhooks",
+        "limits",
+        "tools-cli"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283647,
+      "search_tokens": 9114,
+      "summary_decision_tokens": 325,
+      "summary_body_tokens": 2686,
+      "acp_tokens": 3011,
+      "legacy_tokens": 51285,
+      "v1_tokens": 10205,
+      "v1_decision_tokens": 280,
+      "v1_body_tokens": 9925,
+      "baseline_assembly_ms": 199.8,
+      "search_assembly_ms": 7,
+      "acp_assembly_ms": 11.21,
+      "legacy_assembly_ms": 37.82
+    },
+    {
+      "id": "d12",
+      "question": "What npm command installs the Daytona TypeScript SDK?",
+      "gold_slugs": [
+        "typescript-sdk"
+      ],
+      "content_query": "npm command installs daytona typescript sdk",
+      "candidate_slugs": [
+        "typescript-sdk",
+        "tools-cli",
+        "agent-skills"
+      ],
+      "opened_slugs": [
+        "typescript-sdk"
+      ],
+      "decision": "open",
+      "cover_need": 6,
+      "search_opened_slugs": [
+        "typescript-sdk",
+        "mount-external-storage",
+        "network-limits"
+      ],
+      "legacy_opened_slugs": [
+        "typescript-sdk",
+        "go-sdk",
+        "agent-skills"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283638,
+      "search_tokens": 39216,
+      "summary_decision_tokens": 266,
+      "summary_body_tokens": 1670,
+      "acp_tokens": 1936,
+      "legacy_tokens": 48863,
+      "v1_tokens": 216,
+      "v1_decision_tokens": 216,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 198.27,
+      "search_assembly_ms": 34.54,
+      "acp_assembly_ms": 3.16,
+      "legacy_assembly_ms": 35.09
+    },
+    {
+      "id": "d13",
+      "question": "Can I revoke a standard preview URL token, and is it meant to be shared?",
+      "gold_slugs": [
+        "preview"
+      ],
+      "content_query": "revoke standard preview url token meant shared",
+      "candidate_slugs": [
+        "preview",
+        "custom-preview-proxy",
+        "ssh-access"
+      ],
+      "opened_slugs": [
+        "preview"
+      ],
+      "decision": "open",
+      "cover_need": 7,
+      "search_opened_slugs": [
+        "preview",
+        "isolation",
+        "tools-api"
+      ],
+      "legacy_opened_slugs": [
+        "preview",
+        "isolation",
+        "regions"
+      ],
+      "v1_opened_slugs": [
+        "preview",
+        "custom-preview-proxy",
+        "ssh-access"
+      ],
+      "v1_decision": "open",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283646,
+      "search_tokens": 14183,
+      "summary_decision_tokens": 262,
+      "summary_body_tokens": 1911,
+      "acp_tokens": 2173,
+      "legacy_tokens": 53925,
+      "v1_tokens": 4260,
+      "v1_decision_tokens": 218,
+      "v1_body_tokens": 4042,
+      "baseline_assembly_ms": 195.73,
+      "search_assembly_ms": 9.72,
+      "acp_assembly_ms": 6.07,
+      "legacy_assembly_ms": 37.95
+    },
+    {
+      "id": "d14",
+      "question": "When should I stream session command logs instead of reading a log snapshot?",
+      "gold_slugs": [
+        "log-streaming"
+      ],
+      "content_query": "stream session command logs instead reading log snapshot",
+      "candidate_slugs": [
+        "log-streaming",
+        "audit-logs",
+        "process-code-execution"
+      ],
+      "opened_slugs": [
+        "log-streaming"
+      ],
+      "decision": "open",
+      "cover_need": 8,
+      "search_opened_slugs": [
+        "log-streaming",
+        "process-code-execution",
+        "declarative-builder"
+      ],
+      "legacy_opened_slugs": [
+        "log-streaming",
+        "process-code-execution",
+        "audit-logs"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283643,
+      "search_tokens": 19540,
+      "summary_decision_tokens": 249,
+      "summary_body_tokens": 3348,
+      "acp_tokens": 3597,
+      "legacy_tokens": 60563,
+      "v1_tokens": 199,
+      "v1_decision_tokens": 199,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 193.92,
+      "search_assembly_ms": 13.26,
+      "acp_assembly_ms": 4.45,
+      "legacy_assembly_ms": 41.94
+    },
+    {
+      "id": "d15",
+      "question": "If I target a region at sandbox create time, where is the workload scheduled?",
+      "gold_slugs": [
+        "regions"
+      ],
+      "content_query": "target region sandbox create time workload scheduled",
+      "candidate_slugs": [
+        "regions",
+        "warm-pools",
+        "scale"
+      ],
+      "opened_slugs": [
+        "regions"
+      ],
+      "decision": "open",
+      "cover_need": 7,
+      "search_opened_slugs": [
+        "regions",
+        "scale",
+        "acceptable-use"
+      ],
+      "legacy_opened_slugs": [
+        "regions",
+        "python-sdk",
+        "macos-sandboxes"
+      ],
+      "v1_opened_slugs": [],
+      "v1_decision": "answer",
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
+      "v1_retrieval_hit": true,
+      "baseline_answer_supported": true,
+      "search_answer_supported": true,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": true,
+      "v1_answer_supported": true,
+      "baseline_tokens": 283645,
+      "search_tokens": 13580,
+      "summary_decision_tokens": 302,
+      "summary_body_tokens": 1242,
+      "acp_tokens": 1544,
+      "legacy_tokens": 49408,
+      "v1_tokens": 252,
+      "v1_decision_tokens": 252,
+      "v1_body_tokens": 0,
+      "baseline_assembly_ms": 195.73,
+      "search_assembly_ms": 9.38,
+      "acp_assembly_ms": 2.88,
+      "legacy_assembly_ms": 35.12
+    }
+  ],
+  "scale": [
+    {
+      "n": 1,
+      "baseline_tokens": 283650,
+      "search_tokens": 54270,
+      "acp_tokens": 16661,
+      "legacy_tokens": 71138,
+      "v1_tokens": 27963,
+      "tokens_saved": 266989,
+      "percent_saved": 94.12621188083907,
+      "tokens_saved_vs_search": 37609,
+      "percent_saved_vs_search": 69.29979730974756,
+      "legacy_tokens_saved_vs_search": -16868,
+      "legacy_percent_saved_vs_search": -31.081628892574166,
+      "v1_percent_saved_vs_search": 48.4742951907131,
+      "baseline_input_usd": 0.28365,
+      "search_input_usd": 0.05427,
+      "acp_input_usd": 0.016661,
+      "legacy_input_usd": 0.071138,
+      "v1_input_usd": 0.027963,
+      "usd_saved": 0.266989,
+      "usd_saved_vs_search": 0.037609,
+      "retrieval_hit_rate": 0,
+      "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 0,
+      "v1_retrieval_hit_rate": 0,
+      "acp_answer_support_rate": 0,
+      "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 0,
+      "v1_answer_support_rate": 0,
+      "baseline_answer_support_rate": 1,
+      "baseline_assembly_ms": 276.11,
+      "search_assembly_ms": 35.97,
+      "acp_assembly_ms": 33.25,
+      "legacy_assembly_ms": 48.44
+    },
+    {
+      "n": 10,
+      "baseline_tokens": 2836453,
+      "search_tokens": 249614,
+      "acp_tokens": 92165,
+      "legacy_tokens": 701968,
+      "v1_tokens": 123797,
+      "tokens_saved": 2744288,
+      "percent_saved": 96.75069532264416,
+      "tokens_saved_vs_search": 157449,
+      "percent_saved_vs_search": 63.07699087390931,
+      "legacy_tokens_saved_vs_search": -452354,
+      "legacy_percent_saved_vs_search": -181.22140585063337,
+      "v1_percent_saved_vs_search": 50.40462474059949,
+      "baseline_input_usd": 2.836453,
+      "search_input_usd": 0.249614,
+      "acp_input_usd": 0.092165,
+      "legacy_input_usd": 0.701968,
+      "v1_input_usd": 0.123797,
+      "usd_saved": 2.744288,
+      "usd_saved_vs_search": 0.157449,
+      "retrieval_hit_rate": 0.9,
+      "search_retrieval_hit_rate": 0.7,
+      "legacy_retrieval_hit_rate": 0.5,
+      "v1_retrieval_hit_rate": 0.9,
+      "acp_answer_support_rate": 0.7,
+      "search_answer_support_rate": 0.7,
+      "legacy_answer_support_rate": 0.6,
+      "v1_answer_support_rate": 0.7,
+      "baseline_answer_support_rate": 1,
+      "baseline_assembly_ms": 2033.4,
+      "search_assembly_ms": 178.67,
+      "acp_assembly_ms": 174.12,
+      "legacy_assembly_ms": 478.33
+    },
+    {
+      "n": 50,
+      "baseline_tokens": 14182255,
+      "search_tokens": 1197618,
+      "acp_tokens": 373295,
+      "legacy_tokens": 3253902,
+      "v1_tokens": 503309,
+      "tokens_saved": 13808960,
+      "percent_saved": 97.36787273956081,
+      "tokens_saved_vs_search": 824323,
+      "percent_saved_vs_search": 68.83021130276933,
+      "legacy_tokens_saved_vs_search": -2056284,
+      "legacy_percent_saved_vs_search": -171.69782017304348,
+      "v1_percent_saved_vs_search": 57.97416204499264,
+      "baseline_input_usd": 14.182255,
+      "search_input_usd": 1.197618,
+      "acp_input_usd": 0.373295,
+      "legacy_input_usd": 3.253902,
+      "v1_input_usd": 0.503309,
+      "usd_saved": 13.80896,
+      "usd_saved_vs_search": 0.824323,
+      "retrieval_hit_rate": 0.92,
+      "search_retrieval_hit_rate": 0.8,
+      "legacy_retrieval_hit_rate": 0.64,
+      "v1_retrieval_hit_rate": 0.92,
+      "acp_answer_support_rate": 0.76,
+      "search_answer_support_rate": 0.8,
+      "legacy_answer_support_rate": 0.7,
+      "v1_answer_support_rate": 0.76,
+      "baseline_answer_support_rate": 1,
+      "baseline_assembly_ms": 10101.55,
+      "search_assembly_ms": 876.66,
+      "acp_assembly_ms": 724.92,
+      "legacy_assembly_ms": 2239.52
+    },
+    {
+      "n": 100,
+      "baseline_tokens": 28364485,
+      "search_tokens": 2321096,
+      "acp_tokens": 718721,
+      "legacy_tokens": 6498040,
+      "v1_tokens": 957371,
+      "tokens_saved": 27645764,
+      "percent_saved": 97.4661235696682,
+      "tokens_saved_vs_search": 1602375,
+      "percent_saved_vs_search": 69.03527471504842,
+      "legacy_tokens_saved_vs_search": -4176944,
+      "legacy_percent_saved_vs_search": -179.95567611163003,
+      "v1_percent_saved_vs_search": 58.75349403902295,
+      "baseline_input_usd": 28.364485,
+      "search_input_usd": 2.321096,
+      "acp_input_usd": 0.718721,
+      "legacy_input_usd": 6.49804,
+      "v1_input_usd": 0.957371,
+      "usd_saved": 27.645764,
+      "usd_saved_vs_search": 1.602375,
+      "retrieval_hit_rate": 0.93,
+      "search_retrieval_hit_rate": 0.79,
+      "legacy_retrieval_hit_rate": 0.65,
+      "v1_retrieval_hit_rate": 0.93,
+      "acp_answer_support_rate": 0.79,
+      "search_answer_support_rate": 0.79,
+      "legacy_answer_support_rate": 0.72,
+      "v1_answer_support_rate": 0.79,
+      "baseline_answer_support_rate": 1,
+      "baseline_assembly_ms": 20134.5,
+      "search_assembly_ms": 1694.09,
+      "acp_assembly_ms": 1385.46,
+      "legacy_assembly_ms": 4475.83
+    }
+  ],
+  "enrichment": {
+    "note": "ACO metadata is extractive (the first sentences of each Daytona doc, heading tags, and backtick identifiers). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even for the headline summary-first policy is against the naive full-read (an upper bound) and against search-then-read. The legacy catalog policy has its own break-even rows. Null means that policy did not accumulate a token saving against that arm within 100,000 forks. Raw Daytona page text is not committed. This measurement reads a local cache produced by src/build-docs.ts.",
+    "measured_prompt_input_tokens": 54630,
+    "estimated_output_tokens": 16200,
+    "estimated_output_source": "estimateEnrichmentCost(..., \"standard\") outputTokens constant, not a completion",
+    "package_estimate_usd": 0.151628,
+    "modeled_usd": 0.13563,
+    "measured_token_break_even_forks": 1,
+    "modeled_usd_break_even_forks": 1,
+    "measured_token_break_even_vs_search_forks": 4,
+    "modeled_usd_break_even_vs_search_forks": 9,
+    "legacy_measured_token_break_even_forks": 1,
+    "legacy_measured_token_break_even_vs_search_forks": null,
+    "v1_measured_token_break_even_vs_search_forks": 5
+  }
+}

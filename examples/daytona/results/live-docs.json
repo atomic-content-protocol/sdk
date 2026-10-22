@@ -1,0 +1,872 @@
+{
+  "status": "completed",
+  "mode": "snapshot-parallel",
+  "fallback_reason": "No runners are configured in region 'eu' for sandbox class 'linux-vm'. Try a different region or sandbox class.",
+  "corpus": "docs",
+  "policy": "summary-first",
+  "corpus_read": "snapshot-disk",
+  "requested_n": [
+    1,
+    10,
+    20
+  ],
+  "ran": 20,
+  "enrich_once_ms": 54853,
+  "volume": null,
+  "questions": [
+    {
+      "id": "d01",
+      "sandbox_id": "40e36630-ce23-4e0a-8afe-fa5afc742ab1",
+      "fork_ms": 3676,
+      "agent_ms": 8587,
+      "candidate_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "opened_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "search_opened_slugs": [
+        "linux-sandboxes",
+        "sandboxes",
+        "windows-sandboxes"
+      ],
+      "retrieval_hit": false,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\nBased on the corpus material, **container sandboxes cannot be forked**. When you need the filesystem state of a container sandbox, you should use **snapshots**.\n\nAccording to the documentation:\n\n> \"a Windows sandbox is forked to try several approaches from the same point. Each fork gets its own copy of the filesystem and memory.\"\n\nThis capability is specific to **Windows sandboxes** (VM sandboxes). For container sandboxes that need to preserve filesystem state, the documentation states:\n\n> \"Snapshots are persistent, point-in-time captures of sandbox state, including the filesystem, installed packages, dependencies, and settings. A snapshot saves a sandbox's state so you can restore it later, and any number of new sandboxes can start from the same snapshot.\"\n\nSpecifically for container sandboxes, you create a **cold snapshot** (filesystem-only snapshot) from a stopped sandbox, which captures the filesystem state you can then use to create new sandboxes with that same configuration.",
+        "input_tokens": 34543,
+        "output_tokens": 218,
+        "latency_ms": 3872,
+        "error": null,
+        "prompt_chars": 115990,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material, here's the answer to your question:\n\n**No, a container sandbox cannot be forked.** \n\nWhen you need to preserve the filesystem state of a container sandbox instead of forking, you should **use a filesystem snapshot** (also called a cold snapshot).\n\nThe documentation states: \"Forking is not supported for container sandboxes. Use [**create snapshot from sandbox**](https://www.daytona.io/docs/en/snapshots.md#create-snapshot-from-sandbox) to capture filesystem state, then create a new sandbox from that snapshot.\"\n\nA filesystem snapshot saves the filesystem of a stopped container sandbox, and \"A sandbox created from the snapshot starts with the same filesystem,\" allowing you to replicate the sandbox state without using fork functionality.",
+        "input_tokens": 68248,
+        "output_tokens": 172,
+        "latency_ms": 3091,
+        "error": null,
+        "prompt_chars": 223976,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d02",
+      "sandbox_id": "46412015-8bb7-4c33-b223-fcd79df5baa0",
+      "fork_ms": 3718,
+      "agent_ms": 5139,
+      "candidate_slugs": [
+        "snapshots",
+        "windows-sandboxes",
+        "linux-sandboxes"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "persistence",
+        "troubleshooting",
+        "billing"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "acp": {
+        "answer": "Based on the provided corpus material, I cannot find specific information about whether you can create a snapshot from an already stopped sandbox. The snapshot summary states that \"Snapshots are persistent, point-in-time captures of sandbox state\" and that \"A snapshot saves a sandbox's state so you can restore it later,\" but it does not specify whether the sandbox must be running or can be stopped when creating a snapshot.",
+        "input_tokens": 253,
+        "output_tokens": 87,
+        "latency_ms": 1277,
+        "error": null,
+        "prompt_chars": 1042,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "# Answer\n\nBased on the corpus material, **yes, you can create a snapshot from a sandbox that is already stopped**.\n\nThe documentation states: \"**Cold snapshot captures the filesystem of a stopped sandbox**\"\n\nThis is demonstrated in the code example:\n\n```python\n# Cold snapshot captures the filesystem of a stopped sandbox\nsandbox.stop()\nsandbox.create_snapshot(\"my-env-snapshot\")\n```\n\nThe key point is that cold snapshots (which capture filesystem only) can be created from stopped sandboxes. However, hot snapshots (which capture both filesystem and memory) require the sandbox to be running.",
+        "input_tokens": 25729,
+        "output_tokens": 133,
+        "latency_ms": 2412,
+        "error": null,
+        "prompt_chars": 90815,
+        "answer_supported": false
+      },
+      "naive": null
+    },
+    {
+      "id": "d03",
+      "sandbox_id": "d01a4b1b-2eb3-4730-8ab9-9ae38a7af907",
+      "fork_ms": 3535,
+      "agent_ms": 5953,
+      "candidate_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "opened_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "search_opened_slugs": [
+        "volumes",
+        "persistence",
+        "isolation"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **no, a subpath cannot start with a slash when mounting a volume**.\n\nThe documentation explicitly states:\n\n> \"When you set `subpath`, the value must meet the following requirements:\n> \n> - **No leading slash**: subpaths are S3 key prefixes and must not start with `/`\"\n\nThis is in contrast to mount paths, which must start with a slash. For example, `subpath: \"users/alice\"` is valid, but `subpath: \"/users/alice\"` would violate this requirement.",
+        "input_tokens": 55404,
+        "output_tokens": 127,
+        "latency_ms": 2450,
+        "error": null,
+        "prompt_chars": 168303,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, **no, a subpath cannot start with a slash**.\n\nThe documentation explicitly states:\n\n\"When you set `subpath`, the value must meet the following requirements:\n\n- **No leading slash**: subpaths are S3 key prefixes and must not start with `/`\"\n\nThis is in contrast to mount paths, which must be absolute paths starting with `/`. Subpaths are S3 key prefixes and therefore should not include a leading slash.",
+        "input_tokens": 24489,
+        "output_tokens": 107,
+        "latency_ms": 1859,
+        "error": null,
+        "prompt_chars": 81298,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d04",
+      "sandbox_id": "c481dfc6-72bf-4fd9-a686-041a427df2fc",
+      "fork_ms": 3475,
+      "agent_ms": 6748,
+      "candidate_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "opened_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "search_opened_slugs": [
+        "troubleshooting",
+        "network-limits",
+        "isolation"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "I cannot answer this question based on the provided corpus material. The corpus contains documentation about Organizations, API Keys, and Network Limits (Firewall) for Daytona, but it does not include any information about what the API returns when setting an allow list and block-all together on a new sandbox.\n\nThe Network Limits section does state that \"The options are mutually exclusive. Set at most one non-empty value. Sending a conflicting combination returns a `400` error,\" but this describes the behavior for creating sandboxes, not specifically what happens on a new sandbox with both parameters set together.",
+        "input_tokens": 20271,
+        "output_tokens": 131,
+        "latency_ms": 2631,
+        "error": null,
+        "prompt_chars": 84614,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, I cannot find specific information about what the API returns when you set an allow list and block-all together on a new sandbox.\n\nHowever, the documentation does state that these options are **mutually exclusive**. According to the Network Limits page:\n\n\"The options are mutually exclusive. Set at most one non-empty value. Sending a conflicting combination returns a `400` error.\"\n\nThis indicates that attempting to set both an allow list and block-all together would result in a **400 Bad Request error** (`DaytonaBadRequestError`), but the corpus does not provide the exact error message or response details for this specific scenario.",
+        "input_tokens": 35394,
+        "output_tokens": 147,
+        "latency_ms": 2850,
+        "error": null,
+        "prompt_chars": 131510,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d05",
+      "sandbox_id": "e10d97ef-a8ad-4137-bd3c-86e345af5854",
+      "fork_ms": 1023,
+      "agent_ms": 5147,
+      "candidate_slugs": [
+        "file-system-operations",
+        "authentication",
+        "preview"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "vpn-connections",
+        "authentication",
+        "mount-external-storage"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "I cannot answer this question based on the provided corpus material. None of the three summaries address how the SDK handles the `DAYTONA_API_URL` environment variable or whether it will use a URL specified only in a `.env` file. The summaries cover file system operations, authentication, and preview URLs, but not SDK configuration or environment variable handling.",
+        "input_tokens": 289,
+        "output_tokens": 78,
+        "latency_ms": 1264,
+        "error": null,
+        "prompt_chars": 1150,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "No, the SDK will not use the URL if `DAYTONA_API_URL` is only in a `.env` file.\n\nAccording to the Authentication documentation:\n\n> \"The API URL is the exception: the SDKs read it from code or from the process environment only. A `DAYTONA_API_URL` value in a `.env` file is ignored and reported, so a file in the working directory cannot redirect your API key to another endpoint.\"\n\nThe SDKs only read `DAYTONA_API_URL` from:\n1. Configuration in code\n2. Process environment variables\n\nA `.env` file is not checked for this specific variable.",
+        "input_tokens": 52419,
+        "output_tokens": 148,
+        "latency_ms": 2843,
+        "error": null,
+        "prompt_chars": 158075,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d06",
+      "sandbox_id": "983f9579-2843-42ee-9f51-d47f8f2e8e0d",
+      "fork_ms": 880,
+      "agent_ms": 4179,
+      "candidate_slugs": [
+        "computer-use",
+        "vnc-access",
+        "file-system-operations"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "macos-sandboxes",
+        "vnc-access",
+        "playground"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "acp": {
+        "answer": "Based on the corpus material, Computer Use can drive the following desktop operations inside a sandbox:\n\n**\"mouse, keyboard, screenshot, screen recording, and display operations for automating GUI interactions and testing desktop applications.\"**\n\nThese operations enable programmatic control of desktop environments within sandboxes.",
+        "input_tokens": 240,
+        "output_tokens": 62,
+        "latency_ms": 988,
+        "error": null,
+        "prompt_chars": 1138,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, Computer Use can drive the following desktop operations inside a sandbox:\n\n**Mouse operations:**\n- \"click, move, drag, scroll, and get cursor position\"\n\n**Keyboard operations:**\n- \"type text, press keys, and execute hotkey combinations\"\n\n**Screenshot operations:**\n- \"capture full screen, regions, or compressed images\"\n\n**Display operations:**\n- \"get display information and list open windows\"\n\nAs stated in the VNC Access document: \"**Available operations:** **Mouse**: click, move, drag, scroll, and get cursor position; **Keyboard**: type text, press keys, and execute hotkey combinations; **Screenshot**: capture full screen, regions, or compressed images; **Display**: get display information and list open windows\"",
+        "input_tokens": 7610,
+        "output_tokens": 168,
+        "latency_ms": 2230,
+        "error": null,
+        "prompt_chars": 25241,
+        "answer_supported": false
+      },
+      "naive": null
+    },
+    {
+      "id": "d07",
+      "sandbox_id": "59aa4448-3b15-487f-b6bf-bceb224d3926",
+      "fork_ms": 924,
+      "agent_ms": 5411,
+      "candidate_slugs": [
+        "declarative-builder",
+        "gpu-sandboxes",
+        "file-system-operations"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "declarative-builder",
+        "snapshots",
+        "architecture"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, the answer is:\n\n**Summary 1 (Declarative Builder)** is the relevant answer.\n\nThe declarative builder defines sandbox images without pulling from a container registry by allowing you to \"programmatically define them using the Daytona SDK.\" As stated in the summary: \"Instead of importing images from a container registry, you can programmatically define them using the Daytona SDK.\"",
+        "input_tokens": 287,
+        "output_tokens": 94,
+        "latency_ms": 1377,
+        "error": null,
+        "prompt_chars": 1215,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "# Answer\n\nThe declarative builder defines sandbox images without pulling from a container registry by **programmatically defining them using the Daytona SDK**. As stated in the documentation:\n\n> \"Instead of importing images from a container registry, you can programmatically define them using the Daytona SDK.\"\n\nThe process involves chaining SDK methods to build a complete image definition. You start with a base image (like `Image.debian_slim()`), then chain methods to install packages, add files, configure environment variables, and set up the container. For example:\n\n```python\ndeclarative_image = (\n  Image.debian_slim(\"3.12\")\n  .pip_install([\"requests\", \"pytest\"])\n  .workdir(\"/home/daytona\")\n)\n```\n\nThis declarative image is then used directly to create sandboxes without any registry pull, as the image configuration is built entirely through code.",
+        "input_tokens": 26064,
+        "output_tokens": 203,
+        "latency_ms": 3029,
+        "error": null,
+        "prompt_chars": 84187,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d08",
+      "sandbox_id": "ef01bb49-56ec-43e3-b8d1-471a60327070",
+      "fork_ms": 1096,
+      "agent_ms": 6351,
+      "candidate_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
+      ],
+      "opened_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
+      ],
+      "search_opened_slugs": [
+        "troubleshooting",
+        "typescript-sdk",
+        "warm-pools"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\nNo. According to the corpus, a create request **does not** claim a warm-pool sandbox if you attach a volume or custom environment variables.\n\nThe documentation explicitly states: \"A sandbox create request claims a warm sandbox when all of the following match the pool:\" and lists the requirements, which include:\n\n> \"No custom environment variables, volumes, or secrets\"\n\nThis means that if your create request includes either volumes or custom environment variables, it will not claim a warm sandbox from the pool, even if all other conditions match.",
+        "input_tokens": 15350,
+        "output_tokens": 115,
+        "latency_ms": 2131,
+        "error": null,
+        "prompt_chars": 49335,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, **no**, a create request does not claim a warm-pool sandbox if you attach a volume or custom environment variables.\n\nThe warm pools documentation explicitly states:\n\n> \"A sandbox create request claims a warm sandbox when all of the following match the pool: The same snapshot, The same target region, The snapshot's default resources (CPU, memory, and disk), The default OS user (`daytona`), **No custom environment variables, volumes, or secrets**\"\n\nAnd the troubleshooting section confirms:\n\n> \"The create request must match the pool on snapshot, region, the snapshot's default CPU, memory, and disk, the default OS user (`daytona`), and **must not set custom environment variables, volumes, or secrets**. Any mismatch skips the pool.\"",
+        "input_tokens": 21719,
+        "output_tokens": 175,
+        "latency_ms": 3206,
+        "error": null,
+        "prompt_chars": 71064,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d09",
+      "sandbox_id": "d443f6f2-0ab3-427e-a35f-e42a016ffc1f",
+      "fork_ms": 1103,
+      "agent_ms": 3886,
+      "candidate_slugs": [
+        "ssh-access",
+        "authentication",
+        "secrets"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "vpn-connections",
+        "git-operations",
+        "isolation"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "acp": {
+        "answer": "According to the corpus, SSH into a Daytona sandbox authenticates using **token-based authentication**. As stated in the SSH Access documentation: \"Daytona provides SSH access to your sandboxes using token-based authentication.\"",
+        "input_tokens": 279,
+        "output_tokens": 53,
+        "latency_ms": 929,
+        "error": null,
+        "prompt_chars": 1146,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, I cannot find specific information about SSH authentication into a Daytona sandbox. \n\nWhile the corpus includes an \"SSH Access\" document in the index, the actual content of that document was not provided in the material I have access to. The opened pages only contain information about VPN connections, Git operations, and isolation - none of which directly address SSH authentication methods.\n\nTo answer your question accurately, I would need the content from the SSH Access documentation page.",
+        "input_tokens": 30004,
+        "output_tokens": 104,
+        "latency_ms": 1934,
+        "error": null,
+        "prompt_chars": 96928,
+        "answer_supported": false
+      },
+      "naive": null
+    },
+    {
+      "id": "d10",
+      "sandbox_id": "31eecc45-d1bb-43f4-b658-4fde55c0bd08",
+      "fork_ms": 1179,
+      "agent_ms": 7092,
+      "candidate_slugs": [
+        "secrets",
+        "file-system-operations",
+        "troubleshooting"
+      ],
+      "opened_slugs": [
+        "secrets",
+        "file-system-operations",
+        "troubleshooting"
+      ],
+      "search_opened_slugs": [
+        "secrets",
+        "isolation",
+        "tools-api"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\nNo. A Daytona secret does **not** put the plaintext credential inside the sandbox.\n\n## Supporting Quote\n\n\"Secrets are organization-scoped, encrypted credentials that Daytona injects into a sandbox's outbound HTTPS traffic **without ever placing the plaintext inside the sandbox**. Instead of an environment variable holding the actual API key, the sandbox holds an opaque placeholder token.\"\n\nThe plaintext value is kept outside the sandbox and only substituted at request time by an outbound proxy when sending to allowed hosts:\n\n\"Because the substitution happens in the proxy, **the plaintext value is never present inside the sandbox**. The sandbox sees the placeholder in its environment, and any request to a non-allowed host carries the harmless placeholder rather than the secret.\"",
+        "input_tokens": 30876,
+        "output_tokens": 171,
+        "latency_ms": 3157,
+        "error": null,
+        "prompt_chars": 103970,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "# Answer\n\nNo, a Daytona secret does **not** put the plaintext credential inside the sandbox.\n\nThe documentation explicitly states:\n\n> \"Secrets are organization-scoped, encrypted credentials that Daytona injects into a sandbox's outbound HTTPS traffic without ever placing the plaintext inside the sandbox.\"\n\nInstead, the sandbox receives an opaque placeholder token:\n\n> \"Instead of an environment variable holding the actual API key, the sandbox holds an opaque placeholder token. An outbound proxy replaces the placeholder with the real value before the request reaches its destination, and only when the request goes to a host you have allowed.\"",
+        "input_tokens": 23116,
+        "output_tokens": 139,
+        "latency_ms": 2694,
+        "error": null,
+        "prompt_chars": 76415,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d11",
+      "sandbox_id": "ea167e1c-3dcb-4448-a743-0dd2e9e26ad7",
+      "fork_ms": 1010,
+      "agent_ms": 5934,
+      "candidate_slugs": [
+        "webhooks",
+        "limits",
+        "tools-cli"
+      ],
+      "opened_slugs": [
+        "webhooks",
+        "limits",
+        "tools-cli"
+      ],
+      "search_opened_slugs": [
+        "webhooks",
+        "limits",
+        "acceptable-use"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, webhooks and polling differ fundamentally in their approach:\n\n**Webhooks** are \"reverse API calls\" - instead of your application asking Daytona for updates, **\"Daytona proactively notifies your application when something important happens.\"**\n\nIn contrast, polling would require your app to repeatedly call Daytona's API to check for changes. The corpus actually recommends using webhooks to avoid this inefficiency, stating: **\"use webhooks instead of polling for state changes to avoid unnecessary API calls.\"**",
+        "input_tokens": 11886,
+        "output_tokens": 121,
+        "latency_ms": 2123,
+        "error": null,
+        "prompt_chars": 42874,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, webhooks and polling represent opposite approaches to getting updates:\n\n**Webhooks** are described as **\"reverse API calls\"** - \"instead of your application asking Daytona for updates, Daytona proactively notifies your application when something important happens.\"\n\nIn contrast, polling (asking Daytona for updates) requires your app to repeatedly request status changes. The documentation emphasizes that you should **\"use webhooks instead of polling for state changes to avoid unnecessary API calls\"** as a best practice for staying within rate limits.\n\nSo the key difference is: webhooks push notifications to you when events occur, while polling requires you to pull/ask for updates repeatedly.",
+        "input_tokens": 11116,
+        "output_tokens": 153,
+        "latency_ms": 2566,
+        "error": null,
+        "prompt_chars": 39641,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d12",
+      "sandbox_id": "79ba450b-8cdf-4f94-a9fc-12cdbf13dd86",
+      "fork_ms": 1019,
+      "agent_ms": 4666,
+      "candidate_slugs": [
+        "typescript-sdk",
+        "tools-cli",
+        "agent-skills"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "typescript-sdk",
+        "mount-external-storage",
+        "network-limits"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, the npm command to install the Daytona TypeScript SDK is:\n\n**\"Install the Daytona TypeScript SDK using npm\"** (from the TypeScript SDK Reference summary)\n\nHowever, the specific npm command itself is not explicitly stated in the provided summaries. The summary indicates that installation is possible via npm but does not quote the actual command line (e.g., `npm install @daytona/sdk` or similar).",
+        "input_tokens": 281,
+        "output_tokens": 102,
+        "latency_ms": 1662,
+        "error": null,
+        "prompt_chars": 1110,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the TypeScript SDK Reference documentation, the npm command to install the Daytona TypeScript SDK is:\n\n```bash\nnpm install @daytona/sdk\n```\n\nThe documentation states: \"Install the Daytona TypeScript SDK using npm: `npm install @daytona/sdk`\"",
+        "input_tokens": 52220,
+        "output_tokens": 70,
+        "latency_ms": 1607,
+        "error": null,
+        "prompt_chars": 170864,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d13",
+      "sandbox_id": "1df17d53-f291-49e9-97ce-fdaf1f566a1a",
+      "fork_ms": 866,
+      "agent_ms": 7647,
+      "candidate_slugs": [
+        "preview",
+        "custom-preview-proxy",
+        "ssh-access"
+      ],
+      "opened_slugs": [
+        "preview",
+        "custom-preview-proxy",
+        "ssh-access"
+      ],
+      "search_opened_slugs": [
+        "preview",
+        "isolation",
+        "tools-api"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, **no, you cannot revoke a standard preview URL token, and it is not meant to be shared**.\n\nThe documentation states:\n\n> \"there is no way to revoke a standard preview token. Once issued, assume it stays valid for as long as the sandbox runs.\"\n\nAdditionally:\n\n> \"The token returned by `get_preview_link()` is not restricted to the port you requested it for... Treat it like the sandbox's own credential rather than a per-port viewing token, and **do not share it**. To give someone access to a single port, use a [signed preview URL](#signed-preview-url), which is bound to one port, expires, and can be revoked.\"\n\nIf you need to share access, you should use a **signed preview URL** instead, which \"is bound to a single port, expires, and can be revoked.\"",
+        "input_tokens": 5066,
+        "output_tokens": 194,
+        "latency_ms": 3152,
+        "error": null,
+        "prompt_chars": 18161,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material, here are the answers to your questions about standard preview URL tokens:\n\n**Can you revoke a standard preview URL token?**\n\nNo, you cannot revoke a standard preview URL token. The documentation states: \"there is no way to revoke a standard preview token. Once issued, assume it stays valid for as long as the sandbox runs.\"\n\n**Is it meant to be shared?**\n\nNo, standard preview URL tokens are **not** meant to be shared. The documentation explicitly states: \"do not share it.\" The token is described as \"a sandbox-wide credential\" and should be \"treat[ed] like the sandbox's own credential rather than a per-port viewing token.\"\n\nIf you need to share access to a specific port, the documentation recommends using a **signed preview URL instead**: \"To give someone access to a single port, use a [signed preview URL](#signed-preview-url), which is bound to one port, expires, and can be revoked.\"",
+        "input_tokens": 16993,
+        "output_tokens": 214,
+        "latency_ms": 3259,
+        "error": null,
+        "prompt_chars": 55752,
+        "answer_supported": false
+      },
+      "naive": null
+    },
+    {
+      "id": "d14",
+      "sandbox_id": "ed8188e5-92b1-42a7-bcd4-70146ce048c9",
+      "fork_ms": 1001,
+      "agent_ms": 4861,
+      "candidate_slugs": [
+        "log-streaming",
+        "audit-logs",
+        "process-code-execution"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "log-streaming",
+        "process-code-execution",
+        "declarative-builder"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material, you should stream session command logs instead of reading a log snapshot when you have **\"long-running or background commands.\"**\n\nAs stated in the Log Streaming summary: \"Use streaming for long-running or background commands.\"",
+        "input_tokens": 224,
+        "output_tokens": 55,
+        "latency_ms": 950,
+        "error": null,
+        "prompt_chars": 1011,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, you should stream session command logs instead of reading a log snapshot when you have **long-running or background commands**.\n\nThe documentation states: \"Use streaming for long-running or background commands. Use snapshots when you only need the current output.\"\n\nSpecifically, stream logs when you need to:\n- Monitor processes continuously in real-time\n- Debug long-running jobs\n- Forward logs to other systems\n\nThe corpus provides this guidance: \"Stream logs in the background while the rest of your system continues executing. Use this for continuous monitoring, debugging long-running jobs, or forwarding logs to other systems.\"",
+        "input_tokens": 24905,
+        "output_tokens": 135,
+        "latency_ms": 2734,
+        "error": null,
+        "prompt_chars": 77591,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d15",
+      "sandbox_id": "5ef3f9cd-89ed-44d8-9ccf-cca771f009ec",
+      "fork_ms": 1123,
+      "agent_ms": 3856,
+      "candidate_slugs": [
+        "regions",
+        "warm-pools",
+        "scale"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "regions",
+        "scale",
+        "acceptable-use"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\n**Summary 1** provides the direct answer:\n\nWhen you target a region at sandbox create time, \"Daytona schedules the workload on available capacity within that region.\"",
+        "input_tokens": 305,
+        "output_tokens": 44,
+        "latency_ms": 956,
+        "error": null,
+        "prompt_chars": 1208,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, specifically from the **Regions** page:\n\nWhen you target a region at sandbox create time, \"Daytona schedules the workload on **available capacity within that region**.\"\n\nThe supporting quote is: \"When creating a sandbox, you can target a specific region, and Daytona schedules the workload on available capacity within that region.\"",
+        "input_tokens": 17095,
+        "output_tokens": 84,
+        "latency_ms": 1699,
+        "error": null,
+        "prompt_chars": 55765,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d01",
+      "sandbox_id": "cd66acf0-190d-43c4-bcfa-9c54ff23ea9e",
+      "fork_ms": 1175,
+      "agent_ms": 7221,
+      "candidate_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "opened_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "search_opened_slugs": [
+        "linux-sandboxes",
+        "sandboxes",
+        "windows-sandboxes"
+      ],
+      "retrieval_hit": false,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "# Answer\n\nNo, a container sandbox **cannot be forked**. When you need to preserve its filesystem state, you should use **snapshots** instead.\n\nAs stated in the corpus: \"**Branching from a running state**: a Windows sandbox is forked to try several approaches from the same point. Each fork gets its own copy of the filesystem and memory.\"\n\nHowever, this fork capability applies only to **Windows sandboxes** (VM sandboxes), not container sandboxes. For container sandboxes that need filesystem state preservation, the documentation specifies:\n\n> \"Snapshots are persistent, point-in-time captures of sandbox state, including the filesystem, installed packages, dependencies, and settings. A snapshot saves a sandbox's state so you can restore it later, and any number of new sandboxes can start from the same snapshot.\"\n\nContainer sandboxes specifically support **cold snapshots** (filesystem only), which require the sandbox to be stopped before creating the snapshot.",
+        "input_tokens": 34543,
+        "output_tokens": 211,
+        "latency_ms": 3557,
+        "error": null,
+        "prompt_chars": 115990,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material, here is the answer to your question:\n\n**A container sandbox cannot be forked.** When you need its filesystem state instead, you should use a **filesystem snapshot**.\n\nAs stated in the documentation:\n\n> \"Forking is not supported for container sandboxes. Use [**create snapshot from sandbox**](https://www.daytona.io/docs/en/snapshots.md#create-snapshot-from-sandbox) to capture filesystem state, then create a new sandbox from that snapshot.\"\n\nA filesystem snapshot (also called a cold snapshot) saves the filesystem of a stopped container sandbox, allowing you to preserve and replicate its state in new sandboxes.",
+        "input_tokens": 68248,
+        "output_tokens": 151,
+        "latency_ms": 2472,
+        "error": null,
+        "prompt_chars": 223976,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d02",
+      "sandbox_id": "8e9ab6e2-d92b-4b34-af59-18690d9a70a9",
+      "fork_ms": 1076,
+      "agent_ms": 4861,
+      "candidate_slugs": [
+        "snapshots",
+        "windows-sandboxes",
+        "linux-sandboxes"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "persistence",
+        "troubleshooting",
+        "billing"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": false,
+      "acp": {
+        "answer": "Based on the provided corpus material, I cannot find specific information about whether you can create a snapshot from a stopped sandbox. The snapshot summary states that \"Snapshots are persistent, point-in-time captures of sandbox state, including the filesystem, installed packages, dependencies, and settings,\" but it does not specify whether the sandbox must be running or can be stopped when creating a snapshot.",
+        "input_tokens": 253,
+        "output_tokens": 81,
+        "latency_ms": 1201,
+        "error": null,
+        "prompt_chars": 1042,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material, **yes, you can create a snapshot from a sandbox that is already stopped**.\n\nThe documentation states: \"Cold snapshot captures the filesystem of a stopped sandbox.\"\n\nThis is explicitly shown in the code example:\n\n```python\n# Cold snapshot captures the filesystem of a stopped sandbox\nsandbox.stop()\nsandbox.create_snapshot(\"my-env-snapshot\")\n```\n\nThe Persistence document clarifies that snapshots created from a sandbox capture either the filesystem only (cold snapshots) or the filesystem and memory (hot snapshots), depending on the sandbox class. Cold snapshots can be created from stopped sandboxes across all sandbox types that support snapshotting.",
+        "input_tokens": 25729,
+        "output_tokens": 147,
+        "latency_ms": 2654,
+        "error": null,
+        "prompt_chars": 90815,
+        "answer_supported": false
+      },
+      "naive": null
+    },
+    {
+      "id": "d03",
+      "sandbox_id": "76f9f2ed-a269-4b68-883a-cd48438a91f5",
+      "fork_ms": 1068,
+      "agent_ms": 5675,
+      "candidate_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "opened_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "search_opened_slugs": [
+        "volumes",
+        "persistence",
+        "isolation"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material provided, when you mount a volume with a subpath, **the subpath must NOT start with a slash**.\n\nHere's the supporting quote:\n\n> \"When you set `subpath`, the value must meet the following requirements:\n> \n> - **No leading slash**: subpaths are S3 key prefixes and must not start with `/`\"\n\nFor example, valid subpaths would be like `users/alice` rather than `/users/alice`.",
+        "input_tokens": 55404,
+        "output_tokens": 108,
+        "latency_ms": 2150,
+        "error": null,
+        "prompt_chars": 168303,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material, **no, a subpath cannot start with a slash**.\n\nThe documentation explicitly states:\n\n> \"When you set `subpath`, the value must meet the following requirements:\n> \n> - **No leading slash**: subpaths are S3 key prefixes and must not start with `/`\"\n\nThis is in contrast to `mount_path`, which must start with a slash (e.g., `/home/daytona/volume`). The subpath is an S3 key prefix within the volume, so it should be specified without a leading slash, such as `users/alice` rather than `/users/alice`.",
+        "input_tokens": 24489,
+        "output_tokens": 144,
+        "latency_ms": 2320,
+        "error": null,
+        "prompt_chars": 81298,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d04",
+      "sandbox_id": "9faf2b20-61d4-4aaf-95df-f41edadfa0f0",
+      "fork_ms": 1208,
+      "agent_ms": 7435,
+      "candidate_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "opened_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "search_opened_slugs": [
+        "troubleshooting",
+        "network-limits",
+        "isolation"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "Based on the corpus material provided, I cannot find information about what the API returns when you set an allow list and block-all together on a new sandbox.\n\nHowever, the corpus does address conflicting network settings. According to the \"Create sandboxes with network restrictions\" section:\n\n\"The options are mutually exclusive. Set at most one non-empty value. Sending a conflicting combination returns a `400` error.\"\n\nThis indicates that if you attempt to set both an allow list and block-all together, the API would return a **`400` error** rather than creating the sandbox with both settings applied.",
+        "input_tokens": 20271,
+        "output_tokens": 132,
+        "latency_ms": 2563,
+        "error": null,
+        "prompt_chars": 84614,
+        "answer_supported": true
+      },
+      "search": {
+        "answer": "Based on the corpus material provided, I cannot find specific information about what the API returns when you set an allow list and block-all together on a new sandbox.\n\nHowever, the documentation does state that these options are mutually exclusive. According to the Network Limits section:\n\n\"Set `networkAllowList`, `domainAllowList`, or `networkBlockAll` when creating a sandbox to control which external hosts the sandbox can reach. **The options are mutually exclusive. Set at most one non-empty value. Sending a conflicting combination returns a `400` error.**\"\n\nAdditionally, the Troubleshooting section mentions: \"At the sandbox level, `network_block_all`, a CIDR allow list, and a domain allow list are mutually exclusive: only one mode may be set, and combining them returns `400`.\"\n\nSo while the corpus confirms a `400` error is returned for conflicting combinations, it does not provide the specific error message or response body details for this particular scenario.",
+        "input_tokens": 35394,
+        "output_tokens": 218,
+        "latency_ms": 3713,
+        "error": null,
+        "prompt_chars": 131510,
+        "answer_supported": true
+      },
+      "naive": null
+    },
+    {
+      "id": "d05",
+      "sandbox_id": "e6dca16a-4637-4b75-8e48-f027be6a596f",
+      "fork_ms": 1098,
+      "agent_ms": 6169,
+      "candidate_slugs": [
+        "file-system-operations",
+        "authentication",
+        "preview"
+      ],
+      "opened_slugs": [],
+      "search_opened_slugs": [
+        "vpn-connections",
+        "authentication",
+        "mount-external-storage"
+      ],
+      "retrieval_hit": true,
+      "search_retrieval_hit": true,
+      "acp": {
+        "answer": "I cannot answer this question based on the provided corpus material. None of the three summaries address SDK configuration, environment variables, or how the SDK loads the `DAYTONA_API_URL` setting. The summaries cover file system operations, authentication, and preview URLs, but do not contain information about `.env` file handling or SDK URL configuration.",
+        "input_tokens": 289,
+        "output_tokens": 76,
+        "latency_ms": 1399,
+        "error": null,
+        "prompt_chars": 1150,
+        "answer_supported": false
+      },
+      "search": {
+        "answer": "Based on the corpus material, specifically from the **Authentication** document:\n\n**No, the SDK will not use `DAYTONA_API_URL` if it is only in a `.env` file.**\n\nHere is the supporting quote:\n\n> \"The API URL is the exception: the SDKs read it from code or from the process environment only. A `DAYTONA_API_URL` value in a `.env` file is ignored and reported, so a file in the working directory cannot redirect your API key to another endpoint.\"\n\nThis means `DAYTONA_API_URL` must be set either:\n1. In code (via explicit configuration)\n2. In the process environment (via shell export or environment variable)\n\nIt cannot be read from `.env` or `.env.local` files, unlike other configuration variables like `DAYTONA_API_KEY`.",
+        "input_tokens": 52419,
+        "output_tokens": 193,
+        "latency_ms": 3347,
+        "error": null,
+        "prompt_chars": 158075,
+        "answer_supported": true
+      },
+      "naive": null
+    }
+  ],
+  "scale": [
+    {
+      "n": 1,
+      "complete": true,
+      "acp_input_tokens": 34543,
+      "acp_output_tokens": 218,
+      "search_input_tokens": 68248,
+      "search_output_tokens": 172,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 0,
+      "search_retrieval_hit_rate": 1,
+      "acp_answer_support_rate": 0,
+      "search_answer_support_rate": 1,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 3676,
+      "sum_agent_ms": 8587
+    },
+    {
+      "n": 10,
+      "complete": true,
+      "acp_input_tokens": 157792,
+      "acp_output_tokens": 1136,
+      "search_input_tokens": 314792,
+      "search_output_tokens": 1496,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 0.9,
+      "search_retrieval_hit_rate": 0.7,
+      "acp_answer_support_rate": 0.6,
+      "search_answer_support_rate": 0.7,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 20609,
+      "sum_agent_ms": 58493
+    },
+    {
+      "n": 20,
+      "complete": true,
+      "acp_input_tokens": 286314,
+      "acp_output_tokens": 2260,
+      "search_input_tokens": 643400,
+      "search_output_tokens": 3005,
+      "naive_input_tokens": null,
+      "naive_output_tokens": null,
+      "retrieval_hit_rate": 0.9,
+      "search_retrieval_hit_rate": 0.8,
+      "acp_answer_support_rate": 0.6,
+      "search_answer_support_rate": 0.75,
+      "naive_answer_support_rate": null,
+      "sum_fork_ms": 31253,
+      "sum_agent_ms": 116818
+    }
+  ],
+  "error": null
+}

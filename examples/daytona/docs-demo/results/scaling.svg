@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">Context tokens by fork count</text>
+  <text x="696" y="18" text-anchor="end" font-size="12" font-family="sans-serif" fill="#b45309">Naive full-read (upper bound)</text>
+  <text x="696" y="34" text-anchor="end" font-size="12" font-family="sans-serif" fill="#1d4ed8">Search-then-read</text>
+  <text x="696" y="50" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">Summary-first ACP</text>
+  <line x1="78" y1="366.0" x2="696" y2="366.0" stroke="#e5e7eb" />
+  <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0k</text>
+  <line x1="78" y1="292.5" x2="696" y2="292.5" stroke="#e5e7eb" />
+  <text x="70" y="296.5" text-anchor="end" font-size="12" fill="#374151">7.09M</text>
+  <line x1="78" y1="219.0" x2="696" y2="219.0" stroke="#e5e7eb" />
+  <text x="70" y="223.0" text-anchor="end" font-size="12" fill="#374151">14.18M</text>
+  <line x1="78" y1="145.5" x2="696" y2="145.5" stroke="#e5e7eb" />
+  <text x="70" y="149.5" text-anchor="end" font-size="12" fill="#374151">21.27M</text>
+  <line x1="78" y1="72.0" x2="696" y2="72.0" stroke="#e5e7eb" />
+  <text x="70" y="76.0" text-anchor="end" font-size="12" fill="#374151">28.36M</text>
+  <polyline fill="none" stroke="#b45309" stroke-width="2" points="84.2,363.1 139.8,336.6 387.0,219.0 696.0,72.0"/>
+  <circle cx="84.2" cy="363.1" r="4" fill="#b45309" />
+  <circle cx="139.8" cy="336.6" r="4" fill="#b45309" />
+  <circle cx="387.0" cy="219.0" r="4" fill="#b45309" />
+  <circle cx="696.0" cy="72.0" r="4" fill="#b45309" />
+  <polyline fill="none" stroke="#1d4ed8" stroke-width="2" points="84.2,365.4 139.8,363.4 387.0,353.6 696.0,341.9"/>
+  <circle cx="84.2" cy="365.4" r="4" fill="#1d4ed8" />
+  <circle cx="139.8" cy="363.4" r="4" fill="#1d4ed8" />
+  <circle cx="387.0" cy="353.6" r="4" fill="#1d4ed8" />
+  <circle cx="696.0" cy="341.9" r="4" fill="#1d4ed8" />
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,365.8 139.8,365.0 387.0,362.1 696.0,358.6"/>
+  <circle cx="84.2" cy="365.8" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="365.0" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="362.1" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="358.6" r="4" fill="#0f766e" />
+  <text x="84.2" y="402" text-anchor="middle" font-size="12" fill="#374151">1</text>
+  <text x="139.8" y="402" text-anchor="middle" font-size="12" fill="#374151">10</text>
+  <text x="387.0" y="402" text-anchor="middle" font-size="12" fill="#374151">50</text>
+  <text x="696.0" y="402" text-anchor="middle" font-size="12" fill="#374151">100</text>
+  <text x="387" y="418" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#374151">Forks (N)</text>
+</svg>

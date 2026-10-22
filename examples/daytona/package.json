@@ -1,0 +1,37 @@
+{
+  "name": "@atomic-content-protocol/example-daytona",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Reproducible benchmark: ACP inside Daytona sandboxes (enrich once, fork many).",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "build-corpus": "tsx src/build-corpus.ts",
+    "build-docs": "tsx src/build-docs.ts",
+    "measure": "tsx src/measure.ts",
+    "measure:docs": "tsx src/measure-docs.ts",
+    "bench": "tsx src/bench.ts",
+    "check:web": "tsx src/check-web.ts",
+    "live": "tsx src/live.ts",
+    "lint": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.tools.json",
+    "test": "tsx src/verify.ts && tsx src/check-web.ts",
+    "web": "vite --config web/vite.config.ts --host",
+    "web:build": "vite build --config web/vite.config.ts"
+  },
+  "dependencies": {
+    "@atomic-content-protocol/cli": "0.3.2",
+    "@atomic-content-protocol/core": "0.3.2",
+    "@atomic-content-protocol/enrichment": "0.3.2",
+    "@atomic-content-protocol/mcp": "0.3.2",
+    "@daytonaio/sdk": "0.226.0",
+    "tiktoken": "^1.0.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "js-tiktoken": "^1.0.21",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vite": "^8.3.5",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+}
