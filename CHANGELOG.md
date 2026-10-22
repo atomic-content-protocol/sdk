@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.2] - 2026-10-22
+
+`@atomic-content-protocol/core` and `@atomic-content-protocol/enrichment` carry the change. `mcp`, `web` and `cli` move with them so the release stays a single tag.
 
 ### Fixed
 - **Thin text bodies were summarised from the title.** A body passed straight to `createACO({ body })` had no length gate (0.2.1 gated only *fetched* pages), so `UnifiedPipeline` sent a ten-character placeholder to the model together with its title and got back a confident two-sentence summary written from the title alone. Nineteen articles created with such a placeholder in one day each carried `token_counts.approximate: 3` and a fluent summary of nothing. `MODALITY_ENRICHMENT` now gates `text` and `document` on body length the way `video` already gates a transcript: a trimmed body under `MIN_BODY_LENGTH_FOR_ENRICHMENT` (50 characters) resolves to no summary, no tags or key entities and no language, and `UnifiedPipeline` no longer calls the model for classification alone, returning the input ACO untouched with `model: "skipped"` and no provenance. Conditional flags now gate their base flag instead of promoting it, so a conditional flag on a disabled field has no effect; `video` moves to base true plus conditional and resolves exactly as before. `createACO` also stops normalising the body twice before hashing (`computeContentHash` normalises itself); hashes are unchanged.

@@ -1,6 +1,6 @@
 {
   "name": "@atomic-content-protocol/web",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Make any website readable by AI agents through ACP: build-time ACOs for every page, edge serving for agents, and measurement of who read what",
   "author": "Stacks, Inc (https://www.stacks.inc/)",
   "type": "module",
@@ -39,8 +39,8 @@
     "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
-    "@atomic-content-protocol/core": "^0.3.1",
-    "@atomic-content-protocol/enrichment": "^0.3.1"
+    "@atomic-content-protocol/core": "^0.3.2",
+    "@atomic-content-protocol/enrichment": "^0.3.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
