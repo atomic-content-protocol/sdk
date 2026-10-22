@@ -6,6 +6,8 @@ export interface SearchPage {
   title: string;
   url: string;
   body: string;
+  summary?: string;
+  tags?: string[];
 }
 
 export interface Bm25Hit {
@@ -15,11 +17,14 @@ export interface Bm25Hit {
   score: number;
 }
 
-export function bm25Search(
-  pages: SearchPage[],
+export function tokenize(text: string, stopwords: readonly string[] | Set<string>): string[];
+
+export function bm25Search<T extends { slug: string; title: string; url: string }>(
+  pages: T[],
   queryText: string,
   stopwords: readonly string[],
-  limit: number
+  limit: number,
+  indexText?: (page: T) => string
 ): Bm25Hit[];
 
 export function searchMaterial(
@@ -27,3 +32,26 @@ export function searchMaterial(
   hits: Bm25Hit[],
   sections: { search_index: string; search_ranking: string; search_pages: string }
 ): string;
+
+export interface SummaryFirstOptions {
+  summaryK: number;
+  maxBodies: number;
+  coverFraction: number;
+}
+
+export interface SummaryFirstResult {
+  candidate_slugs: string[];
+  opened_slugs: string[];
+  decision: "answer" | "open";
+  cover_need: number;
+  summaryBlock: string;
+  summaryMaterial: string;
+  bodyMaterial: string;
+}
+
+export function summaryFirst(
+  pages: SearchPage[],
+  queryText: string,
+  stopwords: readonly string[],
+  options: SummaryFirstOptions
+): SummaryFirstResult;

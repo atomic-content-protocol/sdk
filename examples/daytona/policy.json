@@ -1,7 +1,11 @@
 {
-  "name": "mcp-find-similar-top3",
+  "name": "summary-first",
+  "legacy_name": "mcp-find-similar-top3",
   "limit": 3,
   "threshold": 0,
+  "summary_k": 3,
+  "max_bodies": 3,
+  "cover_fraction": 0.5,
   "instruction": "Answer the question using only the corpus material below. Quote a short supporting span.\n\n",
   "catalog_limit": 50,
   "sections": {

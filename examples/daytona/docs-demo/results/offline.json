@@ -8,7 +8,14 @@
   },
   "input_usd_per_million": 1,
   "output_usd_per_million": 5,
-  "policy": "mcp-find-similar-top3",
+  "policy": "summary-first",
+  "legacy_policy": "mcp-find-similar-top3",
+  "summary_first": {
+    "k": 3,
+    "max_bodies": 3,
+    "cover_fraction": 0.5,
+    "rank": "bm25-title-summary-tags"
+  },
   "pages": 54,
   "questions": 15,
   "per_question": [
@@ -19,27 +26,45 @@
         "sandboxes"
       ],
       "content_query": "container sandbox forked instead need filesystem state",
-      "opened_slugs": [
+      "candidate_slugs": [
         "windows-sandboxes",
-        "macos-sandboxes",
+        "declarative-builder",
         "snapshots"
       ],
+      "opened_slugs": [
+        "windows-sandboxes",
+        "declarative-builder",
+        "snapshots"
+      ],
+      "decision": "open",
+      "cover_need": 4,
       "search_opened_slugs": [
         "linux-sandboxes",
         "sandboxes",
         "windows-sandboxes"
       ],
+      "legacy_opened_slugs": [
+        "windows-sandboxes",
+        "macos-sandboxes",
+        "snapshots"
+      ],
       "retrieval_hit": false,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": false,
+      "legacy_answer_supported": false,
       "baseline_tokens": 283650,
       "search_tokens": 54270,
-      "acp_tokens": 71081,
-      "baseline_assembly_ms": 295.33,
-      "search_assembly_ms": 36.86,
-      "acp_assembly_ms": 49.24
+      "summary_decision_tokens": 238,
+      "summary_body_tokens": 27725,
+      "acp_tokens": 27963,
+      "legacy_tokens": 71081,
+      "baseline_assembly_ms": 286.97,
+      "search_assembly_ms": 38.84,
+      "acp_assembly_ms": 24.17,
+      "legacy_assembly_ms": 50.49
     },
     {
       "id": "d02",
@@ -48,27 +73,41 @@
         "snapshots"
       ],
       "content_query": "create snapshot sandbox already stopped",
-      "opened_slugs": [
-        "linux-sandboxes",
+      "candidate_slugs": [
+        "snapshots",
         "windows-sandboxes",
-        "macos-sandboxes"
+        "linux-sandboxes"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "persistence",
         "troubleshooting",
         "billing"
       ],
-      "retrieval_hit": false,
+      "legacy_opened_slugs": [
+        "linux-sandboxes",
+        "windows-sandboxes",
+        "macos-sandboxes"
+      ],
+      "retrieval_hit": true,
       "search_retrieval_hit": false,
+      "legacy_retrieval_hit": false,
       "baseline_answer_supported": true,
       "search_answer_supported": false,
       "acp_answer_supported": false,
+      "legacy_answer_supported": false,
       "baseline_tokens": 283642,
       "search_tokens": 20745,
-      "acp_tokens": 76648,
-      "baseline_assembly_ms": 199.12,
-      "search_assembly_ms": 15.74,
-      "acp_assembly_ms": 53.1
+      "summary_decision_tokens": 214,
+      "summary_body_tokens": 0,
+      "acp_tokens": 214,
+      "legacy_tokens": 76648,
+      "baseline_assembly_ms": 199.01,
+      "search_assembly_ms": 16.03,
+      "acp_assembly_ms": 1.29,
+      "legacy_assembly_ms": 53.71
     },
     {
       "id": "d03",
@@ -77,27 +116,45 @@
         "volumes"
       ],
       "content_query": "mount volume subpath subpath start slash",
-      "opened_slugs": [
+      "candidate_slugs": [
         "volumes",
-        "computer-use",
+        "mount-external-storage",
         "scale"
       ],
+      "opened_slugs": [
+        "volumes",
+        "mount-external-storage",
+        "scale"
+      ],
+      "decision": "open",
+      "cover_need": 3,
       "search_opened_slugs": [
         "volumes",
         "persistence",
         "isolation"
       ],
+      "legacy_opened_slugs": [
+        "volumes",
+        "computer-use",
+        "scale"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283648,
       "search_tokens": 19104,
-      "acp_tokens": 81525,
-      "baseline_assembly_ms": 196.86,
-      "search_assembly_ms": 13.84,
-      "acp_assembly_ms": 55.14
+      "summary_decision_tokens": 265,
+      "summary_body_tokens": 41912,
+      "acp_tokens": 42177,
+      "legacy_tokens": 81525,
+      "baseline_assembly_ms": 200.9,
+      "search_assembly_ms": 14.1,
+      "acp_assembly_ms": 34.62,
+      "legacy_assembly_ms": 55.76
     },
     {
       "id": "d04",
@@ -106,27 +163,45 @@
         "network-limits"
       ],
       "content_query": "api return set allow list block all together new sandbox",
-      "opened_slugs": [
-        "troubleshooting",
+      "candidate_slugs": [
         "organizations",
-        "warm-pools"
+        "api-keys",
+        "network-limits"
       ],
+      "opened_slugs": [
+        "organizations",
+        "api-keys",
+        "network-limits"
+      ],
+      "decision": "open",
+      "cover_need": 5,
       "search_opened_slugs": [
         "troubleshooting",
         "network-limits",
         "isolation"
       ],
-      "retrieval_hit": false,
+      "legacy_opened_slugs": [
+        "troubleshooting",
+        "organizations",
+        "warm-pools"
+      ],
+      "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
-      "acp_answer_supported": false,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": false,
       "baseline_tokens": 283649,
       "search_tokens": 27649,
-      "acp_tokens": 64515,
-      "baseline_assembly_ms": 199.04,
-      "search_assembly_ms": 28.84,
-      "acp_assembly_ms": 72.47
+      "summary_decision_tokens": 197,
+      "summary_body_tokens": 15727,
+      "acp_tokens": 15924,
+      "legacy_tokens": 64515,
+      "baseline_assembly_ms": 200.75,
+      "search_assembly_ms": 28.7,
+      "acp_assembly_ms": 21.57,
+      "legacy_assembly_ms": 46.42
     },
     {
       "id": "d05",
@@ -135,27 +210,41 @@
         "authentication"
       ],
       "content_query": "daytona api url env file sdk url",
-      "opened_slugs": [
+      "candidate_slugs": [
         "file-system-operations",
         "authentication",
-        "observability-otel-collection"
+        "preview"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "vpn-connections",
         "authentication",
         "mount-external-storage"
       ],
+      "legacy_opened_slugs": [
+        "file-system-operations",
+        "authentication",
+        "observability-otel-collection"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
-      "acp_answer_supported": true,
+      "acp_answer_supported": false,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283650,
       "search_tokens": 40109,
-      "acp_tokens": 61768,
-      "baseline_assembly_ms": 296.54,
-      "search_assembly_ms": 26.48,
-      "acp_assembly_ms": 43.23
+      "summary_decision_tokens": 244,
+      "summary_body_tokens": 0,
+      "acp_tokens": 244,
+      "legacy_tokens": 61768,
+      "baseline_assembly_ms": 199.21,
+      "search_assembly_ms": 26.58,
+      "acp_assembly_ms": 1.14,
+      "legacy_assembly_ms": 44.69
     },
     {
       "id": "d06",
@@ -164,27 +253,41 @@
         "computer-use"
       ],
       "content_query": "desktop operations computer drive inside sandbox",
-      "opened_slugs": [
-        "process-code-execution",
+      "candidate_slugs": [
         "computer-use",
-        "git-operations"
+        "vnc-access",
+        "file-system-operations"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "macos-sandboxes",
         "vnc-access",
         "playground"
       ],
+      "legacy_opened_slugs": [
+        "process-code-execution",
+        "computer-use",
+        "git-operations"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": false,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": false,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283640,
       "search_tokens": 6226,
-      "acp_tokens": 80960,
-      "baseline_assembly_ms": 197.11,
-      "search_assembly_ms": 4.35,
-      "acp_assembly_ms": 57.41
+      "summary_decision_tokens": 212,
+      "summary_body_tokens": 0,
+      "acp_tokens": 212,
+      "legacy_tokens": 80960,
+      "baseline_assembly_ms": 204,
+      "search_assembly_ms": 4.51,
+      "acp_assembly_ms": 1.22,
+      "legacy_assembly_ms": 55.02
     },
     {
       "id": "d07",
@@ -193,27 +296,41 @@
         "declarative-builder"
       ],
       "content_query": "declarative builder define sandbox images without pulling container registry",
-      "opened_slugs": [
+      "candidate_slugs": [
         "declarative-builder",
-        "git-operations",
+        "gpu-sandboxes",
         "file-system-operations"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "declarative-builder",
         "snapshots",
         "architecture"
       ],
+      "legacy_opened_slugs": [
+        "declarative-builder",
+        "git-operations",
+        "file-system-operations"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283645,
       "search_tokens": 21264,
-      "acp_tokens": 68318,
-      "baseline_assembly_ms": 200.86,
-      "search_assembly_ms": 14.65,
-      "acp_assembly_ms": 46.98
+      "summary_decision_tokens": 247,
+      "summary_body_tokens": 0,
+      "acp_tokens": 247,
+      "legacy_tokens": 68318,
+      "baseline_assembly_ms": 208.68,
+      "search_assembly_ms": 15.47,
+      "acp_assembly_ms": 1.2,
+      "legacy_assembly_ms": 47.72
     },
     {
       "id": "d08",
@@ -222,27 +339,45 @@
         "warm-pools"
       ],
       "content_query": "create request still claim warm pool sandbox attach volume custom environment variables",
-      "opened_slugs": [
-        "macos-sandboxes",
-        "linux-sandboxes",
-        "warm-pools"
+      "candidate_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
       ],
+      "opened_slugs": [
+        "warm-pools",
+        "authentication",
+        "volumes"
+      ],
+      "decision": "open",
+      "cover_need": 6,
       "search_opened_slugs": [
         "troubleshooting",
         "typescript-sdk",
         "warm-pools"
       ],
+      "legacy_opened_slugs": [
+        "macos-sandboxes",
+        "linux-sandboxes",
+        "warm-pools"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283650,
       "search_tokens": 17492,
-      "acp_tokens": 67088,
-      "baseline_assembly_ms": 199.69,
-      "search_assembly_ms": 11.78,
-      "acp_assembly_ms": 46.76
+      "summary_decision_tokens": 283,
+      "summary_body_tokens": 11800,
+      "acp_tokens": 12083,
+      "legacy_tokens": 67088,
+      "baseline_assembly_ms": 202.86,
+      "search_assembly_ms": 12.05,
+      "acp_assembly_ms": 9.01,
+      "legacy_assembly_ms": 48.53
     },
     {
       "id": "d09",
@@ -251,27 +386,41 @@
         "ssh-access"
       ],
       "content_query": "ssh daytona sandbox authenticate",
-      "opened_slugs": [
-        "macos-sandboxes",
-        "linux-sandboxes",
-        "api-keys"
+      "candidate_slugs": [
+        "ssh-access",
+        "authentication",
+        "secrets"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 2,
       "search_opened_slugs": [
         "vpn-connections",
         "git-operations",
         "isolation"
       ],
-      "retrieval_hit": false,
+      "legacy_opened_slugs": [
+        "macos-sandboxes",
+        "linux-sandboxes",
+        "api-keys"
+      ],
+      "retrieval_hit": true,
       "search_retrieval_hit": false,
+      "legacy_retrieval_hit": false,
       "baseline_answer_supported": true,
       "search_answer_supported": false,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283638,
       "search_tokens": 23832,
-      "acp_tokens": 67223,
-      "baseline_assembly_ms": 200.43,
-      "search_assembly_ms": 16.59,
-      "acp_assembly_ms": 47.66
+      "summary_decision_tokens": 228,
+      "summary_body_tokens": 0,
+      "acp_tokens": 228,
+      "legacy_tokens": 67223,
+      "baseline_assembly_ms": 202.99,
+      "search_assembly_ms": 17.04,
+      "acp_assembly_ms": 1.45,
+      "legacy_assembly_ms": 51.83
     },
     {
       "id": "d10",
@@ -280,27 +429,45 @@
         "secrets"
       ],
       "content_query": "daytona secret put plaintext credential inside sandbox",
-      "opened_slugs": [
-        "git-operations",
+      "candidate_slugs": [
+        "secrets",
         "file-system-operations",
-        "macos-sandboxes"
+        "troubleshooting"
       ],
+      "opened_slugs": [
+        "secrets",
+        "file-system-operations",
+        "troubleshooting"
+      ],
+      "decision": "open",
+      "cover_need": 4,
       "search_opened_slugs": [
         "secrets",
         "isolation",
         "tools-api"
       ],
-      "retrieval_hit": false,
+      "legacy_opened_slugs": [
+        "git-operations",
+        "file-system-operations",
+        "macos-sandboxes"
+      ],
+      "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": false,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
-      "acp_answer_supported": false,
+      "acp_answer_supported": true,
+      "legacy_answer_supported": false,
       "baseline_tokens": 283641,
       "search_tokens": 18923,
-      "acp_tokens": 62226,
-      "baseline_assembly_ms": 197.29,
-      "search_assembly_ms": 12.79,
-      "acp_assembly_ms": 43.53
+      "summary_decision_tokens": 240,
+      "summary_body_tokens": 24265,
+      "acp_tokens": 24505,
+      "legacy_tokens": 62226,
+      "baseline_assembly_ms": 203.2,
+      "search_assembly_ms": 13.21,
+      "acp_assembly_ms": 17.94,
+      "legacy_assembly_ms": 43.73
     },
     {
       "id": "d11",
@@ -309,27 +476,45 @@
         "webhooks"
       ],
       "content_query": "webhooks tell app something happened compared app polling daytona",
+      "candidate_slugs": [
+        "webhooks",
+        "limits",
+        "tools-cli"
+      ],
       "opened_slugs": [
         "webhooks",
         "limits",
-        "linked-accounts"
+        "tools-cli"
       ],
+      "decision": "open",
+      "cover_need": 4,
       "search_opened_slugs": [
         "webhooks",
         "limits",
         "acceptable-use"
       ],
+      "legacy_opened_slugs": [
+        "webhooks",
+        "limits",
+        "linked-accounts"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283647,
       "search_tokens": 9114,
-      "acp_tokens": 51222,
-      "baseline_assembly_ms": 196,
-      "search_assembly_ms": 7.06,
-      "acp_assembly_ms": 37.23
+      "summary_decision_tokens": 280,
+      "summary_body_tokens": 9925,
+      "acp_tokens": 10205,
+      "legacy_tokens": 51222,
+      "baseline_assembly_ms": 203.27,
+      "search_assembly_ms": 7.11,
+      "acp_assembly_ms": 8.45,
+      "legacy_assembly_ms": 41.84
     },
     {
       "id": "d12",
@@ -338,27 +523,41 @@
         "typescript-sdk"
       ],
       "content_query": "npm command installs daytona typescript sdk",
-      "opened_slugs": [
+      "candidate_slugs": [
         "typescript-sdk",
-        "go-sdk",
+        "tools-cli",
         "agent-skills"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "typescript-sdk",
         "mount-external-storage",
         "network-limits"
       ],
+      "legacy_opened_slugs": [
+        "typescript-sdk",
+        "go-sdk",
+        "agent-skills"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283638,
       "search_tokens": 39216,
-      "acp_tokens": 48806,
-      "baseline_assembly_ms": 200.63,
-      "search_assembly_ms": 34.93,
-      "acp_assembly_ms": 36.23
+      "summary_decision_tokens": 216,
+      "summary_body_tokens": 0,
+      "acp_tokens": 216,
+      "legacy_tokens": 48806,
+      "baseline_assembly_ms": 211.57,
+      "search_assembly_ms": 35.38,
+      "acp_assembly_ms": 1.17,
+      "legacy_assembly_ms": 37.13
     },
     {
       "id": "d13",
@@ -367,27 +566,45 @@
         "preview"
       ],
       "content_query": "revoke standard preview url token meant shared",
+      "candidate_slugs": [
+        "preview",
+        "custom-preview-proxy",
+        "ssh-access"
+      ],
       "opened_slugs": [
         "preview",
-        "isolation",
-        "regions"
+        "custom-preview-proxy",
+        "ssh-access"
       ],
+      "decision": "open",
+      "cover_need": 4,
       "search_opened_slugs": [
         "preview",
         "isolation",
         "tools-api"
       ],
+      "legacy_opened_slugs": [
+        "preview",
+        "isolation",
+        "regions"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283646,
       "search_tokens": 14183,
-      "acp_tokens": 53866,
-      "baseline_assembly_ms": 198,
-      "search_assembly_ms": 11.99,
-      "acp_assembly_ms": 38.83
+      "summary_decision_tokens": 218,
+      "summary_body_tokens": 4042,
+      "acp_tokens": 4260,
+      "legacy_tokens": 53866,
+      "baseline_assembly_ms": 207.82,
+      "search_assembly_ms": 10.07,
+      "acp_assembly_ms": 4.1,
+      "legacy_assembly_ms": 40.12
     },
     {
       "id": "d14",
@@ -396,27 +613,41 @@
         "log-streaming"
       ],
       "content_query": "stream session command logs instead reading log snapshot",
-      "opened_slugs": [
+      "candidate_slugs": [
         "log-streaming",
-        "process-code-execution",
-        "audit-logs"
+        "audit-logs",
+        "process-code-execution"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "log-streaming",
         "process-code-execution",
         "declarative-builder"
       ],
+      "legacy_opened_slugs": [
+        "log-streaming",
+        "process-code-execution",
+        "audit-logs"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283643,
       "search_tokens": 19540,
-      "acp_tokens": 60492,
-      "baseline_assembly_ms": 199.22,
-      "search_assembly_ms": 13.3,
-      "acp_assembly_ms": 43.45
+      "summary_decision_tokens": 199,
+      "summary_body_tokens": 0,
+      "acp_tokens": 199,
+      "legacy_tokens": 60492,
+      "baseline_assembly_ms": 198.25,
+      "search_assembly_ms": 13.71,
+      "acp_assembly_ms": 1.1,
+      "legacy_assembly_ms": 43.31
     },
     {
       "id": "d15",
@@ -425,27 +656,41 @@
         "regions"
       ],
       "content_query": "target region sandbox create time workload scheduled",
-      "opened_slugs": [
+      "candidate_slugs": [
         "regions",
-        "python-sdk",
-        "macos-sandboxes"
+        "warm-pools",
+        "scale"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "regions",
         "scale",
         "acceptable-use"
       ],
+      "legacy_opened_slugs": [
+        "regions",
+        "python-sdk",
+        "macos-sandboxes"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 283645,
       "search_tokens": 13580,
-      "acp_tokens": 49347,
-      "baseline_assembly_ms": 197.54,
-      "search_assembly_ms": 9.5,
-      "acp_assembly_ms": 36.09
+      "summary_decision_tokens": 252,
+      "summary_body_tokens": 0,
+      "acp_tokens": 252,
+      "legacy_tokens": 49347,
+      "baseline_assembly_ms": 199.2,
+      "search_assembly_ms": 9.77,
+      "acp_assembly_ms": 1.16,
+      "legacy_assembly_ms": 35.93
     }
   ],
   "scale": [
@@ -453,97 +698,125 @@
       "n": 1,
       "baseline_tokens": 283650,
       "search_tokens": 54270,
-      "acp_tokens": 71081,
-      "tokens_saved": 212569,
-      "percent_saved": 74.94059580468888,
-      "tokens_saved_vs_search": -16811,
-      "percent_saved_vs_search": -30.9765984890363,
+      "acp_tokens": 27963,
+      "legacy_tokens": 71081,
+      "tokens_saved": 255687,
+      "percent_saved": 90.14172395557905,
+      "tokens_saved_vs_search": 26307,
+      "percent_saved_vs_search": 48.4742951907131,
+      "legacy_tokens_saved_vs_search": -16811,
+      "legacy_percent_saved_vs_search": -30.9765984890363,
       "baseline_input_usd": 0.28365,
       "search_input_usd": 0.05427,
-      "acp_input_usd": 0.071081,
-      "usd_saved": 0.212569,
-      "usd_saved_vs_search": -0.016811,
+      "acp_input_usd": 0.027963,
+      "legacy_input_usd": 0.071081,
+      "usd_saved": 0.255687,
+      "usd_saved_vs_search": 0.026307,
       "retrieval_hit_rate": 0,
       "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 0,
       "acp_answer_support_rate": 0,
       "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 0,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 295.33,
-      "search_assembly_ms": 36.86,
-      "acp_assembly_ms": 49.24
+      "baseline_assembly_ms": 286.97,
+      "search_assembly_ms": 38.84,
+      "acp_assembly_ms": 24.17,
+      "legacy_assembly_ms": 50.49
     },
     {
       "n": 10,
       "baseline_tokens": 2836453,
       "search_tokens": 249614,
-      "acp_tokens": 701352,
-      "tokens_saved": 2135101,
-      "percent_saved": 75.27362519315497,
-      "tokens_saved_vs_search": -451738,
-      "percent_saved_vs_search": -180.9746248207232,
+      "acp_tokens": 123797,
+      "legacy_tokens": 701352,
+      "tokens_saved": 2712656,
+      "percent_saved": 95.63549968922453,
+      "tokens_saved_vs_search": 125817,
+      "percent_saved_vs_search": 50.40462474059949,
+      "legacy_tokens_saved_vs_search": -451738,
+      "legacy_percent_saved_vs_search": -180.9746248207232,
       "baseline_input_usd": 2.836453,
       "search_input_usd": 0.249614,
-      "acp_input_usd": 0.701352,
-      "usd_saved": 2.135101,
-      "usd_saved_vs_search": -0.451738,
-      "retrieval_hit_rate": 0.5,
+      "acp_input_usd": 0.123797,
+      "legacy_input_usd": 0.701352,
+      "usd_saved": 2.712656,
+      "usd_saved_vs_search": 0.125817,
+      "retrieval_hit_rate": 0.9,
       "search_retrieval_hit_rate": 0.7,
-      "acp_answer_support_rate": 0.6,
+      "legacy_retrieval_hit_rate": 0.5,
+      "acp_answer_support_rate": 0.7,
       "search_answer_support_rate": 0.7,
+      "legacy_answer_support_rate": 0.6,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 2182.27,
-      "search_assembly_ms": 181.92,
-      "acp_assembly_ms": 515.52
+      "baseline_assembly_ms": 2108.57,
+      "search_assembly_ms": 186.53,
+      "acp_assembly_ms": 113.61,
+      "legacy_assembly_ms": 497.9
     },
     {
       "n": 50,
       "baseline_tokens": 14182255,
       "search_tokens": 1197618,
-      "acp_tokens": 3250792,
-      "tokens_saved": 10931463,
-      "percent_saved": 77.07845473092961,
-      "tokens_saved_vs_search": -2053174,
-      "percent_saved_vs_search": -171.43813803733744,
+      "acp_tokens": 503309,
+      "legacy_tokens": 3250792,
+      "tokens_saved": 13678946,
+      "percent_saved": 96.45113559162488,
+      "tokens_saved_vs_search": 694309,
+      "percent_saved_vs_search": 57.97416204499264,
+      "legacy_tokens_saved_vs_search": -2053174,
+      "legacy_percent_saved_vs_search": -171.43813803733744,
       "baseline_input_usd": 14.182255,
       "search_input_usd": 1.197618,
-      "acp_input_usd": 3.250792,
-      "usd_saved": 10.931463,
-      "usd_saved_vs_search": -2.053174,
-      "retrieval_hit_rate": 0.64,
+      "acp_input_usd": 0.503309,
+      "legacy_input_usd": 3.250792,
+      "usd_saved": 13.678946,
+      "usd_saved_vs_search": 0.694309,
+      "retrieval_hit_rate": 0.92,
       "search_retrieval_hit_rate": 0.8,
-      "acp_answer_support_rate": 0.7,
+      "legacy_retrieval_hit_rate": 0.64,
+      "acp_answer_support_rate": 0.76,
       "search_answer_support_rate": 0.8,
+      "legacy_answer_support_rate": 0.7,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 10707.87,
-      "search_assembly_ms": 897.86,
-      "acp_assembly_ms": 2395.23
+      "baseline_assembly_ms": 10472.88,
+      "search_assembly_ms": 911.96,
+      "acp_assembly_ms": 471.56,
+      "legacy_assembly_ms": 2339.76
     },
     {
       "n": 100,
       "baseline_tokens": 28364485,
       "search_tokens": 2321096,
-      "acp_tokens": 6491862,
-      "tokens_saved": 21872623,
-      "percent_saved": 77.11270978478896,
-      "tokens_saved_vs_search": -4170766,
-      "percent_saved_vs_search": -179.68950874931497,
+      "acp_tokens": 957371,
+      "legacy_tokens": 6491862,
+      "tokens_saved": 27407114,
+      "percent_saved": 96.6247545125533,
+      "tokens_saved_vs_search": 1363725,
+      "percent_saved_vs_search": 58.75349403902295,
+      "legacy_tokens_saved_vs_search": -4170766,
+      "legacy_percent_saved_vs_search": -179.68950874931497,
       "baseline_input_usd": 28.364485,
       "search_input_usd": 2.321096,
-      "acp_input_usd": 6.491862,
-      "usd_saved": 21.872623,
-      "usd_saved_vs_search": -4.170766,
-      "retrieval_hit_rate": 0.65,
+      "acp_input_usd": 0.957371,
+      "legacy_input_usd": 6.491862,
+      "usd_saved": 27.407114,
+      "usd_saved_vs_search": 1.363725,
+      "retrieval_hit_rate": 0.93,
       "search_retrieval_hit_rate": 0.79,
-      "acp_answer_support_rate": 0.72,
+      "legacy_retrieval_hit_rate": 0.65,
+      "acp_answer_support_rate": 0.79,
       "search_answer_support_rate": 0.79,
+      "legacy_answer_support_rate": 0.72,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 21224.23,
-      "search_assembly_ms": 1734.12,
-      "acp_assembly_ms": 4759.62
+      "baseline_assembly_ms": 20880.65,
+      "search_assembly_ms": 1761.95,
+      "acp_assembly_ms": 891.15,
+      "legacy_assembly_ms": 4675.28
     }
   ],
   "enrichment": {
-    "note": "Committed ACO metadata is extractive (the first sentences of each Daytona doc, heading tags, and backtick identifiers). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even against the naive full-read is an upper bound. Break-even against search-then-read is the realistic comparison. Null means ACP did not accumulate a token or dollar saving against that arm within 100,000 forks.",
+    "note": "ACO metadata is extractive (the first sentences of each Daytona doc, heading tags, and backtick identifiers). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even for the headline summary-first policy is against the naive full-read (an upper bound) and against search-then-read. The legacy catalog policy has its own break-even rows. Null means that policy did not accumulate a token saving against that arm within 100,000 forks. Raw Daytona page text is not committed. This measurement reads a local cache produced by src/build-docs.ts.",
     "measured_prompt_input_tokens": 54630,
     "estimated_output_tokens": 16200,
     "estimated_output_source": "estimateEnrichmentCost(..., \"standard\") outputTokens constant, not a completion",
@@ -551,7 +824,9 @@
     "modeled_usd": 0.13563,
     "measured_token_break_even_forks": 1,
     "modeled_usd_break_even_forks": 1,
-    "measured_token_break_even_vs_search_forks": null,
-    "modeled_usd_break_even_vs_search_forks": null
+    "measured_token_break_even_vs_search_forks": 5,
+    "modeled_usd_break_even_vs_search_forks": 12,
+    "legacy_measured_token_break_even_forks": 1,
+    "legacy_measured_token_break_even_vs_search_forks": null
   }
 }

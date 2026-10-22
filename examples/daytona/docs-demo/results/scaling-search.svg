@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
   <rect width="100%" height="100%" fill="#ffffff"/>
-  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">ACP and search-then-read</text>
+  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">Summary-first, legacy ACP, and search</text>
   <text x="696" y="18" text-anchor="end" font-size="12" font-family="sans-serif" fill="#1d4ed8">Search-then-read</text>
-  <text x="696" y="34" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">ACP</text>
+  <text x="696" y="34" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">Summary-first ACP</text>
+  <text x="696" y="50" text-anchor="end" font-size="12" font-family="sans-serif" fill="#7c3aed">Legacy catalog ACP</text>
   <line x1="78" y1="366.0" x2="696" y2="366.0" stroke="#e5e7eb" />
   <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0k</text>
   <line x1="78" y1="292.5" x2="696" y2="292.5" stroke="#e5e7eb" />
@@ -19,11 +20,16 @@
   <circle cx="139.8" cy="354.7" r="4" fill="#1d4ed8" />
   <circle cx="387.0" cy="311.8" r="4" fill="#1d4ed8" />
   <circle cx="696.0" cy="260.9" r="4" fill="#1d4ed8" />
-  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,362.8 139.8,334.2 387.0,218.8 696.0,72.0"/>
-  <circle cx="84.2" cy="362.8" r="4" fill="#0f766e" />
-  <circle cx="139.8" cy="334.2" r="4" fill="#0f766e" />
-  <circle cx="387.0" cy="218.8" r="4" fill="#0f766e" />
-  <circle cx="696.0" cy="72.0" r="4" fill="#0f766e" />
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,364.7 139.8,360.4 387.0,343.2 696.0,322.6"/>
+  <circle cx="84.2" cy="364.7" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="360.4" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="343.2" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="322.6" r="4" fill="#0f766e" />
+  <polyline fill="none" stroke="#7c3aed" stroke-width="2" points="84.2,362.8 139.8,334.2 387.0,218.8 696.0,72.0"/>
+  <circle cx="84.2" cy="362.8" r="4" fill="#7c3aed" />
+  <circle cx="139.8" cy="334.2" r="4" fill="#7c3aed" />
+  <circle cx="387.0" cy="218.8" r="4" fill="#7c3aed" />
+  <circle cx="696.0" cy="72.0" r="4" fill="#7c3aed" />
   <text x="84.2" y="402" text-anchor="middle" font-size="12" fill="#374151">1</text>
   <text x="139.8" y="402" text-anchor="middle" font-size="12" fill="#374151">10</text>
   <text x="387.0" y="402" text-anchor="middle" font-size="12" fill="#374151">50</text>

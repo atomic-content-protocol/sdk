@@ -417,10 +417,10 @@ npx tsx examples/demo-enrich-url.ts https://example.com/some-article
 
 This fetches the URL, creates an ACO, enriches it in a single LLM call, and writes the result to `./demo-vault/`. The raw `.md` file is printed at the end.
 
-**Daytona sandbox benchmark** (enrich a corpus once, then fork parallel sandboxes) lives in [`examples/daytona`](examples/daytona). It compares naive full-read, BM25 search-then-read, and ACP triage, plus a Daytona docs corpus in `examples/daytona/docs-demo`. The offline curves run with no API keys:
+**Daytona sandbox benchmark** (enrich a corpus once, then fork parallel sandboxes) lives in [`examples/daytona`](examples/daytona). The offline run needs no API keys. It compares naive full-read, BM25 search-then-read, summary-first ACP, and the older full-catalog ACP policy, including a Daytona docs question set whose raw page text is fetched locally and not committed.
 
 ```bash
-npm run measure -w @atomic-content-protocol/example-daytona
+npm run bench
 ```
 
 **Package structure:**

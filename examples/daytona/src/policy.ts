@@ -4,8 +4,12 @@ import { fileURLToPath } from "node:url";
 
 export interface Policy {
   name: string;
+  legacy_name: string;
   limit: number;
   threshold: number;
+  summary_k: number;
+  max_bodies: number;
+  cover_fraction: number;
   catalog_limit: number;
   instruction: string;
   sections: {

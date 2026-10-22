@@ -1,0 +1,12 @@
+{
+  "name": "ACP Daytona offline benchmark",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "postCreateCommand": "npm install && npx turbo run build --filter=@atomic-content-protocol/example-daytona",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

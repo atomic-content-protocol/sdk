@@ -6,20 +6,26 @@
  * The benchmark fails if `cl100k` is missing. It does not fall back to the
  * chars/4 heuristic.
  *
- * Triage policy `mcp-find-similar-top3` (see policy.json and the README):
+ * Headline policy `summary-first` (see policy.json and the README):
+ * 1. Okapi BM25 over title, summary, and tags only (not the body, not entities).
+ *    The model is shown those few compact summaries, not the full catalog.
+ * 2. A fixed coverage rule either answers from the summaries or opens up to
+ *    3 full markdown bodies. The decision line is part of the counted prompt.
+ * Token total is cl100k(decision prompt) + cl100k(opened markdown), two
+ * encodings added together. No model is called. The decision line is the
+ * policy string, not a Haiku completion.
+ *
+ * Variant `mcp-find-similar-top3` is still measured:
  * 1. `list_acos` returns every object's frontmatter. That JSON is the catalog.
- * 2. `find_similar` ranks the catalog with the MCP server's content-overlap
- *    fallback (title, tags, entity names, summary). Top 3 are opened.
- * 3. `read_aco` returns frontmatter plus body for those objects only.
- * Token counts use the pretty-printed JSON the MCP server writes on stdio
- * (`JSON.stringify(result, null, 2)` in `ACPMCPServer`).
+ * 2. `find_similar` ranks with content-overlap. Top 3 are opened.
+ * 3. `read_aco` returns frontmatter plus body as pretty JSON.
+ * The MCP server cannot return compact summaries for a filtered id set, so
+ * summary-first uses the local helper in sandbox/bm25.mjs.
  *
  * Two baselines:
  * - Naive full-read is an upper bound. The prompt contains every page body.
- *   A real agent does not do this, and the prompt may not fit a context window.
- * - Search-then-read runs Okapi BM25 over the raw page text (sandbox/bm25.mjs),
- *   keeps the top 3, and charges the model for the title/URL index, the ranking,
- *   and those full pages only.
+ * - Search-then-read runs Okapi BM25 over the raw page text, keeps the top 3,
+ *   and charges the title/URL index, the ranking, and those full pages only.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -29,7 +35,7 @@ import { fileURLToPath } from "node:url";
 import { computeTokenCounts, FilesystemAdapter } from "@atomic-content-protocol/core";
 import { buildUnifiedPrompt, estimateEnrichmentCost, pricingFor } from "@atomic-content-protocol/enrichment";
 import { ACPMCPServer, type ToolOutput } from "@atomic-content-protocol/mcp";
-import { BM25_B, BM25_K1, bm25Search, searchMaterial } from "../sandbox/bm25.mjs";
+import { BM25_B, BM25_K1, bm25Search, searchMaterial, summaryFirst } from "../sandbox/bm25.mjs";
 import { contentQuery, EXAMPLE_ROOT, loadPolicy, promptPrefix, type Question } from "./policy.js";
 
 const require = createRequire(import.meta.url);
@@ -50,19 +56,29 @@ export interface QuestionMeasurement {
   question: string;
   gold_slugs: string[];
   content_query: string;
+  candidate_slugs: string[];
   opened_slugs: string[];
+  decision: "answer" | "open";
+  cover_need: number;
   search_opened_slugs: string[];
+  legacy_opened_slugs: string[];
   retrieval_hit: boolean;
   search_retrieval_hit: boolean;
+  legacy_retrieval_hit: boolean;
   baseline_answer_supported: boolean;
   search_answer_supported: boolean;
   acp_answer_supported: boolean;
+  legacy_answer_supported: boolean;
   baseline_tokens: number;
   search_tokens: number;
+  summary_decision_tokens: number;
+  summary_body_tokens: number;
   acp_tokens: number;
+  legacy_tokens: number;
   baseline_assembly_ms: number;
   search_assembly_ms: number;
   acp_assembly_ms: number;
+  legacy_assembly_ms: number;
 }
 
 export interface ScaleRow {
@@ -70,23 +86,30 @@ export interface ScaleRow {
   baseline_tokens: number;
   search_tokens: number;
   acp_tokens: number;
+  legacy_tokens: number;
   tokens_saved: number;
   percent_saved: number;
   tokens_saved_vs_search: number;
   percent_saved_vs_search: number;
+  legacy_tokens_saved_vs_search: number;
+  legacy_percent_saved_vs_search: number;
   baseline_input_usd: number;
   search_input_usd: number;
   acp_input_usd: number;
+  legacy_input_usd: number;
   usd_saved: number;
   usd_saved_vs_search: number;
   retrieval_hit_rate: number;
   search_retrieval_hit_rate: number;
+  legacy_retrieval_hit_rate: number;
   acp_answer_support_rate: number;
   search_answer_support_rate: number;
+  legacy_answer_support_rate: number;
   baseline_answer_support_rate: number;
   baseline_assembly_ms: number;
   search_assembly_ms: number;
   acp_assembly_ms: number;
+  legacy_assembly_ms: number;
 }
 
 export interface Measurement {
@@ -97,6 +120,8 @@ export interface Measurement {
   input_usd_per_million: number;
   output_usd_per_million: number;
   policy: string;
+  legacy_policy: string;
+  summary_first: { k: number; max_bodies: number; cover_fraction: number; rank: string };
   pages: number;
   questions: number;
   per_question: QuestionMeasurement[];
@@ -112,6 +137,8 @@ export interface Measurement {
     modeled_usd_break_even_forks: number | null;
     measured_token_break_even_vs_search_forks: number | null;
     modeled_usd_break_even_vs_search_forks: number | null;
+    legacy_measured_token_break_even_forks: number | null;
+    legacy_measured_token_break_even_vs_search_forks: number | null;
   };
 }
 
@@ -122,7 +149,7 @@ interface ManifestEntry {
 }
 
 const WIKI_NOTE =
-  "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even against the naive full-read is an upper bound. Break-even against search-then-read is the realistic comparison. Null means ACP did not accumulate a token or dollar saving against that arm within 100,000 forks.";
+  "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even for the headline summary-first policy is against the naive full-read (an upper bound) and against search-then-read. The legacy catalog policy has its own break-even rows. Null means that policy did not accumulate a token saving against that arm within 100,000 forks.";
 
 function wire(result: ToolOutput): string {
   return JSON.stringify(result, null, 2);
@@ -180,6 +207,11 @@ function breakEven(savedPerQuestion: number[], cost: number, limit = 100_000): n
 
 export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOTE): Promise<Measurement> {
   const policy = loadPolicy(root);
+  if (policy.name !== "summary-first") throw new Error(`headline policy must be summary-first, got ${policy.name}`);
+  if (!policy.legacy_name) throw new Error("policy.legacy_name is required");
+  if (!(policy.summary_k > 0) || !(policy.max_bodies > 0) || !(policy.cover_fraction > 0)) {
+    throw new Error("summary_k, max_bodies, and cover_fraction must be positive");
+  }
   const pricing = pricingFor(READ_MODEL);
   if (!pricing) throw new Error(`No price for ${READ_MODEL} in MODEL_PRICING`);
 
@@ -209,10 +241,20 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     throw new Error(`list_acos returned ${Array.isArray(items) ? items.length : "no"} items, expected ${pages.length}`);
   }
   const slugById = new Map<string, string>();
+  const metaBySlug = new Map<string, { summary: string; tags: string[] }>();
   for (const item of items) {
     const fm = item as Record<string, unknown>;
-    slugById.set(String(fm["id"]), String(fm["corpus_slug"]));
+    const slug = String(fm["corpus_slug"]);
+    slugById.set(String(fm["id"]), slug);
+    const tags = Array.isArray(fm["tags"]) ? fm["tags"].map((tag) => String(tag)) : [];
+    const summary = typeof fm["summary"] === "string" ? fm["summary"] : "";
+    metaBySlug.set(slug, { summary, tags });
   }
+  const rankedPages = pages.map((page) => {
+    const meta = metaBySlug.get(page.slug);
+    if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
+    return { ...page, summary: meta.summary, tags: meta.tags };
+  });
   const catalogWire = wire(listResult);
 
   const bodies = pages.map((page) => `# ${page.title}\n\n${page.body}`).join("\n\n");
@@ -237,6 +279,19 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     const searchTokens = await cl100k(searchPrompt);
     const searchMs = performance.now() - searchStarted;
 
+    const summaryStarted = performance.now();
+    const triage = summaryFirst(rankedPages, question.question, policy.stopwords, {
+      summaryK: policy.summary_k,
+      maxBodies: policy.max_bodies,
+      coverFraction: policy.cover_fraction,
+    });
+    const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+    const decisionTokens = await cl100k(decisionPrompt);
+    const bodyTokens = triage.bodyMaterial.length === 0 ? 0 : await cl100k(triage.bodyMaterial);
+    const summaryTokens = decisionTokens + bodyTokens;
+    const summaryMs = performance.now() - summaryStarted;
+    const summaryShown = `${triage.summaryBlock}\n${triage.bodyMaterial}`;
+
     const similarResult = await server.callTool("find_similar", {
       text: query,
       limit: policy.limit,
@@ -259,10 +314,10 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     for (const id of openedIds) {
       reads.push(await server.callTool("read_aco", { id }));
     }
-    const acpPrompt = `${prefix}${policy.sections.catalog}${catalogWire}\n\n${policy.sections.ranking}${wire(similarResult)}\n\n${policy.sections.opened}${reads.map(wire).join("\n\n")}`;
-    const acpStarted = performance.now();
-    const acpTokens = await cl100k(acpPrompt);
-    const acpMs = performance.now() - acpStarted;
+    const legacyPrompt = `${prefix}${policy.sections.catalog}${catalogWire}\n\n${policy.sections.ranking}${wire(similarResult)}\n\n${policy.sections.opened}${reads.map(wire).join("\n\n")}`;
+    const legacyStarted = performance.now();
+    const legacyTokens = await cl100k(legacyPrompt);
+    const legacyMs = performance.now() - legacyStarted;
 
     const openedBodies = reads
       .map((result) => {
@@ -270,26 +325,35 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
         return typeof body === "string" ? body : "";
       })
       .join("\n");
-    const retrievalHit = question.gold_slugs.every((slug) => openedSlugs.includes(slug));
 
     perQuestion.push({
       id: question.id,
       question: question.question,
       gold_slugs: question.gold_slugs,
       content_query: query,
-      opened_slugs: openedSlugs,
+      candidate_slugs: triage.candidate_slugs,
+      opened_slugs: triage.opened_slugs,
+      decision: triage.decision,
+      cover_need: triage.cover_need,
       search_opened_slugs: searchOpened,
-      retrieval_hit: retrievalHit,
+      legacy_opened_slugs: openedSlugs,
+      retrieval_hit: question.gold_slugs.every((slug) => triage.candidate_slugs.includes(slug)),
       search_retrieval_hit: question.gold_slugs.every((slug) => searchOpened.includes(slug)),
+      legacy_retrieval_hit: question.gold_slugs.every((slug) => openedSlugs.includes(slug)),
       baseline_answer_supported: supports(baselineMaterial, question.expected_answer),
       search_answer_supported: supports(searchBody, question.expected_answer),
-      acp_answer_supported: supports(`${catalogWire}\n${openedBodies}`, question.expected_answer),
+      acp_answer_supported: supports(summaryShown, question.expected_answer),
+      legacy_answer_supported: supports(`${catalogWire}\n${openedBodies}`, question.expected_answer),
       baseline_tokens: baselineTokens,
       search_tokens: searchTokens,
-      acp_tokens: acpTokens,
+      summary_decision_tokens: decisionTokens,
+      summary_body_tokens: bodyTokens,
+      acp_tokens: summaryTokens,
+      legacy_tokens: legacyTokens,
       baseline_assembly_ms: Number(baselineMs.toFixed(2)),
       search_assembly_ms: Number(searchMs.toFixed(2)),
-      acp_assembly_ms: Number(acpMs.toFixed(2)),
+      acp_assembly_ms: Number(summaryMs.toFixed(2)),
+      legacy_assembly_ms: Number(legacyMs.toFixed(2)),
     });
   }
 
@@ -308,6 +372,8 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
   const savedVsSearch = perQuestion.map((row) => row.search_tokens - row.acp_tokens);
   const savedUsd = savedTokens.map((tokens) => usd(tokens, pricing.input));
   const savedUsdVsSearch = savedVsSearch.map((tokens) => usd(tokens, pricing.input));
+  const legacySavedTokens = perQuestion.map((row) => row.baseline_tokens - row.legacy_tokens);
+  const legacySavedVsSearch = perQuestion.map((row) => row.search_tokens - row.legacy_tokens);
 
   const scale: ScaleRow[] = policy.fork_sizes.map((n) => {
     const baselineTokens = sumAssigned(
@@ -322,20 +388,29 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
       perQuestion.map((row) => row.acp_tokens),
       n
     );
+    const legacyTokens = sumAssigned(
+      perQuestion.map((row) => row.legacy_tokens),
+      n
+    );
     const saved = baselineTokens - acpTokens;
     const savedSearch = searchTokens - acpTokens;
+    const legacySavedSearch = searchTokens - legacyTokens;
     return {
       n,
       baseline_tokens: baselineTokens,
       search_tokens: searchTokens,
       acp_tokens: acpTokens,
+      legacy_tokens: legacyTokens,
       tokens_saved: saved,
       percent_saved: baselineTokens === 0 ? 0 : (saved / baselineTokens) * 100,
       tokens_saved_vs_search: savedSearch,
       percent_saved_vs_search: searchTokens === 0 ? 0 : (savedSearch / searchTokens) * 100,
+      legacy_tokens_saved_vs_search: legacySavedSearch,
+      legacy_percent_saved_vs_search: searchTokens === 0 ? 0 : (legacySavedSearch / searchTokens) * 100,
       baseline_input_usd: roundUsd(usd(baselineTokens, pricing.input)),
       search_input_usd: roundUsd(usd(searchTokens, pricing.input)),
       acp_input_usd: roundUsd(usd(acpTokens, pricing.input)),
+      legacy_input_usd: roundUsd(usd(legacyTokens, pricing.input)),
       usd_saved: roundUsd(usd(saved, pricing.input)),
       usd_saved_vs_search: roundUsd(usd(savedSearch, pricing.input)),
       retrieval_hit_rate: rateAssigned(
@@ -346,12 +421,20 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
         perQuestion.map((row) => row.search_retrieval_hit),
         n
       ),
+      legacy_retrieval_hit_rate: rateAssigned(
+        perQuestion.map((row) => row.legacy_retrieval_hit),
+        n
+      ),
       acp_answer_support_rate: rateAssigned(
         perQuestion.map((row) => row.acp_answer_supported),
         n
       ),
       search_answer_support_rate: rateAssigned(
         perQuestion.map((row) => row.search_answer_supported),
+        n
+      ),
+      legacy_answer_support_rate: rateAssigned(
+        perQuestion.map((row) => row.legacy_answer_supported),
         n
       ),
       baseline_answer_support_rate: rateAssigned(
@@ -376,6 +459,12 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
           n
         ).toFixed(2)
       ),
+      legacy_assembly_ms: Number(
+        sumAssigned(
+          perQuestion.map((row) => row.legacy_assembly_ms),
+          n
+        ).toFixed(2)
+      ),
     };
   });
 
@@ -387,6 +476,13 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     input_usd_per_million: pricing.input,
     output_usd_per_million: pricing.output,
     policy: policy.name,
+    legacy_policy: policy.legacy_name,
+    summary_first: {
+      k: policy.summary_k,
+      max_bodies: policy.max_bodies,
+      cover_fraction: policy.cover_fraction,
+      rank: "bm25-title-summary-tags",
+    },
     pages: pages.length,
     questions: questions.length,
     per_question: perQuestion,
@@ -402,6 +498,8 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
       modeled_usd_break_even_forks: breakEven(savedUsd, modeledUsd),
       measured_token_break_even_vs_search_forks: breakEven(savedVsSearch, measuredInput),
       modeled_usd_break_even_vs_search_forks: breakEven(savedUsdVsSearch, modeledUsd),
+      legacy_measured_token_break_even_forks: breakEven(legacySavedTokens, measuredInput),
+      legacy_measured_token_break_even_vs_search_forks: breakEven(legacySavedVsSearch, measuredInput),
     },
   };
 }
@@ -418,18 +516,37 @@ function money(value: number): string {
   return `$${value.toFixed(4)}`;
 }
 
+function yn(flag: boolean): string {
+  return flag ? "yes" : "no";
+}
+
+function slugList(slugs: string[]): string {
+  return slugs.length === 0 ? "(none)" : slugs.join(", ");
+}
+
 export function renderMarkdown(result: Measurement): string {
-  const questionRows = result.per_question
+  const tokenRows = result.per_question
     .map((row) => {
-      return `| ${row.id} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.acp_tokens)} | ${row.search_opened_slugs.join(", ")} | ${row.opened_slugs.join(", ")} | ${row.search_retrieval_hit ? "yes" : "no"} | ${row.retrieval_hit ? "yes" : "no"} | ${row.search_answer_supported ? "yes" : "no"} | ${row.acp_answer_supported ? "yes" : "no"} |`;
+      return `| ${row.id} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.summary_decision_tokens)} | ${int(row.summary_body_tokens)} | ${int(row.acp_tokens)} | ${int(row.legacy_tokens)} |`;
+    })
+    .join("\n");
+
+  const retrievalRows = result.per_question
+    .map((row) => {
+      return `| ${row.id} | ${slugList(row.search_opened_slugs)} | ${slugList(row.candidate_slugs)} | ${row.decision} | ${slugList(row.opened_slugs)} | ${slugList(row.legacy_opened_slugs)} | ${yn(row.search_retrieval_hit)} | ${yn(row.retrieval_hit)} | ${yn(row.legacy_retrieval_hit)} | ${yn(row.search_answer_supported)} | ${yn(row.acp_answer_supported)} | ${yn(row.legacy_answer_supported)} |`;
     })
     .join("\n");
 
   const scaleRows = result.scale
-    .map(
-      (row) =>
-        `| ${row.n} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.acp_tokens)} | ${pct(row.percent_saved)} | ${pct(row.percent_saved_vs_search)} | ${money(row.baseline_input_usd)} | ${money(row.search_input_usd)} | ${money(row.acp_input_usd)} | ${pct(row.baseline_answer_support_rate * 100)} | ${pct(row.search_retrieval_hit_rate * 100)} | ${pct(row.search_answer_support_rate * 100)} | ${pct(row.retrieval_hit_rate * 100)} | ${pct(row.acp_answer_support_rate * 100)} |`
-    )
+    .map((row) => {
+      return `| ${row.n} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.acp_tokens)} | ${int(row.legacy_tokens)} | ${pct(row.percent_saved)} | ${pct(row.percent_saved_vs_search)} | ${pct(row.legacy_percent_saved_vs_search)} | ${money(row.baseline_input_usd)} | ${money(row.search_input_usd)} | ${money(row.acp_input_usd)} | ${money(row.legacy_input_usd)} |`;
+    })
+    .join("\n");
+
+  const rateRows = result.scale
+    .map((row) => {
+      return `| ${row.n} | ${pct(row.search_retrieval_hit_rate * 100)} | ${pct(row.retrieval_hit_rate * 100)} | ${pct(row.legacy_retrieval_hit_rate * 100)} | ${pct(row.baseline_answer_support_rate * 100)} | ${pct(row.search_answer_support_rate * 100)} | ${pct(row.acp_answer_support_rate * 100)} | ${pct(row.legacy_answer_support_rate * 100)} |`;
+    })
     .join("\n");
 
   const enrich = result.enrichment;
@@ -437,38 +554,56 @@ export function renderMarkdown(result: Measurement): string {
     if (count === null) return "not reached within 100,000 forks";
     return count === 1 ? "1 fork" : `${count} forks`;
   };
+  const rule = result.summary_first;
+  const fromSummaries = result.per_question.filter((row) => row.decision === "answer").length;
 
   return `# Daytona ACP offline benchmark
 
 Tokenizer: \`${result.tokenizer}\` (tiktoken ${result.tiktoken_version}), counted with \`computeTokenCounts\` from \`@atomic-content-protocol/core\`.
 
-Policy: \`${result.policy}\`. ACP sends \`list_acos\` frontmatter for all ${result.pages} objects, \`find_similar\` content-overlap, and \`read_aco\` for the top 3 hits. Search-then-read runs Okapi BM25 (k1=${result.bm25.k1}, b=${result.bm25.b}) over the raw title plus body, then sends the title and URL index, the top 3 ranking, and those full pages. Naive full-read sends every cached page body. It is an upper bound, not what a careful agent does. The question bank has ${result.questions} questions. Fork counts above that cycle the bank (\`question i % ${result.questions}\`).
+Headline policy: \`${result.policy}\`. BM25 (k1=${result.bm25.k1}, b=${result.bm25.b}) ranks title, summary, and tags only, and keeps the top ${rule.k}. The prompt contains those compact summaries (slug, title, summary) and a decision line. A candidate covers the question when at least max(1, ceil(unique query terms * ${rule.cover_fraction})) of those terms appear in its title, summary, or tags. If any candidate covers, no body is opened. Otherwise up to ${rule.max_bodies} full markdown bodies are opened. On this question bank, ${fromSummaries} of ${result.questions} questions were answered from summaries and opened no body. Summary-first tokens are the sum of two separate cl100k encodings: the decision prompt (instruction, question, summaries, and the decision line) plus the opened markdown. They are not one concatenated encoding, and the decision line is the policy string, not a model completion.
 
-Prices used for the dollar columns are \`MODEL_PRICING["${result.read_model}"]\` input at $${result.input_usd_per_million} per million tokens. Output tokens are not included, because this run does not call a model. These are not invoices.
+Variant \`${result.legacy_policy}\` still puts \`list_acos\` frontmatter for all ${result.pages} objects in the prompt, plus \`find_similar\` content-overlap and \`read_aco\` JSON for the top 3. That variant is reported so the catalog cost stays visible.
 
-A positive "ACP vs search" percent means ACP used fewer input tokens than search-then-read. A negative percent means ACP used more. Savings against the naive full-read are an upper bound.
+Search-then-read runs the same BM25 settings over the raw title plus body, then sends the title and URL index, the top 3 ranking, and those full pages. Naive full-read sends every cached page body. It is an upper bound, not what a careful agent does. The question bank has ${result.questions} questions. Fork counts above that cycle the bank (\`question i % ${result.questions}\`).
+
+Prices used for the dollar columns are \`MODEL_PRICING["${result.read_model}"]\` input at $${result.input_usd_per_million} per million tokens, applied to the measured cl100k totals. Output tokens are not included, because this run does not call a model. The decision line is priced as input, because it is text in the decision prompt. These are not invoices.
+
+A positive "summary-first vs search" percent means summary-first used fewer input tokens than search-then-read. A negative percent means it used more. The same reading applies to the legacy column. Savings against the naive full-read are an upper bound.
 
 The repository README's 86% illustration (250,000 tokens down to 35,000 on 50 documents) is a different hypothetical. It is not this measurement.
 
-## Per question
+## Per question tokens
 
-| Question | Naive tokens | Search tokens | ACP tokens | Search opened | ACP opened | Search hit | ACP hit | Search answer | ACP answer |
-|---|---:|---:|---:|---|---|---|---|---|---|
-${questionRows}
+| Question | Naive | Search | Summary decision | Summary bodies | Summary-first | Legacy ACP |
+|---|---:|---:|---:|---:|---:|---:|
+${tokenRows}
+
+## Per question retrieval
+
+Summary-first hit means every gold slug is in the top-${rule.k} summary candidates. It does not mean the body was opened. Search hit and legacy hit mean every gold slug was opened. Answer support means the expected string is in that arm's shown context: search material, summary-first summaries plus opened markdown (not the question), or the legacy catalog plus opened JSON bodies. None of these is a model grade.
+
+| Question | Search opened | Summary candidates | Decision | Summary bodies | Legacy opened | Search hit | Summary hit | Legacy hit | Search answer | Summary answer | Legacy answer |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+${retrievalRows}
 
 ## Fork scaling
 
-Assembly time is local tokenization time, summed across the N assignments (a repeated question adds its measured time again). It is not sandbox boot time and not model latency. Naive answer support is the expected string inside the full page text. Search answer support is the string inside the search prompt material. ACP answer support is the string inside the metadata catalog plus opened bodies. Retrieval hit means every gold page was opened. None of these is a model grade.
+Assembly time in the JSON is local tokenization time, summed across the N assignments. It is not sandbox boot time and not model latency.
 
-| N | Naive tokens | Search tokens | ACP tokens | ACP vs naive | ACP vs search | Naive $ | Search $ | ACP $ | Naive answer | Search hit | Search answer | ACP hit | ACP answer |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| N | Naive tokens | Search tokens | Summary-first tokens | Legacy tokens | Summary vs naive | Summary vs search | Legacy vs search | Naive $ | Search $ | Summary $ | Legacy $ |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 ${scaleRows}
+
+| N | Search hit | Summary hit | Legacy hit | Naive answer | Search answer | Summary answer | Legacy answer |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+${rateRows}
 
 ![Context tokens by fork count](scaling.svg)
 
-![ACP and search-then-read](scaling-search.svg)
+![Summary-first, legacy ACP, and search-then-read](scaling-search.svg)
 
-The first chart uses the naive upper bound as its scale, so the other two lines sit near the bottom. The second chart is only search-then-read and ACP.
+The first chart uses the naive upper bound as its scale, so the other lines sit near the bottom. The second chart is search-then-read, summary-first, and the legacy catalog policy.
 
 ## Enrichment, counted once
 
@@ -481,34 +616,39 @@ ${enrich.note}
 | Estimated output source | ${enrich.estimated_output_source} |
 | Package \`estimateEnrichmentCost\` total (approximate tokenizer) | ${money(enrich.package_estimate_usd)} |
 | Modeled fast-tier USD (measured input + estimated output) | ${money(enrich.modeled_usd)} |
-| Break-even vs naive full-read, measured tokens | ${forks(enrich.measured_token_break_even_forks)} |
-| Break-even vs naive full-read, modeled USD | ${forks(enrich.modeled_usd_break_even_forks)} |
-| Break-even vs search-then-read, measured tokens | ${forks(enrich.measured_token_break_even_vs_search_forks)} |
-| Break-even vs search-then-read, modeled USD | ${forks(enrich.modeled_usd_break_even_vs_search_forks)} |
+| Summary-first break-even vs naive full-read, measured tokens | ${forks(enrich.measured_token_break_even_forks)} |
+| Summary-first break-even vs naive full-read, modeled USD | ${forks(enrich.modeled_usd_break_even_forks)} |
+| Summary-first break-even vs search-then-read, measured tokens | ${forks(enrich.measured_token_break_even_vs_search_forks)} |
+| Summary-first break-even vs search-then-read, modeled USD | ${forks(enrich.modeled_usd_break_even_vs_search_forks)} |
+| Legacy catalog break-even vs naive full-read, measured tokens | ${forks(enrich.legacy_measured_token_break_even_forks)} |
+| Legacy catalog break-even vs search-then-read, measured tokens | ${forks(enrich.legacy_measured_token_break_even_vs_search_forks)} |
 | Model spend that produced the committed metadata | $0 |
 
-A break-even of 0 forks means the measured per-fork token saving already exceeds the one-time prompt, or the cost being compared is zero.
+A break-even of 0 forks means the measured per-fork token saving already exceeds the one-time prompt, or the cost being compared is zero. "Not reached" means that arm never saves tokens against the comparison, so enrichment is not paid back by the read path.
 
 ## Accuracy
 
-Retrieval hit means every gold page for that question was one of the opened objects. Answer support means the expected answer string occurs in that arm's context. This is not a model grade. A live model can still answer wrongly from a context that contains the string.
+Summary-first retrieval hit means every gold page was one of the summary candidates. Answer support means the expected answer string occurs in the compact summaries or in a markdown body that the coverage rule opened. Legacy retrieval hit means every gold page was opened by \`find_similar\`. This is not a model grade. A live model can still answer wrongly from a context that contains the string.
 
 ## Caveats
 
-- Naive full-read is an upper bound. It stuffs every page into one prompt. Search-then-read is the realistic baseline: BM25 over raw text, top 3, same k as ACP.
-- The ACP prompt still includes the full metadata catalog plus three opened objects. That catalog can cost more tokens than a title and URL index plus three raw pages.
-- Page bodies for the Wikipedia corpus are MediaWiki plaintext extracts, capped at 100,000 characters. \`fetchPageForUrl\` on those HTML pages returns chrome and wikitext, which is recorded on the manifest and is not the body. The docs demo uses the markdown files from the docs index instead.
+- Naive full-read is an upper bound. Search-then-read is the realistic baseline: BM25 over raw text, top 3.
+- Summary-first does not put the full metadata catalog in the prompt. The MCP server's \`find_similar\` returns only id, title, and similarity_score. \`list_acos\` returns every object's full frontmatter and cannot return compact summaries for a filtered id set. \`read_aco\` returns pretty JSON, not markdown. A small SDK addition that would match this policy is \`read_summaries({ ids })\` returning \`{ id, title, summary }[]\`, plus a markdown format on \`read_aco\`. This demo ranks frontmatter with the local helper and opens markdown from the page cache. It does not change SDK packages.
+- The offline decision is the coverage rule above, not a Haiku completion. A live run sends that same context in one model call. Provider usage on the concatenated prompt can differ slightly from the sum of the two offline encodings.
+- Page bodies for the Wikipedia corpus are MediaWiki plaintext extracts, capped at 100,000 characters. \`fetchPageForUrl\` on those HTML pages returns chrome and wikitext, which is recorded on the manifest and is not the body. The docs demo uses markdown fetched from the docs index. That raw text is not committed. \`src/build-docs.ts\` regenerates it locally.
 - Metadata was not produced by \`UnifiedPipeline\`. A model summary could be shorter or longer, and could rank differently.
 - Cycling the question bank out to N=100 repeats the same work. It shows the fork curve, not that many distinct questions.
-- Input-only dollar savings ignore output tokens. Similar answer lengths on both sides would add about the same output cost to each and would not remove the input gap.
-- Naive prompts for the Wikipedia corpus are larger than a typical 200k-token context window. The live harness uses search-then-read by default so the comparison call can fit. Set \`ACP_LIVE_BASELINE=naive\` or \`both\` to also send the upper bound.
+- Input-only dollar figures ignore model output tokens. Similar answer lengths on both sides would add about the same output cost to each and would not remove the input gap.
+- Naive prompts for the Wikipedia corpus are larger than a typical 200k-token context window. The live harness uses search-then-read as the non-ACP arm by default. Set \`ACP_LIVE_BASELINE=naive\` or \`both\` to also send the upper bound. The ACP arm of a live run is summary-first.
 `;
 }
+
+export type SeriesKey = "baseline_tokens" | "search_tokens" | "acp_tokens" | "legacy_tokens";
 
 export function renderSvg(
   rows: ScaleRow[],
   title: string,
-  series: Array<{ key: "baseline_tokens" | "search_tokens" | "acp_tokens"; color: string; label: string }>
+  series: Array<{ key: SeriesKey; color: string; label: string }>
 ): string {
   const width = 720;
   const height = 420;
@@ -562,20 +702,20 @@ export function renderSvg(
 `;
 }
 
-const NAIVE_SERIES = [
-  { key: "baseline_tokens" as const, color: "#b45309", label: "Naive full-read (upper bound)" },
-  { key: "search_tokens" as const, color: "#1d4ed8", label: "Search-then-read" },
-  { key: "acp_tokens" as const, color: "#0f766e", label: "ACP" },
+export const NAIVE_SERIES: Array<{ key: SeriesKey; color: string; label: string }> = [
+  { key: "baseline_tokens", color: "#b45309", label: "Naive full-read (upper bound)" },
+  { key: "search_tokens", color: "#1d4ed8", label: "Search-then-read" },
+  { key: "acp_tokens", color: "#0f766e", label: "Summary-first ACP" },
 ];
 
-const SEARCH_SERIES = [
-  { key: "search_tokens" as const, color: "#1d4ed8", label: "Search-then-read" },
-  { key: "acp_tokens" as const, color: "#0f766e", label: "ACP" },
+export const COMPARISON_SERIES: Array<{ key: SeriesKey; color: string; label: string }> = [
+  { key: "search_tokens", color: "#1d4ed8", label: "Search-then-read" },
+  { key: "acp_tokens", color: "#0f766e", label: "Summary-first ACP" },
+  { key: "legacy_tokens", color: "#7c3aed", label: "Legacy catalog ACP" },
 ];
 
-async function main(): Promise<void> {
-  const result = await measureCorpus();
-  const resultsDir = path.join(EXAMPLE_ROOT, "results");
+export function writeMeasurement(root: string, result: Measurement): void {
+  const resultsDir = path.join(root, "results");
   mkdirSync(resultsDir, { recursive: true });
   writeFileSync(path.join(resultsDir, "offline.json"), `${JSON.stringify(result, null, 2)}\n`);
   writeFileSync(path.join(resultsDir, "offline.md"), renderMarkdown(result));
@@ -585,14 +725,19 @@ async function main(): Promise<void> {
   );
   writeFileSync(
     path.join(resultsDir, "scaling-search.svg"),
-    renderSvg(result.scale, "ACP and search-then-read", SEARCH_SERIES)
+    renderSvg(result.scale, "Summary-first, legacy ACP, and search", COMPARISON_SERIES)
   );
+}
+
+async function main(): Promise<void> {
+  const result = await measureCorpus();
+  writeMeasurement(EXAMPLE_ROOT, result);
   const scale = result.scale
     .map((row) => `${row.n}:naive ${row.percent_saved.toFixed(1)}% search ${row.percent_saved_vs_search.toFixed(1)}%`)
     .join(" ");
   console.log(`wrote results (${scale})`);
   console.log(
-    `enrichment prompt tokens ${result.enrichment.measured_prompt_input_tokens}, token break-even ${result.enrichment.measured_token_break_even_forks}`
+    `enrichment prompt tokens ${result.enrichment.measured_prompt_input_tokens}, vs search break-even ${result.enrichment.measured_token_break_even_vs_search_forks}`
   );
 }
 

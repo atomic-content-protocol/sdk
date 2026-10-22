@@ -6,8 +6,10 @@
  * log(1 + (N - df + 0.5) / (df + 0.5)).
  * Tokens are lowercase runs of [a-z0-9] of length 3 or more, minus the
  * stopword list in policy.json. The query uses each remaining term once.
- * The indexed text is the title plus the body. Ties break by slug ascending.
- * A hit with score 0 is dropped, then the list is cut to `limit`.
+ * The default indexed text is the title plus the body. Pass `indexText` to
+ * rank a different string (summary-first uses title, summary, and tags).
+ * Ties break by slug ascending. A hit with score 0 is dropped, then the
+ * list is cut to `limit`.
  */
 
 export const BM25_K1 = 1.2;
@@ -21,10 +23,11 @@ export function tokenize(text, stopwords) {
     .filter((word) => word.length >= 3 && !stop.has(word));
 }
 
-export function bm25Search(pages, queryText, stopwords, limit) {
+export function bm25Search(pages, queryText, stopwords, limit, indexText) {
+  const textOf = indexText ?? ((page) => `${page.title}\n${page.body}`);
   const terms = [...new Set(tokenize(queryText, stopwords))];
   const docs = pages.map((page) => {
-    const tokens = tokenize(`${page.title}\n${page.body}`, stopwords);
+    const tokens = tokenize(textOf(page), stopwords);
     const tf = new Map();
     for (const token of tokens) tf.set(token, (tf.get(token) ?? 0) + 1);
     return { page, tf, length: tokens.length };
@@ -72,4 +75,53 @@ export function searchMaterial(pages, hits, sections) {
     })
     .join("\n\n");
   return `${sections.search_index}${JSON.stringify(index, null, 2)}\n\n${sections.search_ranking}${JSON.stringify(ranking, null, 2)}\n\n${sections.search_pages}${opened}`;
+}
+
+/**
+ * Summary-first triage. Rank title + summary + tags only, show those compact
+ * summaries, and open full markdown bodies only when none of the candidates
+ * covers enough query terms.
+ *
+ * A candidate covers the question when the number of unique query terms found
+ * in its title, summary, and tags is at least max(1, ceil(terms * coverFraction)).
+ * If any of the top `summaryK` covers, open nothing. Otherwise open up to
+ * `maxBodies` full bodies, in rank order. This rule is fixed. Do not retune it
+ * to chase a score.
+ */
+export function summaryFirst(pages, queryText, stopwords, options) {
+  const hits = bm25Search(pages, queryText, stopwords, options.summaryK, (page) =>
+    `${page.title}\n${page.summary ?? ""}\n${(page.tags ?? []).join(" ")}`
+  );
+  const terms = [...new Set(tokenize(queryText, stopwords))];
+  const need = Math.max(1, Math.ceil(terms.length * options.coverFraction));
+  const judged = hits.map((hit) => {
+    const page = pages.find((candidate) => candidate.slug === hit.slug);
+    if (!page) throw new Error(`summary-first hit missing page ${hit.slug}`);
+    const hay = new Set(tokenize(`${page.title}\n${page.summary ?? ""}\n${(page.tags ?? []).join(" ")}`, stopwords));
+    const covered = terms.filter((term) => hay.has(term)).length;
+    return { hit, page, covered };
+  });
+  const anyCover = judged.some((row) => row.covered >= need);
+  const opened = anyCover ? [] : judged.slice(0, options.maxBodies);
+  const decisionLine = anyCover
+    ? "Decision: answer from summaries."
+    : `Decision: open ${opened.map((row) => row.page.slug).join(", ")}.`;
+  const summaryBlock = judged
+    .map(
+      (row, index) =>
+        `${index + 1}. slug: ${row.page.slug}\ntitle: ${row.page.title}\nsummary: ${row.page.summary ?? ""}`
+    )
+    .join("\n\n");
+  const summaryMaterial = `Candidate summaries:\n${summaryBlock}\n\n${decisionLine}\n`;
+  const bodyMaterial =
+    opened.length === 0 ? "" : opened.map((row) => `# ${row.page.title}\n\n${row.page.body}`).join("\n\n");
+  return {
+    candidate_slugs: judged.map((row) => row.page.slug),
+    opened_slugs: opened.map((row) => row.page.slug),
+    decision: anyCover ? "answer" : "open",
+    cover_need: need,
+    summaryBlock,
+    summaryMaterial,
+    bodyMaterial,
+  };
 }

@@ -10,6 +10,7 @@
     "build-docs": "tsx src/build-docs.ts",
     "measure": "tsx src/measure.ts",
     "measure:docs": "tsx src/measure-docs.ts",
+    "bench": "tsx src/bench.ts",
     "live": "tsx src/live.ts",
     "lint": "tsc --noEmit -p tsconfig.json",
     "test": "tsx src/verify.ts"

@@ -6,12 +6,17 @@
  * still returns the triage decision and sets `error` on each model result.
  *
  * Keep `contentQuery` in sync with src/policy.ts. Both read policy.json.
+ *
+ * The ACP arm is summary-first. `list_acos` is used only to read frontmatter
+ * (title, summary, tags). That catalog is not placed in the model prompt.
+ * The offline coverage rule decides which markdown bodies to open. A live
+ * model call, when a key is set, receives that same context in one prompt.
  */
 
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { bm25Search, searchMaterial } from "./bm25.mjs";
+import { bm25Search, searchMaterial, summaryFirst } from "./bm25.mjs";
 
 const policy = JSON.parse(readFileSync(process.env.ACP_POLICY ?? "/opt/acp/policy.json", "utf8"));
 const vault = process.env.ACP_VAULT ?? "/opt/acp/vault";
@@ -177,24 +182,26 @@ async function answerQuestion(client, question, pages) {
     sortBy: "title",
     order: "asc",
   });
-  const slugById = new Map();
+  const metaBySlug = new Map();
   for (const item of list.data.items ?? []) {
-    slugById.set(String(item.id), String(item.corpus_slug));
+    const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [];
+    metaBySlug.set(String(item.corpus_slug), {
+      summary: typeof item.summary === "string" ? item.summary : "",
+      tags,
+    });
   }
-  const similar = await callTool(client, "find_similar", {
-    text: query,
-    limit: policy.limit,
-    threshold: policy.threshold,
+  const enriched = pages.map((page) => {
+    const meta = metaBySlug.get(page.slug);
+    if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
+    return { ...page, summary: meta.summary, tags: meta.tags };
   });
-  const openedIds = (similar.data.results ?? []).map((row) => String(row.id));
-  const openedSlugs = openedIds.map((id) => {
-    const slug = slugById.get(id);
-    if (!slug) throw new Error(`unknown id ${id}`);
-    return slug;
+  const triage = summaryFirst(enriched, question.question, policy.stopwords, {
+    summaryK: policy.summary_k,
+    maxBodies: policy.max_bodies,
+    coverFraction: policy.cover_fraction,
   });
-  const reads = [];
-  for (const id of openedIds) reads.push(await callTool(client, "read_aco", { id }));
-  const acpPrompt = `${prefix}${policy.sections.catalog}${list.text}\n\n${policy.sections.ranking}${similar.text}\n\n${policy.sections.opened}${reads.map((read) => read.text).join("\n\n")}`;
+  const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+  const acpPrompt = triage.bodyMaterial.length === 0 ? decisionPrompt : `${decisionPrompt}${triage.bodyMaterial}`;
   const hits = bm25Search(pages, question.question, policy.stopwords, policy.limit);
   const searchPrompt = `${prefix}${searchMaterial(pages, hits, policy.sections)}`;
   const mode = process.env.SMOKE === "1" ? "search" : (process.env.ACP_LIVE_BASELINE ?? "search");
@@ -212,9 +219,10 @@ async function answerQuestion(client, question, pages) {
   return {
     question_id: question.id,
     content_query: query,
-    opened_slugs: openedSlugs,
+    candidate_slugs: triage.candidate_slugs,
+    opened_slugs: triage.opened_slugs,
+    decision: triage.decision,
     search_opened_slugs: hits.map((hit) => hit.slug),
-    method: similar.data.method ?? null,
     baseline_mode: mode,
     acp,
     search,

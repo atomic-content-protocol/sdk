@@ -8,7 +8,14 @@
   },
   "input_usd_per_million": 1,
   "output_usd_per_million": 5,
-  "policy": "mcp-find-similar-top3",
+  "policy": "summary-first",
+  "legacy_policy": "mcp-find-similar-top3",
+  "summary_first": {
+    "k": 3,
+    "max_bodies": 3,
+    "cover_fraction": 0.5,
+    "rank": "bm25-title-summary-tags"
+  },
   "pages": 50,
   "questions": 20,
   "per_question": [
@@ -19,27 +26,41 @@
         "alan-turing"
       ],
       "content_query": "mathematician helped allies decipher messages encrypted german enigma machine",
-      "opened_slugs": [
+      "candidate_slugs": [
         "alan-turing",
         "printing-press",
         "ada-lovelace"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "alan-turing",
         "public-key-cryptography",
         "rsa"
       ],
+      "legacy_opened_slugs": [
+        "alan-turing",
+        "printing-press",
+        "ada-lovelace"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562635,
       "search_tokens": 31602,
-      "acp_tokens": 81874,
-      "baseline_assembly_ms": 489.24,
-      "search_assembly_ms": 23.46,
-      "acp_assembly_ms": 58.57
+      "summary_decision_tokens": 285,
+      "summary_body_tokens": 0,
+      "acp_tokens": 285,
+      "legacy_tokens": 81874,
+      "baseline_assembly_ms": 499.59,
+      "search_assembly_ms": 23.8,
+      "acp_assembly_ms": 1.98,
+      "legacy_assembly_ms": 58.85
     },
     {
       "id": "q02",
@@ -48,27 +69,41 @@
         "ada-lovelace"
       ],
       "content_query": "recognised charles babbage analytical engine applications beyond pure calculation",
-      "opened_slugs": [
+      "candidate_slugs": [
         "ada-lovelace",
-        "tcp",
-        "voyager-1"
+        "voyager-1",
+        "tcp"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "ada-lovelace",
         "alan-turing",
         "turing-machine"
       ],
+      "legacy_opened_slugs": [
+        "ada-lovelace",
+        "tcp",
+        "voyager-1"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562634,
       "search_tokens": 34612,
-      "acp_tokens": 81796,
-      "baseline_assembly_ms": 405.45,
-      "search_assembly_ms": 24.06,
-      "acp_assembly_ms": 58.47
+      "summary_decision_tokens": 293,
+      "summary_body_tokens": 0,
+      "acp_tokens": 293,
+      "legacy_tokens": 81796,
+      "baseline_assembly_ms": 389.89,
+      "search_assembly_ms": 22.9,
+      "acp_assembly_ms": 1.45,
+      "legacy_assembly_ms": 56.74
     },
     {
       "id": "q03",
@@ -77,27 +112,41 @@
         "grace-hopper"
       ],
       "content_query": "computer scientist united states navy rear admiral",
-      "opened_slugs": [
+      "candidate_slugs": [
         "grace-hopper",
         "tim-berners-lee",
         "quicksort"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "grace-hopper",
         "apollo-11",
         "antikythera"
       ],
+      "legacy_opened_slugs": [
+        "grace-hopper",
+        "tim-berners-lee",
+        "quicksort"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562631,
       "search_tokens": 38900,
-      "acp_tokens": 76943,
-      "baseline_assembly_ms": 388.7,
-      "search_assembly_ms": 26.25,
-      "acp_assembly_ms": 59.01
+      "summary_decision_tokens": 251,
+      "summary_body_tokens": 0,
+      "acp_tokens": 251,
+      "legacy_tokens": 76943,
+      "baseline_assembly_ms": 395.28,
+      "search_assembly_ms": 24.86,
+      "acp_assembly_ms": 1.55,
+      "legacy_assembly_ms": 56.19
     },
     {
       "id": "q04",
@@ -106,27 +155,41 @@
         "margaret-hamilton"
       ],
       "content_query": "led development board flight software apollo guidance computer",
-      "opened_slugs": [
+      "candidate_slugs": [
         "margaret-hamilton",
-        "linus-torvalds",
-        "postgresql"
+        "apollo-11",
+        "go-game"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "margaret-hamilton",
         "apollo-11",
         "james-webb"
       ],
+      "legacy_opened_slugs": [
+        "margaret-hamilton",
+        "linus-torvalds",
+        "postgresql"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562634,
       "search_tokens": 37560,
-      "acp_tokens": 65121,
-      "baseline_assembly_ms": 395.52,
-      "search_assembly_ms": 27.59,
-      "acp_assembly_ms": 49.97
+      "summary_decision_tokens": 301,
+      "summary_body_tokens": 0,
+      "acp_tokens": 301,
+      "legacy_tokens": 65121,
+      "baseline_assembly_ms": 394.57,
+      "search_assembly_ms": 26.23,
+      "acp_assembly_ms": 1.41,
+      "legacy_assembly_ms": 47.68
     },
     {
       "id": "q05",
@@ -135,27 +198,41 @@
         "tim-berners-lee"
       ],
       "content_query": "described inventor world wide web",
-      "opened_slugs": [
+      "candidate_slugs": [
         "tim-berners-lee",
-        "sahara",
-        "mariana-trench"
+        "rsa",
+        "sahara"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "tim-berners-lee",
         "postgresql",
         "antikythera"
       ],
+      "legacy_opened_slugs": [
+        "tim-berners-lee",
+        "sahara",
+        "mariana-trench"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562631,
       "search_tokens": 26620,
-      "acp_tokens": 69969,
-      "baseline_assembly_ms": 397.57,
-      "search_assembly_ms": 17.63,
-      "acp_assembly_ms": 50.27
+      "summary_decision_tokens": 301,
+      "summary_body_tokens": 0,
+      "acp_tokens": 301,
+      "legacy_tokens": 69969,
+      "baseline_assembly_ms": 395.1,
+      "search_assembly_ms": 18.22,
+      "acp_assembly_ms": 1.29,
+      "legacy_assembly_ms": 52.3
     },
     {
       "id": "q06",
@@ -164,27 +241,41 @@
         "linus-torvalds"
       ],
       "content_query": "created distributed version control system git",
-      "opened_slugs": [
+      "candidate_slugs": [
         "linus-torvalds",
-        "antikythera",
-        "tcp"
+        "tcp",
+        "chess"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "linus-torvalds",
         "rust",
         "kubernetes"
       ],
+      "legacy_opened_slugs": [
+        "linus-torvalds",
+        "antikythera",
+        "tcp"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562628,
       "search_tokens": 18603,
-      "acp_tokens": 81650,
-      "baseline_assembly_ms": 393.14,
-      "search_assembly_ms": 12.45,
-      "acp_assembly_ms": 59
+      "summary_decision_tokens": 275,
+      "summary_body_tokens": 0,
+      "acp_tokens": 275,
+      "legacy_tokens": 81650,
+      "baseline_assembly_ms": 395.35,
+      "search_assembly_ms": 12.83,
+      "acp_assembly_ms": 1.27,
+      "legacy_assembly_ms": 57.21
     },
     {
       "id": "q07",
@@ -193,27 +284,41 @@
         "python"
       ],
       "content_query": "programming language emphasizes readability through significant indentation",
-      "opened_slugs": [
+      "candidate_slugs": [
+        "python",
+        "rust",
+        "library-of-alexandria"
+      ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
+      "search_opened_slugs": [
         "python",
         "rust",
         "grace-hopper"
       ],
-      "search_opened_slugs": [
+      "legacy_opened_slugs": [
         "python",
         "rust",
         "grace-hopper"
       ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562628,
       "search_tokens": 24060,
-      "acp_tokens": 71988,
-      "baseline_assembly_ms": 400.15,
-      "search_assembly_ms": 16.44,
-      "acp_assembly_ms": 68.6
+      "summary_decision_tokens": 229,
+      "summary_body_tokens": 0,
+      "acp_tokens": 229,
+      "legacy_tokens": 71988,
+      "baseline_assembly_ms": 383.86,
+      "search_assembly_ms": 16.31,
+      "acp_assembly_ms": 1.26,
+      "legacy_assembly_ms": 50.72
     },
     {
       "id": "q08",
@@ -222,27 +327,41 @@
         "rust"
       ],
       "content_query": "programming language emphasizes performance type safety concurrency memory safety",
-      "opened_slugs": [
+      "candidate_slugs": [
         "rust",
         "python",
-        "grace-hopper"
+        "haiku"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "rust",
         "python",
         "postgresql"
       ],
+      "legacy_opened_slugs": [
+        "rust",
+        "python",
+        "grace-hopper"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562634,
       "search_tokens": 25567,
-      "acp_tokens": 71995,
-      "baseline_assembly_ms": 414.62,
-      "search_assembly_ms": 17.39,
-      "acp_assembly_ms": 51.89
+      "summary_decision_tokens": 266,
+      "summary_body_tokens": 0,
+      "acp_tokens": 266,
+      "legacy_tokens": 71995,
+      "baseline_assembly_ms": 381.82,
+      "search_assembly_ms": 17.35,
+      "acp_assembly_ms": 1.22,
+      "legacy_assembly_ms": 50.86
     },
     {
       "id": "q09",
@@ -251,27 +370,41 @@
         "postgresql"
       ],
       "content_query": "relational database described featuring materialized views stored procedures",
-      "opened_slugs": [
+      "candidate_slugs": [
         "postgresql",
         "rsa",
         "olympic-games"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "postgresql",
         "hubble",
         "python"
       ],
+      "legacy_opened_slugs": [
+        "postgresql",
+        "rsa",
+        "olympic-games"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562633,
       "search_tokens": 36592,
-      "acp_tokens": 88922,
-      "baseline_assembly_ms": 385.91,
-      "search_assembly_ms": 23.65,
-      "acp_assembly_ms": 62.25
+      "summary_decision_tokens": 293,
+      "summary_body_tokens": 0,
+      "acp_tokens": 293,
+      "legacy_tokens": 88922,
+      "baseline_assembly_ms": 379.01,
+      "search_assembly_ms": 23.46,
+      "acp_assembly_ms": 1.31,
+      "legacy_assembly_ms": 62.1
     },
     {
       "id": "q10",
@@ -280,27 +413,41 @@
         "kubernetes"
       ],
       "content_query": "container orchestration system trademark held cloud native computing foundation",
-      "opened_slugs": [
+      "candidate_slugs": [
         "kubernetes",
-        "quicksort",
-        "turing-machine"
+        "turing-machine",
+        "quicksort"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "kubernetes",
         "postgresql",
         "linus-torvalds"
       ],
+      "legacy_opened_slugs": [
+        "kubernetes",
+        "quicksort",
+        "turing-machine"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562635,
       "search_tokens": 19383,
-      "acp_tokens": 83217,
-      "baseline_assembly_ms": 393.32,
-      "search_assembly_ms": 13.56,
-      "acp_assembly_ms": 60.22
+      "summary_decision_tokens": 222,
+      "summary_body_tokens": 0,
+      "acp_tokens": 222,
+      "legacy_tokens": 83217,
+      "baseline_assembly_ms": 380.92,
+      "search_assembly_ms": 12.72,
+      "acp_assembly_ms": 1.18,
+      "legacy_assembly_ms": 58.76
     },
     {
       "id": "q11",
@@ -309,27 +456,41 @@
         "tcp"
       ],
       "content_query": "protocol provides reliable ordered error checked delivery stream octets",
-      "opened_slugs": [
+      "candidate_slugs": [
         "tcp",
-        "periodic-table",
-        "kyoto-protocol"
+        "kyoto-protocol",
+        "periodic-table"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "tcp",
         "rust",
         "public-key-cryptography"
       ],
+      "legacy_opened_slugs": [
+        "tcp",
+        "periodic-table",
+        "kyoto-protocol"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562637,
       "search_tokens": 28744,
-      "acp_tokens": 96717,
-      "baseline_assembly_ms": 399.11,
-      "search_assembly_ms": 19.73,
-      "acp_assembly_ms": 73.41
+      "summary_decision_tokens": 318,
+      "summary_body_tokens": 0,
+      "acp_tokens": 318,
+      "legacy_tokens": 96717,
+      "baseline_assembly_ms": 376.88,
+      "search_assembly_ms": 18.63,
+      "acp_assembly_ms": 1.24,
+      "legacy_assembly_ms": 65.43
     },
     {
       "id": "q12",
@@ -338,27 +499,41 @@
         "quicksort"
       ],
       "content_query": "sorting algorithm developed british computer scientist tony hoare 1959",
-      "opened_slugs": [
+      "candidate_slugs": [
         "quicksort",
-        "alan-turing",
-        "tim-berners-lee"
+        "tim-berners-lee",
+        "alan-turing"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "quicksort",
         "alan-turing",
         "pi"
       ],
+      "legacy_opened_slugs": [
+        "quicksort",
+        "alan-turing",
+        "tim-berners-lee"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562636,
       "search_tokens": 49990,
-      "acp_tokens": 84804,
-      "baseline_assembly_ms": 399.56,
-      "search_assembly_ms": 44.75,
-      "acp_assembly_ms": 59.14
+      "summary_decision_tokens": 286,
+      "summary_body_tokens": 0,
+      "acp_tokens": 286,
+      "legacy_tokens": 84804,
+      "baseline_assembly_ms": 380.03,
+      "search_assembly_ms": 44.66,
+      "acp_assembly_ms": 1.26,
+      "legacy_assembly_ms": 58.75
     },
     {
       "id": "q13",
@@ -367,27 +542,41 @@
         "turing-machine"
       ],
       "content_query": "mathematical model manipulates symbols strip tape according table rules",
-      "opened_slugs": [
+      "candidate_slugs": [
         "turing-machine",
         "periodic-table",
-        "antikythera"
+        "pi"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
       "search_opened_slugs": [
         "turing-machine",
         "ada-lovelace",
         "go-game"
       ],
+      "legacy_opened_slugs": [
+        "turing-machine",
+        "periodic-table",
+        "antikythera"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562637,
       "search_tokens": 35504,
-      "acp_tokens": 93751,
-      "baseline_assembly_ms": 377.15,
-      "search_assembly_ms": 22.8,
-      "acp_assembly_ms": 63.66
+      "summary_decision_tokens": 259,
+      "summary_body_tokens": 0,
+      "acp_tokens": 259,
+      "legacy_tokens": 93751,
+      "baseline_assembly_ms": 379.79,
+      "search_assembly_ms": 23.75,
+      "acp_assembly_ms": 1.35,
+      "legacy_assembly_ms": 65.59
     },
     {
       "id": "q14",
@@ -396,27 +585,41 @@
         "public-key-cryptography"
       ],
       "content_query": "field cryptographic systems uses pairs related keys one public one private",
-      "opened_slugs": [
+      "candidate_slugs": [
+        "public-key-cryptography",
+        "rsa",
+        "postgresql"
+      ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
+      "search_opened_slugs": [
         "public-key-cryptography",
         "rsa",
         "tcp"
       ],
-      "search_opened_slugs": [
+      "legacy_opened_slugs": [
         "public-key-cryptography",
         "rsa",
         "tcp"
       ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562636,
       "search_tokens": 32905,
-      "acp_tokens": 82800,
-      "baseline_assembly_ms": 377.05,
-      "search_assembly_ms": 22.46,
-      "acp_assembly_ms": 58.45
+      "summary_decision_tokens": 277,
+      "summary_body_tokens": 0,
+      "acp_tokens": 277,
+      "legacy_tokens": 82800,
+      "baseline_assembly_ms": 392.07,
+      "search_assembly_ms": 23.73,
+      "acp_assembly_ms": 1.29,
+      "legacy_assembly_ms": 58.72
     },
     {
       "id": "q15",
@@ -425,27 +628,41 @@
         "rsa"
       ],
       "content_query": "year rivest shamir adleman publicly describe public key algorithm",
-      "opened_slugs": [
+      "candidate_slugs": [
+        "rsa",
+        "public-key-cryptography",
+        "sourdough"
+      ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 5,
+      "search_opened_slugs": [
         "rsa",
         "public-key-cryptography",
         "quicksort"
       ],
-      "search_opened_slugs": [
+      "legacy_opened_slugs": [
         "rsa",
         "public-key-cryptography",
         "quicksort"
       ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562640,
       "search_tokens": 32202,
-      "acp_tokens": 84308,
-      "baseline_assembly_ms": 378.68,
-      "search_assembly_ms": 23.7,
-      "acp_assembly_ms": 60.28
+      "summary_decision_tokens": 253,
+      "summary_body_tokens": 0,
+      "acp_tokens": 253,
+      "legacy_tokens": 84308,
+      "baseline_assembly_ms": 380.38,
+      "search_assembly_ms": 23.81,
+      "acp_assembly_ms": 1.24,
+      "legacy_assembly_ms": 60.31
     },
     {
       "id": "q16",
@@ -454,27 +671,41 @@
         "voyager-1"
       ],
       "content_query": "nasa space probe launched september 1977",
-      "opened_slugs": [
+      "candidate_slugs": [
         "voyager-1",
         "hubble",
         "perseverance"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "voyager-1",
         "hubble",
         "james-webb"
       ],
+      "legacy_opened_slugs": [
+        "voyager-1",
+        "hubble",
+        "perseverance"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562634,
       "search_tokens": 41543,
-      "acp_tokens": 82059,
-      "baseline_assembly_ms": 376.97,
-      "search_assembly_ms": 26.1,
-      "acp_assembly_ms": 57.12
+      "summary_decision_tokens": 311,
+      "summary_body_tokens": 0,
+      "acp_tokens": 311,
+      "legacy_tokens": 82059,
+      "baseline_assembly_ms": 381.67,
+      "search_assembly_ms": 26.45,
+      "acp_assembly_ms": 1.24,
+      "legacy_assembly_ms": 56.98
     },
     {
       "id": "q17",
@@ -483,27 +714,41 @@
         "apollo-11"
       ],
       "content_query": "nasa mission first landed humans moon",
-      "opened_slugs": [
+      "candidate_slugs": [
         "apollo-11",
         "perseverance",
         "voyager-1"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "apollo-11",
         "perseverance",
         "margaret-hamilton"
       ],
+      "legacy_opened_slugs": [
+        "apollo-11",
+        "perseverance",
+        "voyager-1"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562629,
       "search_tokens": 30151,
-      "acp_tokens": 81339,
-      "baseline_assembly_ms": 377.69,
-      "search_assembly_ms": 19.2,
-      "acp_assembly_ms": 56.31
+      "summary_decision_tokens": 319,
+      "summary_body_tokens": 0,
+      "acp_tokens": 319,
+      "legacy_tokens": 81339,
+      "baseline_assembly_ms": 392.57,
+      "search_assembly_ms": 19.75,
+      "acp_assembly_ms": 1.28,
+      "legacy_assembly_ms": 57.52
     },
     {
       "id": "q18",
@@ -512,27 +757,41 @@
         "hubble"
       ],
       "content_query": "space telescope launched low earth orbit 1990",
-      "opened_slugs": [
+      "candidate_slugs": [
         "hubble",
-        "voyager-1",
-        "james-webb"
+        "james-webb",
+        "voyager-1"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 4,
       "search_opened_slugs": [
         "hubble",
         "james-webb",
         "apollo-11"
       ],
+      "legacy_opened_slugs": [
+        "hubble",
+        "voyager-1",
+        "james-webb"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562633,
       "search_tokens": 51542,
-      "acp_tokens": 89550,
-      "baseline_assembly_ms": 378.43,
-      "search_assembly_ms": 33.26,
-      "acp_assembly_ms": 61.38
+      "summary_decision_tokens": 275,
+      "summary_body_tokens": 0,
+      "acp_tokens": 275,
+      "legacy_tokens": 89550,
+      "baseline_assembly_ms": 379.28,
+      "search_assembly_ms": 32.71,
+      "acp_assembly_ms": 1.2,
+      "legacy_assembly_ms": 60.75
     },
     {
       "id": "q19",
@@ -541,27 +800,41 @@
         "james-webb"
       ],
       "content_query": "space telescope designed conduct infrared astronomy",
-      "opened_slugs": [
+      "candidate_slugs": [
         "james-webb",
         "hubble",
-        "antikythera"
+        "voyager-1"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "james-webb",
         "hubble",
         "apollo-11"
       ],
+      "legacy_opened_slugs": [
+        "james-webb",
+        "hubble",
+        "antikythera"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562629,
       "search_tokens": 51538,
-      "acp_tokens": 95152,
-      "baseline_assembly_ms": 389.52,
-      "search_assembly_ms": 32.83,
-      "acp_assembly_ms": 65.09
+      "summary_decision_tokens": 271,
+      "summary_body_tokens": 0,
+      "acp_tokens": 271,
+      "legacy_tokens": 95152,
+      "baseline_assembly_ms": 377.67,
+      "search_assembly_ms": 32.2,
+      "acp_assembly_ms": 1.16,
+      "legacy_assembly_ms": 64.44
     },
     {
       "id": "q20",
@@ -570,27 +843,41 @@
         "perseverance"
       ],
       "content_query": "nasa rover landed jezero crater",
-      "opened_slugs": [
+      "candidate_slugs": [
         "perseverance",
         "apollo-11",
-        "margaret-hamilton"
+        "voyager-1"
       ],
+      "opened_slugs": [],
+      "decision": "answer",
+      "cover_need": 3,
       "search_opened_slugs": [
         "perseverance",
         "apollo-11",
         "hubble"
       ],
+      "legacy_opened_slugs": [
+        "perseverance",
+        "apollo-11",
+        "margaret-hamilton"
+      ],
       "retrieval_hit": true,
       "search_retrieval_hit": true,
+      "legacy_retrieval_hit": true,
       "baseline_answer_supported": true,
       "search_answer_supported": true,
       "acp_answer_supported": true,
+      "legacy_answer_supported": true,
       "baseline_tokens": 562630,
       "search_tokens": 44135,
-      "acp_tokens": 78042,
-      "baseline_assembly_ms": 379.71,
-      "search_assembly_ms": 28.32,
-      "acp_assembly_ms": 54.79
+      "summary_decision_tokens": 320,
+      "summary_body_tokens": 0,
+      "acp_tokens": 320,
+      "legacy_tokens": 78042,
+      "baseline_assembly_ms": 385.98,
+      "search_assembly_ms": 29.28,
+      "acp_assembly_ms": 1.31,
+      "legacy_assembly_ms": 55.43
     }
   ],
   "scale": [
@@ -598,97 +885,125 @@
       "n": 1,
       "baseline_tokens": 562635,
       "search_tokens": 31602,
-      "acp_tokens": 81874,
-      "tokens_saved": 480761,
-      "percent_saved": 85.44811467470029,
-      "tokens_saved_vs_search": -50272,
-      "percent_saved_vs_search": -159.07853933295362,
+      "acp_tokens": 285,
+      "legacy_tokens": 81874,
+      "tokens_saved": 562350,
+      "percent_saved": 99.94934549041562,
+      "tokens_saved_vs_search": 31317,
+      "percent_saved_vs_search": 99.09815834440859,
+      "legacy_tokens_saved_vs_search": -50272,
+      "legacy_percent_saved_vs_search": -159.07853933295362,
       "baseline_input_usd": 0.562635,
       "search_input_usd": 0.031602,
-      "acp_input_usd": 0.081874,
-      "usd_saved": 0.480761,
-      "usd_saved_vs_search": -0.050272,
+      "acp_input_usd": 0.000285,
+      "legacy_input_usd": 0.081874,
+      "usd_saved": 0.56235,
+      "usd_saved_vs_search": 0.031317,
       "retrieval_hit_rate": 1,
       "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
       "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 489.24,
-      "search_assembly_ms": 23.46,
-      "acp_assembly_ms": 58.57
+      "baseline_assembly_ms": 499.59,
+      "search_assembly_ms": 23.8,
+      "acp_assembly_ms": 1.98,
+      "legacy_assembly_ms": 58.85
     },
     {
       "n": 10,
       "baseline_tokens": 5626323,
       "search_tokens": 293499,
-      "acp_tokens": 773475,
-      "tokens_saved": 4852848,
-      "percent_saved": 86.25256672963853,
-      "tokens_saved_vs_search": -479976,
-      "percent_saved_vs_search": -163.5358212464097,
+      "acp_tokens": 2716,
+      "legacy_tokens": 773475,
+      "tokens_saved": 5623607,
+      "percent_saved": 99.95172690938647,
+      "tokens_saved_vs_search": 290783,
+      "percent_saved_vs_search": 99.0746135421245,
+      "legacy_tokens_saved_vs_search": -479976,
+      "legacy_percent_saved_vs_search": -163.5358212464097,
       "baseline_input_usd": 5.626323,
       "search_input_usd": 0.293499,
-      "acp_input_usd": 0.773475,
-      "usd_saved": 4.852848,
-      "usd_saved_vs_search": -0.479976,
+      "acp_input_usd": 0.002716,
+      "legacy_input_usd": 0.773475,
+      "usd_saved": 5.623607,
+      "usd_saved_vs_search": 0.290783,
       "retrieval_hit_rate": 1,
       "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
       "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 4063.62,
-      "search_assembly_ms": 202.48,
-      "acp_assembly_ms": 578.25
+      "baseline_assembly_ms": 3995.39,
+      "search_assembly_ms": 198.68,
+      "acp_assembly_ms": 13.92,
+      "legacy_assembly_ms": 551.41
     },
     {
       "n": 50,
       "baseline_tokens": 28131651,
       "search_tokens": 1677005,
-      "acp_tokens": 4057469,
-      "tokens_saved": 24074182,
-      "percent_saved": 85.57685434104098,
-      "tokens_saved_vs_search": -2380464,
-      "percent_saved_vs_search": -141.94734064597304,
+      "acp_tokens": 13926,
+      "legacy_tokens": 4057469,
+      "tokens_saved": 28117725,
+      "percent_saved": 99.95049703979336,
+      "tokens_saved_vs_search": 1663079,
+      "percent_saved_vs_search": 99.16959102686039,
+      "legacy_tokens_saved_vs_search": -2380464,
+      "legacy_percent_saved_vs_search": -141.94734064597304,
       "baseline_input_usd": 28.131651,
       "search_input_usd": 1.677005,
-      "acp_input_usd": 4.057469,
-      "usd_saved": 24.074182,
-      "usd_saved_vs_search": -2.380464,
+      "acp_input_usd": 0.013926,
+      "legacy_input_usd": 4.057469,
+      "usd_saved": 28.117725,
+      "usd_saved_vs_search": 1.663079,
       "retrieval_hit_rate": 1,
       "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
       "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 19858.6,
-      "search_assembly_ms": 1153.74,
-      "acp_assembly_ms": 2954.01
+      "baseline_assembly_ms": 19638.81,
+      "search_assembly_ms": 1145.98,
+      "acp_assembly_ms": 66.9,
+      "legacy_assembly_ms": 2862.07
     },
     {
       "n": 100,
       "baseline_tokens": 56263320,
       "search_tokens": 3458765,
-      "acp_tokens": 8209985,
-      "tokens_saved": 48053335,
-      "percent_saved": 85.40792651411256,
-      "tokens_saved_vs_search": -4751220,
-      "percent_saved_vs_search": -137.36752858317928,
+      "acp_tokens": 28025,
+      "legacy_tokens": 8209985,
+      "tokens_saved": 56235295,
+      "percent_saved": 99.95018957288691,
+      "tokens_saved_vs_search": 3430740,
+      "percent_saved_vs_search": 99.18973969032298,
+      "legacy_tokens_saved_vs_search": -4751220,
+      "legacy_percent_saved_vs_search": -137.36752858317928,
       "baseline_input_usd": 56.26332,
       "search_input_usd": 3.458765,
-      "acp_input_usd": 8.209985,
-      "usd_saved": 48.053335,
-      "usd_saved_vs_search": -4.75122,
+      "acp_input_usd": 0.028025,
+      "legacy_input_usd": 8.209985,
+      "usd_saved": 56.235295,
+      "usd_saved_vs_search": 3.43074,
       "retrieval_hit_rate": 1,
       "search_retrieval_hit_rate": 1,
+      "legacy_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
       "search_answer_support_rate": 1,
+      "legacy_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 39487.45,
-      "search_assembly_ms": 2378.15,
-      "acp_assembly_ms": 5939.4
+      "baseline_assembly_ms": 39108.55,
+      "search_assembly_ms": 2368.25,
+      "acp_assembly_ms": 132.45,
+      "legacy_assembly_ms": 5776.65
     }
   ],
   "enrichment": {
-    "note": "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even against the naive full-read is an upper bound. Break-even against search-then-read is the realistic comparison. Null means ACP did not accumulate a token or dollar saving against that arm within 100,000 forks.",
+    "note": "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even for the headline summary-first policy is against the naive full-read (an upper bound) and against search-then-read. The legacy catalog policy has its own break-even rows. Null means that policy did not accumulate a token saving against that arm within 100,000 forks.",
     "measured_prompt_input_tokens": 50696,
     "estimated_output_tokens": 15000,
     "estimated_output_source": "estimateEnrichmentCost(..., \"standard\") outputTokens constant, not a completion",
@@ -696,7 +1011,9 @@
     "modeled_usd": 0.125696,
     "measured_token_break_even_forks": 1,
     "modeled_usd_break_even_forks": 1,
-    "measured_token_break_even_vs_search_forks": null,
-    "modeled_usd_break_even_vs_search_forks": null
+    "measured_token_break_even_vs_search_forks": 2,
+    "modeled_usd_break_even_vs_search_forks": 4,
+    "legacy_measured_token_break_even_forks": 1,
+    "legacy_measured_token_break_even_vs_search_forks": null
   }
 }

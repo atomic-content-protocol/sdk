@@ -17,6 +17,12 @@
  * ACP_LIVE_N (default `1,10,50,100`) selects the rows. The harness runs the
  * largest N once. Smaller rows are prefixes of that sequence.
  *
+ * The ACP arm is summary-first: compact summaries, then markdown bodies only
+ * when the coverage rule opens them. The model receives that context in one
+ * call. The offline benchmark counts the decision prompt and the bodies as
+ * two cl100k encodings. Provider usage here is whatever the API returns for
+ * the concatenated prompt.
+ *
  * ACP_LIVE_BASELINE (default `search`) chooses the non-ACP arm:
  * - `search`: BM25 search-then-read, top 3. This fits a normal context window.
  * - `naive`: full-read of every page. Upper bound. Often rejected by the model.
@@ -44,6 +50,7 @@ interface QuestionRun {
   sandbox_id: string;
   fork_ms: number;
   agent_ms: number;
+  candidate_slugs: string[];
   opened_slugs: string[];
   search_opened_slugs: string[];
   retrieval_hit: boolean | null;
@@ -179,6 +186,7 @@ async function runAgent(
   if (typeof parsed["error"] === "string" && !Array.isArray(parsed["opened_slugs"])) {
     throw new Error(parsed["error"]);
   }
+  const candidates = Array.isArray(parsed["candidate_slugs"]) ? parsed["candidate_slugs"].map(String) : [];
   const opened = Array.isArray(parsed["opened_slugs"]) ? parsed["opened_slugs"].map(String) : [];
   const searchOpened = Array.isArray(parsed["search_opened_slugs"]) ? parsed["search_opened_slugs"].map(String) : [];
   return {
@@ -186,9 +194,10 @@ async function runAgent(
     sandbox_id: sandbox.id,
     fork_ms: 0,
     agent_ms: agentMs,
+    candidate_slugs: candidates,
     opened_slugs: opened,
     search_opened_slugs: searchOpened,
-    retrieval_hit: question.gold_slugs.every((slug) => opened.includes(slug)),
+    retrieval_hit: question.gold_slugs.every((slug) => candidates.includes(slug)),
     search_retrieval_hit: question.gold_slugs.every((slug) => searchOpened.includes(slug)),
     acp: modelBlock(parsed["acp"], question.expected_answer),
     search: parsed["search"] == null ? null : modelBlock(parsed["search"], question.expected_answer),
@@ -237,7 +246,7 @@ function renderLive(report: LiveReport): string {
   if (report.error) lines.push("", `Error: ${report.error}`);
   lines.push(
     "",
-    "The default comparison is ACP against search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.",
+    "The ACP arm is summary-first. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.",
     "Token columns are the provider's reported usage. A null means that call did not return usage. Nothing here is estimated.",
     ""
   );
@@ -258,14 +267,14 @@ function renderLive(report: LiveReport): string {
   }
   lines.push("", "## Per question", "");
   lines.push(
-    "| Question | Sandbox | ACP opened | Search opened | ACP hit | Search hit | ACP in/out | Search in/out | Naive in/out | ACP error | Search error | Naive error |"
+    "| Question | Sandbox | ACP candidates | ACP bodies | Search opened | ACP hit | Search hit | ACP in/out | Search in/out | Naive in/out | ACP error | Search error | Naive error |"
   );
-  lines.push("|---|---|---|---|---|---|---:|---:|---:|---|---|---|");
+  lines.push("|---|---|---|---|---|---|---|---:|---:|---:|---|---|---|");
   for (const row of report.questions) {
     const pair = (block: ModelBlock | null) =>
       block === null || block.input_tokens === null ? "" : `${block.input_tokens}/${block.output_tokens ?? ""}`;
     lines.push(
-      `| ${row.id} | ${row.sandbox_id} | ${row.opened_slugs.join(", ")} | ${row.search_opened_slugs.join(", ")} | ${row.retrieval_hit ? "yes" : "no"} | ${row.search_retrieval_hit ? "yes" : "no"} | ${pair(row.acp)} | ${pair(row.search)} | ${pair(row.naive)} | ${row.acp.error ?? ""} | ${row.search?.error ?? ""} | ${row.naive?.error ?? ""} |`
+      `| ${row.id} | ${row.sandbox_id} | ${row.candidate_slugs.join(", ")} | ${row.opened_slugs.join(", ")} | ${row.search_opened_slugs.join(", ")} | ${row.retrieval_hit ? "yes" : "no"} | ${row.search_retrieval_hit ? "yes" : "no"} | ${pair(row.acp)} | ${pair(row.search)} | ${pair(row.naive)} | ${row.acp.error ?? ""} | ${row.search?.error ?? ""} | ${row.naive?.error ?? ""} |`
     );
   }
   return `${lines.join("\n")}\n`;
