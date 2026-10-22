@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Thin text bodies were summarised from the title.** A body passed straight to `createACO({ body })` had no length gate (0.2.1 gated only *fetched* pages), so `UnifiedPipeline` sent a ten-character placeholder to the model together with its title and got back a confident two-sentence summary written from the title alone. Nineteen articles created with such a placeholder in one day each carried `token_counts.approximate: 3` and a fluent summary of nothing. `MODALITY_ENRICHMENT` now gates `text` and `document` on body length the way `video` already gates a transcript: a trimmed body under `MIN_BODY_LENGTH_FOR_ENRICHMENT` (50 characters) resolves to no summary, no tags or key entities and no language, and `UnifiedPipeline` no longer calls the model for classification alone, returning the input ACO untouched with `model: "skipped"` and no provenance. Conditional flags now gate their base flag instead of promoting it, so a conditional flag on a disabled field has no effect; `video` moves to base true plus conditional and resolves exactly as before. `createACO` also stops normalising the body twice before hashing (`computeContentHash` normalises itself); hashes are unchanged.
+
+### Upgrade notes
+- Callers that relied on title-only enrichment of an empty or placeholder body now get no `summary`, `tags`, `key_entities` or `language` from `UnifiedPipeline`. The ACO comes back unchanged and is enriched on the next run once it has a real body; `force: true` does not bypass the gate. Only inference is gated: `createACO` still computes `content_hash` and `token_counts` for a thin body, and a fetched URL is still reported as `EXTRACTION_TOO_THIN` as in 0.2.1.
+- `getEnrichmentStrategy("manual", "")` now returns `summary: false, textEnrichment: false, language: false`. Code that read `MODALITY_ENRICHMENT` directly and treated a conditional flag as "enabled when there is a body" should call `getEnrichmentStrategy(sourceType, body)` instead, which has always been the supported entry point.
+
 ## [0.3.1] - 2026-10-10
 
 `@atomic-content-protocol/web` is the only package with code changes. The others move with it, so the release stays a single tag.

@@ -20,6 +20,9 @@ const OUTPUT = {
   language: "en",
 };
 
+/** Long enough to clear MIN_BODY_LENGTH_FOR_ENRICHMENT; a shorter body is not sent to the model at all. */
+const ENRICHABLE_CONTENT = "Alpha and beta are concepts, described here at enough length to be enriched.";
+
 function fakeProvider(): IEnrichmentProvider & { calls: number } {
   const p = {
     name: "Fake/fake-model",
@@ -153,7 +156,7 @@ describe("tool calls", () => {
   it("enrich_content returns validated enriched frontmatter and truthful model", async () => {
     const { res, tool } = await callTool(
       "enrich_content",
-      { content: "Alpha and beta are concepts.", title: "T" },
+      { content: ENRICHABLE_CONTENT, title: "T" },
       { "X-Forwarded-For": "10.9.9.1" }
     );
     expect(res.status).toBe(200);
@@ -365,7 +368,7 @@ describe("hardening (re-review)", () => {
       const res = await fetch(`http://127.0.0.1:${port}/mcp`, {
         method: "POST",
         headers: HEADERS,
-        body: JSON.stringify(rpc("tools/call", { name: "enrich_content", arguments: { content: "hello world" } })),
+        body: JSON.stringify(rpc("tools/call", { name: "enrich_content", arguments: { content: ENRICHABLE_CONTENT } })),
       });
       const parsed = parseRpc(await res.text());
       const tool = JSON.parse(parsed.result.content[0].text);

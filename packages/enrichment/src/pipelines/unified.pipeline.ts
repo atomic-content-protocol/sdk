@@ -1,5 +1,10 @@
 import type { ACO, SourceType } from "@atomic-content-protocol/core";
-import { getEnrichmentStrategy, SOURCE_TYPE_MODALITY, SOURCE_TYPES } from "@atomic-content-protocol/core";
+import {
+  getEnrichmentStrategy,
+  MIN_BODY_LENGTH_FOR_ENRICHMENT,
+  SOURCE_TYPE_MODALITY,
+  SOURCE_TYPES,
+} from "@atomic-content-protocol/core";
 import type { IEnrichmentProvider } from "../providers/provider.interface.js";
 import { buildUnifiedPrompt, parseUnifiedOutput, UNIFIED_SCHEMA } from "../utils/prompts.js";
 import { createProvenanceRecord } from "../utils/provenance.js";
@@ -19,6 +24,13 @@ import { hasValue, readProvenance } from "./single-field.pipeline.js";
  * treated as human-authored and never overwritten implicitly. Empty values
  * (missing, "", []) are (re)generated. If nothing needs generating, the LLM
  * call is skipped entirely.
+ *
+ * Thin bodies: a text or document body under MIN_BODY_LENGTH_FOR_ENRICHMENT
+ * characters (empty, or a placeholder) is never sent to the model. The
+ * strategy disables summary, tags, entities and language for it, and
+ * classification is not inferred from the title alone either, so the input
+ * ACO is returned untouched with `model: "skipped"` and no provenance. Once
+ * the body is real, the next run enriches it. `force` does not bypass this.
  *
  * Provenance records the model that actually answered (after any
  * `ProviderRouter` fallback), not the first configured provider.
@@ -64,13 +76,20 @@ export class UnifiedPipeline implements IEnrichmentPipeline {
     const newProvenance: Record<string, unknown> = { ...existingProvenance };
     const updatedFields: Record<string, unknown> = { ...frontmatter };
 
+    // Classification is inferred from the body, so it needs a body worth
+    // reading: the same threshold the strategy applies to summary, tags,
+    // entities and language. Without it (a thin text body) the model would
+    // classify from the title alone, and nothing else needs the call.
+    const bodyMeetsThreshold = body.trim().length >= MIN_BODY_LENGTH_FOR_ENRICHMENT;
+
     // Short-circuit: if the only field needing enrichment is classification AND
-    // the strategy has a fixed default, skip the LLM call entirely.
+    // the strategy has a fixed default (or the body is too thin to classify),
+    // skip the LLM call entirely.
     const llmNeededForTags = needsTags && strategy.textEnrichment;
     const llmNeededForSummary = needsSummary && strategy.summary;
     const llmNeededForEntities = needsEntities && strategy.textEnrichment;
     const llmNeededForLanguage = needsLanguage && strategy.language;
-    const llmNeededForClassification = needsClassification && !strategy.classificationDefault;
+    const llmNeededForClassification = needsClassification && !strategy.classificationDefault && bodyMeetsThreshold;
     const needsLLM =
       llmNeededForTags ||
       llmNeededForSummary ||

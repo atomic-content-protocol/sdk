@@ -6,6 +6,8 @@ const LONG_BODY = "a".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT);
 // A body just below the threshold
 const SHORT_BODY = "a".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT - 1);
 
+const TEXT_AND_DOCUMENT_TYPES = ["manual", "uploaded_md", "link", "converted_pdf", "converted_doc"] as const;
+
 describe("SOURCE_TYPE_MODALITY", () => {
   it("maps text-native types to 'text'", () => {
     for (const st of ["link", "uploaded_md", "manual", "selected_text", "llm_capture"] as const) {
@@ -28,15 +30,61 @@ describe("SOURCE_TYPE_MODALITY", () => {
 });
 
 describe("getEnrichmentStrategy — text/document types", () => {
-  for (const st of ["manual", "uploaded_md", "link", "converted_pdf", "converted_doc"] as const) {
-    it(`${st}: all enrichment enabled, no fixed classification`, () => {
-      const s = getEnrichmentStrategy(st, "some meaningful body content here and more words");
+  for (const st of TEXT_AND_DOCUMENT_TYPES) {
+    it(`${st}: all enrichment enabled for a body at the threshold, no fixed classification`, () => {
+      const s = getEnrichmentStrategy(st, LONG_BODY);
       expect(s.language).toBe(true);
       expect(s.summary).toBe(true);
       expect(s.textEnrichment).toBe(true);
       expect(s.classificationDefault).toBeNull();
     });
+
+    it(`${st}: empty body disables summary, textEnrichment and language`, () => {
+      const s = getEnrichmentStrategy(st, "");
+      expect(s.summary).toBe(false);
+      expect(s.textEnrichment).toBe(false);
+      expect(s.language).toBe(false);
+      expect(s.classificationDefault).toBeNull();
+    });
+
+    it(`${st}: body below the threshold disables summary, textEnrichment and language`, () => {
+      const s = getEnrichmentStrategy(st, SHORT_BODY);
+      expect(s.summary).toBe(false);
+      expect(s.textEnrichment).toBe(false);
+      expect(s.language).toBe(false);
+      expect(s.classificationDefault).toBeNull();
+    });
   }
+
+  it("manual with an empty body: nothing is inferred (LAB-1527 acceptance)", () => {
+    const s = getEnrichmentStrategy("manual", "");
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
+    expect(s.language).toBe(false);
+  });
+
+  it("uploaded_md with a short body: nothing is inferred (LAB-1527 acceptance)", () => {
+    const s = getEnrichmentStrategy("uploaded_md", "short");
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
+    expect(s.language).toBe(false);
+  });
+
+  it("a ten-character placeholder body is gated", () => {
+    const s = getEnrichmentStrategy("manual", "TODO: body");
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
+    expect(s.language).toBe(false);
+  });
+
+  it("whitespace padding does not lift a short body over the threshold", () => {
+    const padded = `${" ".repeat(40)}short${" ".repeat(40)}`;
+    expect(padded.length).toBeGreaterThan(MIN_BODY_LENGTH_FOR_ENRICHMENT);
+    const s = getEnrichmentStrategy("manual", padded);
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
+    expect(s.language).toBe(false);
+  });
 });
 
 describe("getEnrichmentStrategy — uploaded_image", () => {
@@ -96,10 +144,17 @@ describe("getEnrichmentStrategy — converted_video", () => {
 describe("getEnrichmentStrategy — unknown source_type", () => {
   it("falls back to 'text' strategy without crashing", () => {
     // Cast needed to simulate runtime malformed frontmatter
-    const s = getEnrichmentStrategy("unknown_future_type" as any, "some body");
+    const s = getEnrichmentStrategy("unknown_future_type" as any, LONG_BODY);
     expect(s.language).toBe(true);
     expect(s.textEnrichment).toBe(true);
     expect(s.classificationDefault).toBeNull();
+  });
+
+  it("falls back to 'text' gating too: a short body is not inferred from", () => {
+    const s = getEnrichmentStrategy("unknown_future_type" as any, "some body");
+    expect(s.language).toBe(false);
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
   });
 
   it("returns text strategy for empty unknown type", () => {
@@ -109,15 +164,35 @@ describe("getEnrichmentStrategy — unknown source_type", () => {
 });
 
 describe("MIN_BODY_LENGTH_FOR_ENRICHMENT boundary", () => {
+  const atThreshold = "x".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT);
+  const belowThreshold = "x".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT - 1);
+
   it("body of exactly MIN_BODY_LENGTH_FOR_ENRICHMENT triggers enrichment for video", () => {
-    const atThreshold = "x".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT);
     const s = getEnrichmentStrategy("converted_video", atThreshold);
     expect(s.language).toBe(true);
   });
 
   it("body of MIN_BODY_LENGTH_FOR_ENRICHMENT - 1 does not trigger enrichment for video", () => {
-    const belowThreshold = "x".repeat(MIN_BODY_LENGTH_FOR_ENRICHMENT - 1);
     const s = getEnrichmentStrategy("converted_video", belowThreshold);
     expect(s.language).toBe(false);
+  });
+
+  it("body of exactly MIN_BODY_LENGTH_FOR_ENRICHMENT enables every field for text", () => {
+    const s = getEnrichmentStrategy("manual", atThreshold);
+    expect(s.language).toBe(true);
+    expect(s.summary).toBe(true);
+    expect(s.textEnrichment).toBe(true);
+  });
+
+  it("body of MIN_BODY_LENGTH_FOR_ENRICHMENT - 1 disables every field for text", () => {
+    const s = getEnrichmentStrategy("manual", belowThreshold);
+    expect(s.language).toBe(false);
+    expect(s.summary).toBe(false);
+    expect(s.textEnrichment).toBe(false);
+  });
+
+  it("the threshold counts trimmed characters", () => {
+    const s = getEnrichmentStrategy("manual", `  ${belowThreshold}  `);
+    expect(s.summary).toBe(false);
   });
 });
