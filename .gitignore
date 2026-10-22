@@ -7,6 +7,8 @@ dist/
 .acp/
 !examples/daytona/corpus/vault/.acp/
 !examples/daytona/corpus/vault/.acp/**
+!examples/daytona/docs-demo/corpus/vault/.acp/
+!examples/daytona/docs-demo/corpus/vault/.acp/**
 .DS_Store
 coverage/
 demo-vault/

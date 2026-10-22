@@ -1,0 +1,766 @@
+{
+  "version": 1,
+  "entries": {
+    "01a164cb-6267-75e7-aaa6-467b4a9c7412": {
+      "title": "Daytona Documentation",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:53.031Z",
+      "tags": [
+        "en",
+        "get-started",
+        "next-steps",
+        "reference"
+      ],
+      "status": "final"
+    },
+    "01a164cb-639c-711d-b294-bde5329c61a6": {
+      "title": "Authentication",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:53.340Z",
+      "tags": [
+        "authentication",
+        "get-an-api-key",
+        "environment-variables",
+        "authenticate-the-sdk",
+        "authenticate-the-cli",
+        "authenticate-api-requests",
+        "jwt-tokens"
+      ],
+      "status": "final"
+    },
+    "01a164cb-646e-772d-8b21-9751e321c4f3": {
+      "title": "Sandboxes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:53.550Z",
+      "tags": [
+        "sandboxes",
+        "create-sandboxes",
+        "sandbox-operations",
+        "sandbox-lifecycle",
+        "automated-lifecycle-management"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6543-7652-a8f8-acffff9604a7": {
+      "title": "Linux Sandboxes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:53.763Z",
+      "tags": [
+        "linux",
+        "sandboxes",
+        "use-cases",
+        "create-a-linux-sandbox",
+        "create-a-linux-vm-sandbox",
+        "nested-virtualization",
+        "filesystem-snapshot"
+      ],
+      "status": "final"
+    },
+    "01a164cb-65f0-7347-80f2-b38d121c7f19": {
+      "title": "Windows Sandboxes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:53.936Z",
+      "tags": [
+        "windows",
+        "sandboxes",
+        "use-cases",
+        "create-a-windows-sandbox",
+        "filesystem-snapshot",
+        "memory-snapshot",
+        "filesystem-persistence"
+      ],
+      "status": "final"
+    },
+    "01a164cb-66a4-76bf-8f9b-87bffd94a3c6": {
+      "title": "macOS Sandboxes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:54.116Z",
+      "tags": [
+        "macos",
+        "sandboxes",
+        "use-cases",
+        "create-a-macos-sandbox"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6765-71ef-abe6-d463fe1517f2": {
+      "title": "GPU Sandboxes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:54.309Z",
+      "tags": [
+        "gpu",
+        "sandboxes",
+        "use-cases",
+        "create-a-gpu-sandbox",
+        "spot",
+        "gpu-allocation",
+        "resources"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6803-76a8-8ed1-bd0648d1ed51": {
+      "title": "Isolation",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:54.467Z",
+      "tags": [
+        "isolation",
+        "runtime-isolation",
+        "network-isolation",
+        "organization-isolation"
+      ],
+      "status": "final"
+    },
+    "01a164cb-689b-71c0-85ec-b108c817f7a9": {
+      "title": "Persistence",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:54.619Z",
+      "tags": [
+        "persistence",
+        "filesystem-persistence",
+        "memory-persistence",
+        "persistence-beyond-a-sandbox",
+        "retention-and-lifecycle",
+        "opting-out-of-persistence"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6958-7689-96c2-f043b23b3238": {
+      "title": "Scale",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:54.808Z",
+      "tags": [
+        "scale",
+        "sandbox-scaling",
+        "fleet-scaling",
+        "workload-concurrency",
+        "capacity-and-throughput"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6a2c-73eb-a757-0b7fb6e50092": {
+      "title": "Snapshots",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.020Z",
+      "tags": [
+        "snapshots",
+        "default-snapshots",
+        "create-snapshots",
+        "vm-snapshots",
+        "gpu-snapshots",
+        "create-snapshot-from-sandbox",
+        "snapshots-from-private-registries"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6ac7-7781-aed4-bb2e97d259f9": {
+      "title": "Warm Pools",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.175Z",
+      "tags": [
+        "warm",
+        "pools",
+        "replenishment",
+        "limits",
+        "create-a-warm-pool",
+        "list-warm-pools",
+        "resize-a-warm-pool"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6b61-770a-ac00-18132067503c": {
+      "title": "Declarative Builder",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.329Z",
+      "tags": [
+        "declarative",
+        "builder",
+        "build-declarative-images",
+        "create-pre-built-snapshots",
+        "image-configuration"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6c20-707c-83bc-dafeeab3eaaf": {
+      "title": "Volumes",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.520Z",
+      "tags": [
+        "volumes",
+        "create-volumes",
+        "wait-for-a-volume-to-be-ready",
+        "mount-volumes",
+        "work-with-volumes",
+        "get-a-volume-by-name",
+        "get-a-volume-by-id"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6d0d-74cb-b5c2-d111104b5059": {
+      "title": "Mount External Storage",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.757Z",
+      "tags": [
+        "mount",
+        "external",
+        "storage",
+        "mount-an-amazon-s3-bucket",
+        "mount-a-cloudflare-r2-bucket",
+        "mount-a-tigris-bucket",
+        "mount-a-supabase-storage-bucket"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6df2-76ae-8fe9-20e9d89818f7": {
+      "title": "Regions",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:55.986Z",
+      "tags": [
+        "regions",
+        "shared-regions",
+        "earth-region",
+        "dedicated-regions",
+        "custom-regions"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6e89-709a-b089-7044391adf93": {
+      "title": "File System Operations",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.137Z",
+      "tags": [
+        "file",
+        "system",
+        "operations",
+        "basic-operations",
+        "advanced-operations"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6f24-769c-bdc0-6efb1c6ac9af": {
+      "title": "Git Operations",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.292Z",
+      "tags": [
+        "git",
+        "operations",
+        "basic-operations",
+        "branch-operations",
+        "stage-changes",
+        "commit-changes",
+        "remote-operations"
+      ],
+      "status": "final"
+    },
+    "01a164cb-6fbe-708f-a05e-a2b8187671c0": {
+      "title": "Language Server Protocol",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.446Z",
+      "tags": [
+        "language",
+        "server",
+        "protocol",
+        "workflow",
+        "create-lsp-servers",
+        "start-lsp-servers",
+        "stop-lsp-servers"
+      ],
+      "status": "final"
+    },
+    "01a164cb-705d-70f6-ae1c-8c7779071a41": {
+      "title": "Process and Code Execution",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.605Z",
+      "tags": [
+        "process",
+        "code",
+        "execution",
+        "code-execution",
+        "command-execution",
+        "session-operations",
+        "resource-management"
+      ],
+      "status": "final"
+    },
+    "01a164cb-70f9-7088-b9ca-31550d864fc1": {
+      "title": "Pseudo Terminal (PTY)",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.761Z",
+      "tags": [
+        "pty",
+        "create-pty-session",
+        "connect-to-pty-session",
+        "list-pty-sessions",
+        "get-pty-session-info",
+        "kill-pty-session",
+        "resize-pty-session"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7198-734a-8104-cb2966de8f3f": {
+      "title": "Log Streaming",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:56.920Z",
+      "tags": [
+        "log",
+        "streaming",
+        "stream-logs-with-callbacks",
+        "retrieve-all-existing-logs"
+      ],
+      "status": "final"
+    },
+    "01a164cb-722e-7458-af9c-983e23af51b1": {
+      "title": "Daytona MCP Server",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.070Z",
+      "tags": [
+        "mcp",
+        "install-daytona-cli",
+        "authenticate-with-daytona",
+        "initialize-mcp-server",
+        "configure-mcp-server",
+        "start-mcp-server",
+        "available-tools"
+      ],
+      "status": "final"
+    },
+    "01a164cb-72f4-7402-a6da-34de75147df0": {
+      "title": "Computer Use",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.268Z",
+      "tags": [
+        "computer",
+        "use",
+        "start-computer-use",
+        "stop-computer-use",
+        "get-status",
+        "get-process-status",
+        "restart-process"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7392-757b-87c2-b1021a5c4d5f": {
+      "title": "Agent Skills",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.426Z",
+      "tags": [
+        "agent",
+        "skills",
+        "installation",
+        "usage",
+        "structure"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7429-7539-a081-cbf2720531f1": {
+      "title": "Web Terminal",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.577Z",
+      "tags": [
+        "web",
+        "terminal",
+        "access-from-dashboard",
+        "access-via-cli",
+        "access-via-url",
+        "security"
+      ],
+      "status": "final"
+    },
+    "01a164cb-74bf-75cb-812c-5ded8784fc02": {
+      "title": "SSH Access",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.727Z",
+      "tags": [
+        "ssh",
+        "access",
+        "access-from-dashboard",
+        "access-via-cli",
+        "access-via-token",
+        "connect-with-vs-code",
+        "connect-with-jetbrains-ides"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7555-75a3-9d91-d0123c102f56": {
+      "title": "VNC Access",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:57.877Z",
+      "tags": [
+        "vnc",
+        "access",
+        "access-vnc-from-dashboard",
+        "programmatic-vnc-management",
+        "automating-desktop-interactions",
+        "required-packages"
+      ],
+      "status": "final"
+    },
+    "01a164cb-75ee-72bb-a028-d03ec643143a": {
+      "title": "VPN Connections",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.030Z",
+      "tags": [
+        "vpn",
+        "connections",
+        "tailscale",
+        "openvpn",
+        "netbird"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7689-731d-bafb-e4f57b89906b": {
+      "title": "Preview",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.185Z",
+      "tags": [
+        "preview",
+        "authentication",
+        "standard-preview-url",
+        "signed-preview-url",
+        "warning-page"
+      ],
+      "status": "final"
+    },
+    "01a164cb-771f-73db-be7a-0c2b25fef6da": {
+      "title": "Custom Preview Proxy",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.335Z",
+      "tags": [
+        "custom",
+        "preview",
+        "proxy",
+        "how-it-works",
+        "websocket-support",
+        "reserved-ports",
+        "proxy-headers"
+      ],
+      "status": "final"
+    },
+    "01a164cb-77b4-71bf-a130-25747286651d": {
+      "title": "Playground",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.484Z",
+      "tags": [
+        "playground",
+        "access-from-dashboard",
+        "sandbox",
+        "terminal",
+        "vnc"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7847-711e-9e6f-689e04988d33": {
+      "title": "Webhooks",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.631Z",
+      "tags": [
+        "webhooks",
+        "accessing-webhooks",
+        "create-webhook-endpoints",
+        "edit-webhook-endpoints",
+        "delete-webhook-endpoints",
+        "webhook-events",
+        "webhook-payload-format"
+      ],
+      "status": "final"
+    },
+    "01a164cb-78f9-701a-940b-7cbc4590f56c": {
+      "title": "Network Limits (Firewall)",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.809Z",
+      "tags": [
+        "network",
+        "limits",
+        "tier-based-network-restrictions",
+        "create-sandboxes-with-network-restrictio",
+        "update-network-settings-while-a-sandbox-",
+        "outbound-proxy",
+        "network-allow-list-format"
+      ],
+      "status": "final"
+    },
+    "01a164cb-799c-77af-a866-977cdbe1fe7b": {
+      "title": "Secrets",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:58.972Z",
+      "tags": [
+        "secrets",
+        "how-secrets-work",
+        "host-allowlist",
+        "create-a-secret",
+        "use-a-secret-in-a-sandbox",
+        "verify-substitution",
+        "update-secrets-in-a-sandbox"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7a34-7298-8bd8-8541be40fb47": {
+      "title": "Audit Logs",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.124Z",
+      "tags": [
+        "audit",
+        "logs",
+        "access-from-dashboard",
+        "real-time-updates",
+        "log-structure",
+        "get-audit-logs-for-organization",
+        "get-audit-scenarios"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7ad3-7677-8e47-b13cfc33c683": {
+      "title": "OpenTelemetry Collection",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.283Z",
+      "tags": [
+        "observability",
+        "otel",
+        "collection",
+        "configure-sandbox-collection",
+        "organization-metrics",
+        "sdk-tracing",
+        "example"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7b6c-746e-a683-bdd6297a02c3": {
+      "title": "Bring Your Own Compute (BYOC)",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.436Z",
+      "tags": [
+        "bring",
+        "your",
+        "own",
+        "compute",
+        "custom-regions",
+        "deployment"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7bff-76fa-a445-8dadef6ce6cd": {
+      "title": "Architecture",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.583Z",
+      "tags": [
+        "architecture"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7c95-713b-8c88-679d32487206": {
+      "title": "Organizations",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.733Z",
+      "tags": [
+        "organizations",
+        "personal-vs-collaborative",
+        "create-organization",
+        "list-organizations",
+        "leave-organization",
+        "delete-organization",
+        "roles"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7d2e-771d-ba18-e7745b494fcf": {
+      "title": "API Keys",
+      "source_type": "link",
+      "created": "2026-10-22T18:06:59.886Z",
+      "tags": [
+        "api",
+        "keys",
+        "create-an-api-key",
+        "permissions-scopes",
+        "list-api-keys",
+        "get-current-api-key",
+        "get-api-key"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7de0-7197-ae9f-334f6206e365": {
+      "title": "Organization SSO",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.064Z",
+      "tags": [
+        "sso",
+        "configure-sso",
+        "list-sso-connections",
+        "sign-in-with-sso",
+        "configure-scim-directory-sync",
+        "legacy-oidc-identity-providers"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7e7d-73f8-8aca-eed29b1c4827": {
+      "title": "Limits",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.221Z",
+      "tags": [
+        "limits",
+        "resources",
+        "sandbox-limits",
+        "disk-quota",
+        "rate-limits",
+        "tiers",
+        "best-practices"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7f16-71fb-bb18-7a54dda3fcf8": {
+      "title": "Billing",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.374Z",
+      "tags": [
+        "billing",
+        "sandbox-billing",
+        "wallet",
+        "spending",
+        "cancellation-post-cancellation"
+      ],
+      "status": "final"
+    },
+    "01a164cb-7f9a-75dc-a03d-886ab1416f85": {
+      "title": "Acceptable Use Guidelines",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.506Z",
+      "tags": [
+        "acceptable",
+        "use",
+        "your-users-and-your-agents",
+        "prohibited-use",
+        "cryptocurrency-and-token-earning-workloa",
+        "security-testing",
+        "enforcement"
+      ],
+      "status": "final"
+    },
+    "01a164cb-8032-70b8-a5d6-447002ded876": {
+      "title": "Linked Accounts",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.658Z",
+      "tags": [
+        "linked",
+        "accounts",
+        "link-account",
+        "unlink-account"
+      ],
+      "status": "final"
+    },
+    "01a164cb-80fa-71a8-8e79-55683fc6269b": {
+      "title": "Troubleshooting",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:00.858Z",
+      "tags": [
+        "troubleshooting",
+        "sandbox-lifecycle",
+        "account",
+        "runtime-and-access",
+        "error-handling"
+      ],
+      "status": "final"
+    },
+    "01a164cb-8197-744b-b174-4ecb0a209d72": {
+      "title": "TypeScript SDK Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.015Z",
+      "tags": [
+        "typescript",
+        "sdk",
+        "installation",
+        "getting-started",
+        "configuration",
+        "real-time-state-updates",
+        "multiple-runtime-support"
+      ],
+      "status": "final"
+    },
+    "01a164cb-8247-761f-b759-b28fdda2e515": {
+      "title": "Python SDK Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.191Z",
+      "tags": [
+        "python",
+        "sdk",
+        "installation",
+        "getting-started",
+        "configuration",
+        "real-time-state-updates",
+        "async-python-sdk"
+      ],
+      "status": "final"
+    },
+    "01a164cb-82e1-71f8-97b8-bcc4f7eb7348": {
+      "title": "Go SDK Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.345Z",
+      "tags": [
+        "go",
+        "sdk",
+        "installation",
+        "getting-started",
+        "configuration",
+        "real-time-state-updates",
+        "reference"
+      ],
+      "status": "final"
+    },
+    "01a164cb-8378-7328-9f25-375bf2642308": {
+      "title": "Java SDK Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.496Z",
+      "tags": [
+        "java",
+        "sdk",
+        "installation",
+        "getting-started",
+        "configuration",
+        "real-time-state-updates",
+        "reference"
+      ],
+      "status": "final"
+    },
+    "01a164cb-8411-735b-a2b9-59efa9641b85": {
+      "title": "Ruby SDK Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.649Z",
+      "tags": [
+        "ruby",
+        "sdk",
+        "installation",
+        "getting-started",
+        "configuration",
+        "real-time-state-updates",
+        "environment-variables"
+      ],
+      "status": "final"
+    },
+    "01a164cb-84b7-764e-a086-5b619ddb1630": {
+      "title": "CLI",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:01.815Z",
+      "tags": [
+        "tools",
+        "cli",
+        "installation",
+        "daytona",
+        "daytona-archive",
+        "daytona-autocomplete",
+        "daytona-create"
+      ],
+      "status": "final"
+    },
+    "01a164cb-857b-70b6-8184-ea345651f4e7": {
+      "title": "Daytona API Reference",
+      "source_type": "link",
+      "created": "2026-10-22T18:07:02.011Z",
+      "tags": [
+        "tools",
+        "api",
+        "daytona-api",
+        "daytona-toolbox-api",
+        "daytona-analytics-api"
+      ],
+      "status": "final"
+    }
+  },
+  "updated_at": "2026-10-22T18:07:02.017Z"
+}

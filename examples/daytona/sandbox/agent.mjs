@@ -11,6 +11,7 @@
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { bm25Search, searchMaterial } from "./bm25.mjs";
 
 const policy = JSON.parse(readFileSync(process.env.ACP_POLICY ?? "/opt/acp/policy.json", "utf8"));
 const vault = process.env.ACP_VAULT ?? "/opt/acp/vault";
@@ -164,14 +165,18 @@ function loadPages() {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   return manifest.map((entry) => {
     const body = readFileSync(path.join(pagesDir, `${entry.slug}.txt`), "utf8").replace(/\n$/, "");
-    return { slug: entry.slug, title: entry.title, body };
+    return { slug: entry.slug, title: entry.title, url: entry.source_url, body };
   });
 }
 
 async function answerQuestion(client, question, pages) {
   const query = contentQuery(question.question, policy.stopwords);
   const prefix = `${policy.instruction}Question: ${question.question}\n\n`;
-  const list = await callTool(client, "list_acos", { limit: 50, sortBy: "title", order: "asc" });
+  const list = await callTool(client, "list_acos", {
+    limit: policy.catalog_limit,
+    sortBy: "title",
+    order: "asc",
+  });
   const slugById = new Map();
   for (const item of list.data.items ?? []) {
     slugById.set(String(item.id), String(item.corpus_slug));
@@ -190,16 +195,30 @@ async function answerQuestion(client, question, pages) {
   const reads = [];
   for (const id of openedIds) reads.push(await callTool(client, "read_aco", { id }));
   const acpPrompt = `${prefix}${policy.sections.catalog}${list.text}\n\n${policy.sections.ranking}${similar.text}\n\n${policy.sections.opened}${reads.map((read) => read.text).join("\n\n")}`;
-  const baselinePrompt = `${prefix}${policy.sections.pages}${pages.map((page) => `# ${page.title}\n\n${page.body}`).join("\n\n")}`;
+  const hits = bm25Search(pages, question.question, policy.stopwords, policy.limit);
+  const searchPrompt = `${prefix}${searchMaterial(pages, hits, policy.sections)}`;
+  const mode = process.env.SMOKE === "1" ? "search" : (process.env.ACP_LIVE_BASELINE ?? "search");
+  if (!["search", "naive", "both"].includes(mode)) {
+    throw new Error(`ACP_LIVE_BASELINE must be search, naive, or both, got ${mode}`);
+  }
   const acp = await callModel(acpPrompt);
-  const baseline = await callModel(baselinePrompt);
+  const search = mode === "naive" ? null : await callModel(searchPrompt);
+  const naive =
+    mode === "naive" || mode === "both"
+      ? await callModel(
+          `${prefix}${policy.sections.pages}${pages.map((page) => `# ${page.title}\n\n${page.body}`).join("\n\n")}`
+        )
+      : null;
   return {
     question_id: question.id,
     content_query: query,
     opened_slugs: openedSlugs,
+    search_opened_slugs: hits.map((hit) => hit.slug),
     method: similar.data.method ?? null,
+    baseline_mode: mode,
     acp,
-    baseline,
+    search,
+    naive,
   };
 }
 

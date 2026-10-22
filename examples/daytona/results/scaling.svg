@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
   <rect width="100%" height="100%" fill="#ffffff"/>
-  <text x="78" y="28" font-size="16" font-family="sans-serif" fill="#111827">Context tokens by fork count</text>
-  <text x="648" y="28" text-anchor="end" font-size="12" font-family="sans-serif" fill="#b45309">Baseline</text>
-  <text x="696" y="28" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">ACP</text>
+  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">Context tokens by fork count</text>
+  <text x="696" y="18" text-anchor="end" font-size="12" font-family="sans-serif" fill="#b45309">Naive full-read (upper bound)</text>
+  <text x="696" y="34" text-anchor="end" font-size="12" font-family="sans-serif" fill="#1d4ed8">Search-then-read</text>
+  <text x="696" y="50" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">ACP</text>
   <line x1="78" y1="366.0" x2="696" y2="366.0" stroke="#e5e7eb" />
-  <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0.00M</text>
-  <line x1="78" y1="286.0" x2="696" y2="286.0" stroke="#e5e7eb" />
-  <text x="70" y="290.0" text-anchor="end" font-size="12" fill="#374151">14.07M</text>
-  <line x1="78" y1="206.0" x2="696" y2="206.0" stroke="#e5e7eb" />
-  <text x="70" y="210.0" text-anchor="end" font-size="12" fill="#374151">28.13M</text>
-  <line x1="78" y1="126.0" x2="696" y2="126.0" stroke="#e5e7eb" />
-  <text x="70" y="130.0" text-anchor="end" font-size="12" fill="#374151">42.20M</text>
-  <line x1="78" y1="46.0" x2="696" y2="46.0" stroke="#e5e7eb" />
-  <text x="70" y="50.0" text-anchor="end" font-size="12" fill="#374151">56.26M</text>
-  <polyline fill="none" stroke="#b45309" stroke-width="2" points="84.2,362.8 139.8,334.0 387.0,206.0 696.0,46.0"/>
-  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,365.5 139.8,361.6 387.0,342.9 696.0,319.3"/>
-  <circle cx="84.2" cy="362.8" r="4" fill="#b45309" />
-  <circle cx="139.8" cy="334.0" r="4" fill="#b45309" />
-  <circle cx="387.0" cy="206.0" r="4" fill="#b45309" />
-  <circle cx="696.0" cy="46.0" r="4" fill="#b45309" />
-  <circle cx="84.2" cy="365.5" r="4" fill="#0f766e" />
-  <circle cx="139.8" cy="361.6" r="4" fill="#0f766e" />
-  <circle cx="387.0" cy="342.9" r="4" fill="#0f766e" />
-  <circle cx="696.0" cy="319.3" r="4" fill="#0f766e" />
+  <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0k</text>
+  <line x1="78" y1="292.5" x2="696" y2="292.5" stroke="#e5e7eb" />
+  <text x="70" y="296.5" text-anchor="end" font-size="12" fill="#374151">14.07M</text>
+  <line x1="78" y1="219.0" x2="696" y2="219.0" stroke="#e5e7eb" />
+  <text x="70" y="223.0" text-anchor="end" font-size="12" fill="#374151">28.13M</text>
+  <line x1="78" y1="145.5" x2="696" y2="145.5" stroke="#e5e7eb" />
+  <text x="70" y="149.5" text-anchor="end" font-size="12" fill="#374151">42.20M</text>
+  <line x1="78" y1="72.0" x2="696" y2="72.0" stroke="#e5e7eb" />
+  <text x="70" y="76.0" text-anchor="end" font-size="12" fill="#374151">56.26M</text>
+  <polyline fill="none" stroke="#b45309" stroke-width="2" points="84.2,363.1 139.8,336.6 387.0,219.0 696.0,72.0"/>
+  <circle cx="84.2" cy="363.1" r="4" fill="#b45309" />
+  <circle cx="139.8" cy="336.6" r="4" fill="#b45309" />
+  <circle cx="387.0" cy="219.0" r="4" fill="#b45309" />
+  <circle cx="696.0" cy="72.0" r="4" fill="#b45309" />
+  <polyline fill="none" stroke="#1d4ed8" stroke-width="2" points="84.2,365.8 139.8,364.5 387.0,357.2 696.0,347.9"/>
+  <circle cx="84.2" cy="365.8" r="4" fill="#1d4ed8" />
+  <circle cx="139.8" cy="364.5" r="4" fill="#1d4ed8" />
+  <circle cx="387.0" cy="357.2" r="4" fill="#1d4ed8" />
+  <circle cx="696.0" cy="347.9" r="4" fill="#1d4ed8" />
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,365.6 139.8,362.0 387.0,344.8 696.0,323.1"/>
+  <circle cx="84.2" cy="365.6" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="362.0" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="344.8" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="323.1" r="4" fill="#0f766e" />
   <text x="84.2" y="402" text-anchor="middle" font-size="12" fill="#374151">1</text>
   <text x="139.8" y="402" text-anchor="middle" font-size="12" fill="#374151">10</text>
   <text x="387.0" y="402" text-anchor="middle" font-size="12" fill="#374151">50</text>

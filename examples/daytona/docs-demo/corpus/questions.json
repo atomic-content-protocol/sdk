@@ -1,0 +1,92 @@
+[
+  {
+    "id": "d01",
+    "question": "Can a container sandbox be forked, and what should I use instead when I need its filesystem state?",
+    "expected_answer": "Forking is not supported for container sandboxes.",
+    "gold_slugs": ["sandboxes"]
+  },
+  {
+    "id": "d02",
+    "question": "Can I create a snapshot from a sandbox that is already stopped?",
+    "expected_answer": "Create a snapshot from a running or stopped sandbox.",
+    "gold_slugs": ["snapshots"]
+  },
+  {
+    "id": "d03",
+    "question": "When I mount a volume with a subpath, can that subpath start with a slash?",
+    "expected_answer": "subpaths are S3 key prefixes and must not start with",
+    "gold_slugs": ["volumes"]
+  },
+  {
+    "id": "d04",
+    "question": "What does the API return if I set an allow list and block-all together on a new sandbox?",
+    "expected_answer": "Sending a conflicting combination returns a `400` error.",
+    "gold_slugs": ["network-limits"]
+  },
+  {
+    "id": "d05",
+    "question": "If DAYTONA_API_URL is only in a .env file, will the SDK use that URL?",
+    "expected_answer": "A `DAYTONA_API_URL` value in a `.env` file is ignored",
+    "gold_slugs": ["authentication"]
+  },
+  {
+    "id": "d06",
+    "question": "Which desktop operations can Computer Use drive inside a sandbox?",
+    "expected_answer": "mouse, keyboard, screenshot, screen recording, and display operations",
+    "gold_slugs": ["computer-use"]
+  },
+  {
+    "id": "d07",
+    "question": "How does the declarative builder define sandbox images without pulling from a container registry?",
+    "expected_answer": "programmatically define them using the Daytona SDK",
+    "gold_slugs": ["declarative-builder"]
+  },
+  {
+    "id": "d08",
+    "question": "Does a create request still claim a warm-pool sandbox if I attach a volume or custom environment variables?",
+    "expected_answer": "No custom environment variables, volumes, or secrets",
+    "gold_slugs": ["warm-pools"]
+  },
+  {
+    "id": "d09",
+    "question": "How does SSH into a Daytona sandbox authenticate?",
+    "expected_answer": "token-based authentication",
+    "gold_slugs": ["ssh-access"]
+  },
+  {
+    "id": "d10",
+    "question": "Does a Daytona secret put the plaintext credential inside the sandbox?",
+    "expected_answer": "without ever placing the plaintext inside the sandbox",
+    "gold_slugs": ["secrets"]
+  },
+  {
+    "id": "d11",
+    "question": "How do webhooks tell my app that something happened, compared with my app polling Daytona?",
+    "expected_answer": "proactively notifies your application when something important happens",
+    "gold_slugs": ["webhooks"]
+  },
+  {
+    "id": "d12",
+    "question": "What npm command installs the Daytona TypeScript SDK?",
+    "expected_answer": "Install the Daytona TypeScript SDK using npm",
+    "gold_slugs": ["typescript-sdk"]
+  },
+  {
+    "id": "d13",
+    "question": "Can I revoke a standard preview URL token, and is it meant to be shared?",
+    "expected_answer": "That token is sandbox-wide and cannot be revoked",
+    "gold_slugs": ["preview"]
+  },
+  {
+    "id": "d14",
+    "question": "When should I stream session command logs instead of reading a log snapshot?",
+    "expected_answer": "Use streaming for long-running or background commands.",
+    "gold_slugs": ["log-streaming"]
+  },
+  {
+    "id": "d15",
+    "question": "If I target a region at sandbox create time, where is the workload scheduled?",
+    "expected_answer": "schedules the workload on available capacity within that region",
+    "gold_slugs": ["regions"]
+  }
+]

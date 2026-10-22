@@ -3,11 +3,15 @@
   "limit": 3,
   "threshold": 0,
   "instruction": "Answer the question using only the corpus material below. Quote a short supporting span.\n\n",
+  "catalog_limit": 50,
   "sections": {
     "catalog": "Metadata catalog (list_acos, frontmatter only):\n",
     "ranking": "Triage ranking (find_similar):\n",
     "opened": "Opened objects (read_aco):\n",
-    "pages": "Full pages:\n"
+    "pages": "Full pages:\n",
+    "search_index": "Title and URL index:\n",
+    "search_ranking": "BM25 ranking (raw page text, top 3):\n",
+    "search_pages": "Opened pages:\n"
   },
   "stopwords": [
     "a",

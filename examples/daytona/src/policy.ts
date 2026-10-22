@@ -6,12 +6,16 @@ export interface Policy {
   name: string;
   limit: number;
   threshold: number;
+  catalog_limit: number;
   instruction: string;
   sections: {
     catalog: string;
     ranking: string;
     opened: string;
     pages: string;
+    search_index: string;
+    search_ranking: string;
+    search_pages: string;
   };
   stopwords: string[];
   fork_sizes: number[];
@@ -28,8 +32,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 export const EXAMPLE_ROOT = path.resolve(HERE, "..");
 
-export function loadPolicy(): Policy {
-  const raw = JSON.parse(readFileSync(path.join(EXAMPLE_ROOT, "policy.json"), "utf8")) as Policy;
+export function loadPolicy(root = EXAMPLE_ROOT): Policy {
+  const raw = JSON.parse(readFileSync(path.join(root, "policy.json"), "utf8")) as Policy;
   return raw;
 }
 

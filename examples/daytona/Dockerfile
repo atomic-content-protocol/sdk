@@ -14,6 +14,7 @@ ENV PATH="/opt/acp/node_modules/.bin:${PATH}"
 
 COPY policy.json /opt/acp/policy.json
 COPY sandbox/agent.mjs /opt/acp/agent.mjs
+COPY sandbox/bm25.mjs /opt/acp/bm25.mjs
 COPY corpus/questions.json /opt/acp/questions.json
 COPY corpus/manifest.json /opt/acp/manifest.json
 COPY corpus/pages /opt/acp/pages

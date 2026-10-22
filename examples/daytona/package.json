@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc --noEmit -p tsconfig.json",
     "build-corpus": "tsx src/build-corpus.ts",
+    "build-docs": "tsx src/build-docs.ts",
     "measure": "tsx src/measure.ts",
+    "measure:docs": "tsx src/measure-docs.ts",
     "live": "tsx src/live.ts",
     "lint": "tsc --noEmit -p tsconfig.json",
     "test": "tsx src/verify.ts"

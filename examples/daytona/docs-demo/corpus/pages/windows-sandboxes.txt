@@ -1,0 +1,1406 @@
+# Windows Sandboxes
+
+Daytona provides **Windows sandboxes** for AI agents that need a Windows operating system. Each Windows sandbox runs its own Windows kernel with a dedicated filesystem, network stack, and allocated vCPU, RAM, and disk.
+
+Agents and developers can install software, run Windows applications, run commands in the command prompt or PowerShell, and control the desktop through Computer Use.
+
+| **Term**                | **Description**                                                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Sandbox**             | An isolated Windows environment created on demand to run code.                                                               |
+| **Windows VM**          | A sandbox that runs as a virtual machine with its own Windows kernel. The hardware enforces the boundary between sandboxes.   |
+| **Sandbox class**       | The runtime of a sandbox. Windows sandboxes use the Windows class, set by the snapshot.                                      |
+| **Snapshot**            | A pre-configured template that new sandboxes start from.                                                                     |
+| **Toolbox**             | The Daytona daemon inside the sandbox that serves file, Git, process, and Computer Use requests.                              |
+| **Shell**               | The program the toolbox runs commands with. The command prompt by default, or PowerShell when configured.                    |
+
+:::note[Access]
+Windows sandboxes are available to [Tier 3 and higher organizations](https://www.daytona.io/docs/en/limits.md#tiers). <br /> Contact [support@daytona.io](mailto:support@daytona.io) to request access.
+:::
+
+## Use cases
+
+Windows sandboxes are used when the software, the test, or the task requires Windows.
+
+- **Computer-use agents on Windows**: an agent operates Windows applications through screenshots, mouse and keyboard input, and the accessibility tree with [Computer Use](https://www.daytona.io/docs/en/computer-use.md), for tasks that exist only in Windows software.
+- **Windows-only software**: programs, installers, and command-line tools that have no Linux version run in an isolated machine instead of on a shared Windows server.
+- **Build and test on Windows**: code, scripts, and installers are built or tested on a clean Windows machine for each run, so results do not depend on leftover state.
+- **PowerShell and automation**: PowerShell scripts and Windows administration tasks run against a real Windows installation before they reach production machines.
+- **Evaluation and reinforcement learning (RL)**: each test case or episode gets an identical Windows machine, started from the base snapshot or from a filesystem snapshot you prepared.
+- **Long-lived agent sessions**: a Windows sandbox pauses when the agent goes idle and resumes with its processes and memory intact.
+- **Branching from a running state**: a Windows sandbox is forked to try several approaches from the same point. Each fork gets its own copy of the filesystem and memory.
+
+## Create a Windows sandbox
+
+Create a Windows sandbox.
+
+| **Snapshot**            | **vCPU** | **Memory** | **Storage** |
+| ----------------------- | -------- | ---------- | ----------- |
+| **`windows-small`**     | 1        | 4GiB       | 30GiB       |
+| **`windows-medium`**    | 2        | 8GiB       | 50GiB       |
+| **`windows-large`**     | 4        | 16GiB      | 50GiB       |
+
+
+Create a Windows sandbox from a default snapshot. The snapshot sets the sandbox resources.
+
+1. Go to [Daytona Sandboxes ↗](https://app.daytona.io/dashboard/sandboxes)
+2. Click <Button>Create Sandbox</Button>
+3. Select a Windows <Button>Snapshot</Button>: **`windows-small`**, **`windows-medium`**, or **`windows-large`**
+4. Click <Button>Create</Button>
+
+
+```python
+from daytona import Daytona, CreateSandboxFromSnapshotParams
+
+daytona = Daytona()
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="windows-small"))
+```
+
+
+```typescript
+import { Daytona } from '@daytona/sdk'
+
+const daytona = new Daytona()
+const sandbox = await daytona.create({ snapshot: 'windows-small' })
+```
+
+
+```ruby
+require 'daytona'
+
+daytona = Daytona::Daytona.new
+sandbox = daytona.create(
+  Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'windows-small')
+)
+```
+
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/daytona/clients/sdk-go/pkg/daytona"
+	"github.com/daytona/clients/sdk-go/pkg/types"
+)
+
+func main() {
+	client, _ := daytona.NewClient()
+	ctx := context.Background()
+	_, _ = client.Create(ctx, types.SnapshotParams{
+		Snapshot: "windows-small",
+	})
+}
+```
+
+
+```java
+import io.daytona.sdk.Daytona;
+import io.daytona.sdk.Sandbox;
+import io.daytona.sdk.model.CreateSandboxFromSnapshotParams;
+
+public class App {
+    public static void main(String[] args) {
+        try (Daytona daytona = new Daytona()) {
+            CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+            params.setSnapshot("windows-small");
+            Sandbox sandbox = daytona.create(params);
+        }
+    }
+}
+```
+
+
+```bash
+daytona create --snapshot windows-small
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "snapshot": "windows-small"
+}'
+```
+
+
+
+Create a Windows sandbox from your own snapshot. Windows snapshots are created from an existing Windows sandbox: create a sandbox from a default Windows snapshot, install and configure what you need, then create a [filesystem snapshot](#filesystem-snapshot) or a [memory snapshot](#memory-snapshot) from it. New sandboxes created from that snapshot start with the same environment.
+
+1. Go to [Daytona Sandboxes ↗](https://app.daytona.io/dashboard/sandboxes)
+2. Click <Button>Create Sandbox</Button>
+3. Select a Windows <Button>Snapshot</Button>: **`windows-small`**, **`windows-medium`**, or **`windows-large`**
+4. Click <Button>Create</Button>
+5. Install and configure the software you need in the sandbox
+6. Stop the sandbox and create a snapshot from it, for example **`my-windows-snapshot`**
+7. Click <Button>Create Sandbox</Button>
+8. Select the <Button>Snapshot</Button> **`my-windows-snapshot`**
+9. Click <Button>Create</Button>
+
+
+```python
+from daytona import Daytona, CreateSandboxFromSnapshotParams
+
+daytona = Daytona()
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="windows-small"))
+
+# Install and configure the software you need, then create a snapshot
+sandbox.stop()
+sandbox.create_snapshot("my-windows-snapshot")
+
+# Create a Windows sandbox from your snapshot
+new_sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="my-windows-snapshot"))
+```
+
+
+```typescript
+import { Daytona } from '@daytona/sdk'
+
+const daytona = new Daytona()
+const sandbox = await daytona.create({ snapshot: 'windows-small' })
+
+// Install and configure the software you need, then create a snapshot
+await sandbox.stop()
+await sandbox.createSnapshot('my-windows-snapshot')
+
+// Create a Windows sandbox from your snapshot
+const newSandbox = await daytona.create({ snapshot: 'my-windows-snapshot' })
+```
+
+
+```ruby
+require 'daytona'
+
+daytona = Daytona::Daytona.new
+sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'windows-small'))
+
+# Install and configure the software you need, then create a snapshot
+sandbox.stop
+sandbox.create_snapshot(name: 'my-windows-snapshot')
+
+# Create a Windows sandbox from your snapshot
+new_sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'my-windows-snapshot'))
+```
+
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/daytona/clients/sdk-go/pkg/daytona"
+	"github.com/daytona/clients/sdk-go/pkg/types"
+)
+
+func main() {
+	client, _ := daytona.NewClient()
+	ctx := context.Background()
+	sandbox, err := client.Create(ctx, types.SnapshotParams{Snapshot: "windows-small"})
+	if err != nil {
+		panic(err)
+	}
+
+	// Install and configure the software you need, then create a snapshot
+	if err := sandbox.Stop(ctx); err != nil {
+		panic(err)
+	}
+	if err := sandbox.CreateSnapshot(ctx, "my-windows-snapshot"); err != nil {
+		panic(err)
+	}
+
+	// Create a Windows sandbox from your snapshot
+	_, err = client.Create(ctx, types.SnapshotParams{Snapshot: "my-windows-snapshot"})
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+
+```java
+import io.daytona.sdk.Daytona;
+import io.daytona.sdk.Sandbox;
+import io.daytona.sdk.model.CreateSandboxFromSnapshotParams;
+
+public class App {
+    public static void main(String[] args) {
+        try (Daytona daytona = new Daytona()) {
+            CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+            params.setSnapshot("windows-small");
+            Sandbox sandbox = daytona.create(params);
+
+            // Install and configure the software you need, then create a snapshot
+            sandbox.stop();
+            sandbox.createSnapshot("my-windows-snapshot");
+
+            // Create a Windows sandbox from your snapshot
+            CreateSandboxFromSnapshotParams fromSnapshot = new CreateSandboxFromSnapshotParams();
+            fromSnapshot.setSnapshot("my-windows-snapshot");
+            Sandbox newSandbox = daytona.create(fromSnapshot);
+        }
+    }
+}
+```
+
+
+```bash
+# Create the snapshot from a stopped Windows sandbox with an SDK or the API, then:
+daytona create --snapshot my-windows-snapshot
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "windows-small"}'
+
+# Install and configure the software you need, then create a snapshot
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/stop' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/snapshot' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "name": "my-windows-snapshot",
+  "includeMemory": false
+}'
+
+# Create a Windows sandbox from your snapshot
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "my-windows-snapshot"}'
+```
+
+
+
+## Filesystem snapshot
+
+A filesystem snapshot, also called a cold snapshot, saves the filesystem of a stopped Windows sandbox. A snapshot without the include memory option is a filesystem snapshot.
+
+
+```python
+from daytona import Daytona, CreateSandboxFromSnapshotParams
+
+daytona = Daytona()
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="windows-small"))
+
+# Write a file to the filesystem
+sandbox.fs.upload_file(b"done", "setup.txt")
+
+# A filesystem snapshot requires a stopped sandbox
+sandbox.stop()
+sandbox.create_snapshot("my-windows-snapshot")
+
+# A sandbox created from the snapshot starts with the same filesystem
+new_sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="my-windows-snapshot"))
+content = new_sandbox.fs.download_file("setup.txt")
+print(content.decode())  # done
+```
+
+
+```typescript
+import { Daytona } from '@daytona/sdk'
+
+const daytona = new Daytona()
+const sandbox = await daytona.create({ snapshot: 'windows-small' })
+
+// Write a file to the filesystem
+await sandbox.fs.uploadFile(Buffer.from('done'), 'setup.txt')
+
+// A filesystem snapshot requires a stopped sandbox
+await sandbox.stop()
+await sandbox.createSnapshot('my-windows-snapshot')
+
+// A sandbox created from the snapshot starts with the same filesystem
+const newSandbox = await daytona.create({ snapshot: 'my-windows-snapshot' })
+const content = await newSandbox.fs.downloadFile('setup.txt')
+console.log(content.toString()) // done
+```
+
+
+```ruby
+require 'daytona'
+
+daytona = Daytona::Daytona.new
+sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'windows-small'))
+
+# Write a file to the filesystem
+sandbox.fs.upload_file('done', 'setup.txt')
+
+# A filesystem snapshot requires a stopped sandbox
+sandbox.stop
+sandbox.create_snapshot(name: 'my-windows-snapshot')
+
+# A sandbox created from the snapshot starts with the same filesystem
+new_sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'my-windows-snapshot'))
+content = new_sandbox.fs.download_file('setup.txt')
+puts content # done
+```
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/daytona/clients/sdk-go/pkg/daytona"
+	"github.com/daytona/clients/sdk-go/pkg/types"
+)
+
+func main() {
+	client, _ := daytona.NewClient()
+	ctx := context.Background()
+	sandbox, err := client.Create(ctx, types.SnapshotParams{Snapshot: "windows-small"})
+	if err != nil {
+		panic(err)
+	}
+
+	// Write a file to the filesystem
+	if err := sandbox.FileSystem.UploadFile(ctx, []byte("done"), "setup.txt"); err != nil {
+		panic(err)
+	}
+
+	// A filesystem snapshot requires a stopped sandbox
+	if err := sandbox.Stop(ctx); err != nil {
+		panic(err)
+	}
+	if err := sandbox.CreateSnapshot(ctx, "my-windows-snapshot"); err != nil {
+		panic(err)
+	}
+
+	// A sandbox created from the snapshot starts with the same filesystem
+	newSandbox, err := client.Create(ctx, types.SnapshotParams{Snapshot: "my-windows-snapshot"})
+	if err != nil {
+		panic(err)
+	}
+	content, err := newSandbox.FileSystem.DownloadFile(ctx, "setup.txt", nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(content)) // done
+}
+```
+
+
+```java
+import io.daytona.sdk.Daytona;
+import io.daytona.sdk.Sandbox;
+import io.daytona.sdk.model.CreateSandboxFromSnapshotParams;
+
+public class App {
+    public static void main(String[] args) {
+        try (Daytona daytona = new Daytona()) {
+            CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+            params.setSnapshot("windows-small");
+            Sandbox sandbox = daytona.create(params);
+
+            // Write a file to the filesystem
+            sandbox.fs.uploadFile("done".getBytes(), "setup.txt");
+
+            // A filesystem snapshot requires a stopped sandbox
+            sandbox.stop();
+            sandbox.createSnapshot("my-windows-snapshot");
+
+            // A sandbox created from the snapshot starts with the same filesystem
+            CreateSandboxFromSnapshotParams fromSnapshot = new CreateSandboxFromSnapshotParams();
+            fromSnapshot.setSnapshot("my-windows-snapshot");
+            Sandbox newSandbox = daytona.create(fromSnapshot);
+            byte[] content = newSandbox.fs.downloadFile("setup.txt");
+            System.out.println(new String(content)); // done
+        }
+    }
+}
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "windows-small"}'
+
+# Write a file to the filesystem
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/files/upload-v2?path=setup.txt' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --form 'file=@setup.txt'
+
+# A filesystem snapshot requires a stopped sandbox
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/stop' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/snapshot' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "name": "my-windows-snapshot",
+  "includeMemory": false
+}'
+
+# A sandbox created from the snapshot starts with the same filesystem
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "my-windows-snapshot"}'
+
+curl 'https://proxy.app.daytona.io/toolbox/{newSandboxId}/files/download?path=setup.txt' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+## Memory snapshot
+
+A memory snapshot, also called a hot snapshot, saves the filesystem and memory of a started Windows sandbox. A sandbox created from a memory snapshot starts with its processes and open applications already running.
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/snapshot' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "name": "my-windows-hot-snapshot",
+  "includeMemory": true
+}'
+```
+
+
+## Filesystem persistence
+
+Filesystem persistence keeps the contents of a sandbox's disk: files, installed programs, cloned repositories, and build artifacts. A sandbox with a preserved filesystem starts with its environment intact, with nothing to reinstall or rebuild.
+
+Windows sandboxes preserve their filesystem across [stop and start](#stop--start) and [filesystem snapshots](#filesystem-snapshot) created from a sandbox. An [ephemeral sandbox](https://www.daytona.io/docs/en/sandboxes.md#ephemeral-sandboxes) is deleted on stop, so its filesystem is not kept.
+
+
+```python
+from daytona import Daytona, CreateSandboxFromSnapshotParams
+
+daytona = Daytona()
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="windows-small"))
+
+# Write a file to the filesystem
+sandbox.fs.upload_file(b"done", "setup.txt")
+
+# Stop clears memory and moves the filesystem to nearby storage
+sandbox.stop()
+
+# Start restores the filesystem and boots the sandbox
+sandbox.start()
+content = sandbox.fs.download_file("setup.txt")
+print(content.decode())  # done
+```
+
+
+```typescript
+import { Daytona } from '@daytona/sdk'
+
+const daytona = new Daytona()
+const sandbox = await daytona.create({ snapshot: 'windows-small' })
+
+// Write a file to the filesystem
+await sandbox.fs.uploadFile(Buffer.from('done'), 'setup.txt')
+
+// Stop clears memory and moves the filesystem to nearby storage
+await sandbox.stop()
+
+// Start restores the filesystem and boots the sandbox
+await sandbox.start()
+const content = await sandbox.fs.downloadFile('setup.txt')
+console.log(content.toString()) // done
+```
+
+
+```ruby
+require 'daytona'
+
+daytona = Daytona::Daytona.new
+sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'windows-small'))
+
+# Write a file to the filesystem
+sandbox.fs.upload_file('done', 'setup.txt')
+
+# Stop clears memory and moves the filesystem to nearby storage
+sandbox.stop
+
+# Start restores the filesystem and boots the sandbox
+sandbox.start
+content = sandbox.fs.download_file('setup.txt')
+puts content # done
+```
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/daytona/clients/sdk-go/pkg/daytona"
+	"github.com/daytona/clients/sdk-go/pkg/types"
+)
+
+func main() {
+	client, _ := daytona.NewClient()
+	ctx := context.Background()
+	sandbox, err := client.Create(ctx, types.SnapshotParams{Snapshot: "windows-small"})
+	if err != nil {
+		panic(err)
+	}
+
+	// Write a file to the filesystem
+	if err := sandbox.FileSystem.UploadFile(ctx, []byte("done"), "setup.txt"); err != nil {
+		panic(err)
+	}
+
+	// Stop clears memory and moves the filesystem to nearby storage
+	if err := sandbox.Stop(ctx); err != nil {
+		panic(err)
+	}
+
+	// Start restores the filesystem and boots the sandbox
+	if err := sandbox.Start(ctx); err != nil {
+		panic(err)
+	}
+	content, err := sandbox.FileSystem.DownloadFile(ctx, "setup.txt", nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(content)) // done
+}
+```
+
+
+```java
+import io.daytona.sdk.Daytona;
+import io.daytona.sdk.Sandbox;
+import io.daytona.sdk.model.CreateSandboxFromSnapshotParams;
+
+public class App {
+    public static void main(String[] args) {
+        try (Daytona daytona = new Daytona()) {
+            CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+            params.setSnapshot("windows-small");
+            Sandbox sandbox = daytona.create(params);
+
+            // Write a file to the filesystem
+            sandbox.fs.uploadFile("done".getBytes(), "setup.txt");
+
+            // Stop clears memory and moves the filesystem to nearby storage
+            sandbox.stop();
+
+            // Start restores the filesystem and boots the sandbox
+            sandbox.start();
+            byte[] content = sandbox.fs.downloadFile("setup.txt");
+            System.out.println(new String(content)); // done
+        }
+    }
+}
+```
+
+
+```bash
+daytona create --snapshot windows-small
+
+# Write a file to the filesystem
+daytona exec [SANDBOX_ID] -- cmd /c "echo done> setup.txt"
+
+# Stop clears memory and moves the filesystem to nearby storage
+daytona stop [SANDBOX_ID]
+
+# Start restores the filesystem and boots the sandbox
+daytona start [SANDBOX_ID]
+daytona exec [SANDBOX_ID] -- type setup.txt
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "windows-small"}'
+
+# Write a file to the filesystem
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/files/upload-v2?path=setup.txt' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --form 'file=@setup.txt'
+
+# Stop clears memory and moves the filesystem to nearby storage
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/stop' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# Start restores the filesystem and boots the sandbox
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/start' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/files/download?path=setup.txt' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+## Memory persistence
+
+Memory persistence keeps the runtime state of a sandbox: running processes, open applications, and everything loaded in RAM. A sandbox with preserved memory continues from the point it was frozen, with processes still running, instead of starting from a clean boot.
+
+Windows sandboxes preserve their memory across [pause and resume](#pause--resume), [memory snapshots](#memory-snapshot) created from a sandbox, and [forks](#fork). Memory state is cleared on every stop.
+
+
+```python
+from daytona import Daytona, CreateSandboxFromSnapshotParams, SessionExecuteRequest
+
+daytona = Daytona()
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(snapshot="windows-small"))
+
+# Start a process that runs in the background
+sandbox.process.create_session("keepalive")
+response = sandbox.process.execute_session_command(
+    "keepalive",
+    SessionExecuteRequest(command="ping -n 3600 127.0.0.1", run_async=True),
+)
+
+# Pause keeps the filesystem and memory
+sandbox.pause()
+
+# Start resumes every process from the point where the sandbox paused
+sandbox.start()
+command = sandbox.process.get_session_command("keepalive", response.cmd_id)
+print(command.exit_code)  # None: the process is still running
+```
+
+
+```typescript
+import { Daytona } from '@daytona/sdk'
+
+const daytona = new Daytona()
+const sandbox = await daytona.create({ snapshot: 'windows-small' })
+
+// Start a process that runs in the background
+await sandbox.process.createSession('keepalive')
+const response = await sandbox.process.executeSessionCommand('keepalive', {
+  command: 'ping -n 3600 127.0.0.1',
+  runAsync: true,
+})
+
+// Pause keeps the filesystem and memory
+await sandbox.pause()
+
+// Start resumes every process from the point where the sandbox paused
+await sandbox.start()
+const command = await sandbox.process.getSessionCommand('keepalive', response.cmdId)
+console.log(command.exitCode) // undefined: the process is still running
+```
+
+
+```ruby
+require 'daytona'
+
+daytona = Daytona::Daytona.new
+sandbox = daytona.create(Daytona::CreateSandboxFromSnapshotParams.new(snapshot: 'windows-small'))
+
+# Start a process that runs in the background
+sandbox.process.create_session('keepalive')
+response = sandbox.process.execute_session_command(
+  session_id: 'keepalive',
+  req: Daytona::SessionExecuteRequest.new(command: 'ping -n 3600 127.0.0.1', run_async: true)
+)
+
+# Pause keeps the filesystem and memory
+sandbox.pause
+
+# Start resumes every process from the point where the sandbox paused
+sandbox.start
+command = sandbox.process.get_session_command(session_id: 'keepalive', command_id: response.cmd_id)
+puts command.exit_code.inspect # nil: the process is still running
+```
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/daytona/clients/sdk-go/pkg/daytona"
+	"github.com/daytona/clients/sdk-go/pkg/types"
+)
+
+func main() {
+	client, _ := daytona.NewClient()
+	ctx := context.Background()
+	sandbox, err := client.Create(ctx, types.SnapshotParams{Snapshot: "windows-small"})
+	if err != nil {
+		panic(err)
+	}
+
+	// Start a process that runs in the background
+	if err := sandbox.Process.CreateSession(ctx, "keepalive"); err != nil {
+		panic(err)
+	}
+	response, err := sandbox.Process.ExecuteSessionCommand(ctx, "keepalive", "ping -n 3600 127.0.0.1", true, false)
+	if err != nil {
+		panic(err)
+	}
+
+	// Pause keeps the filesystem and memory
+	if err := sandbox.Pause(ctx); err != nil {
+		panic(err)
+	}
+
+	// Start resumes every process from the point where the sandbox paused
+	if err := sandbox.Start(ctx); err != nil {
+		panic(err)
+	}
+	command, err := sandbox.Process.GetSessionCommand(ctx, "keepalive", response["cmdId"].(string))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(command["exitCode"]) // <nil>: the process is still running
+}
+```
+
+
+```java
+import io.daytona.sdk.Daytona;
+import io.daytona.sdk.Sandbox;
+import io.daytona.sdk.model.Command;
+import io.daytona.sdk.model.CreateSandboxFromSnapshotParams;
+import io.daytona.sdk.model.SessionExecuteRequest;
+import io.daytona.sdk.model.SessionExecuteResponse;
+
+public class App {
+    public static void main(String[] args) {
+        try (Daytona daytona = new Daytona()) {
+            CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+            params.setSnapshot("windows-small");
+            Sandbox sandbox = daytona.create(params);
+
+            // Start a process that runs in the background
+            sandbox.process.createSession("keepalive");
+            SessionExecuteResponse response = sandbox.process.executeSessionCommand(
+                "keepalive",
+                new SessionExecuteRequest("ping -n 3600 127.0.0.1", true)
+            );
+
+            // Pause keeps the filesystem and memory
+            sandbox.pause();
+
+            // Start resumes every process from the point where the sandbox paused
+            sandbox.start();
+            Command command = sandbox.process.getSessionCommand("keepalive", response.getCmdId());
+            System.out.println(command.getExitCode()); // null: the process is still running
+        }
+    }
+}
+```
+
+
+```bash
+daytona create --snapshot windows-small
+
+# Pause keeps the filesystem and memory
+daytona pause [SANDBOX_ID]
+
+# Start resumes every process from the point where the sandbox paused
+daytona start [SANDBOX_ID]
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"snapshot": "windows-small"}'
+
+# Start a process that runs in the background
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/process/session' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"sessionId": "keepalive"}'
+
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/process/session/keepalive/exec' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{"command": "ping -n 3600 127.0.0.1", "runAsync": true}'
+
+# Pause keeps the filesystem and memory
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/pause' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# Start resumes every process from the point where the sandbox paused
+curl 'https://app.daytona.io/api/sandbox/{sandboxId}/start' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# The command has no exitCode while the process is still running
+curl 'https://proxy.app.daytona.io/toolbox/{sandboxId}/process/session/keepalive/command/{commandId}' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+## Desktop
+
+Windows sandboxes support [Computer Use](https://www.daytona.io/docs/en/computer-use.md) on the Windows desktop: screenshots, mouse and keyboard input, display and window information, the accessibility tree, and screen recordings.
+
+## Shell
+
+The toolbox runs commands with the Windows command prompt by default. To run commands with another shell, such as Windows PowerShell or PowerShell 7, set the following environment variable in the sandbox. The toolbox looks the value up on the PATH and falls back to the command prompt if it is not found. If the toolbox cannot find the command prompt, it uses Windows PowerShell.
+
+| **Environment variable** | **Value**            | **Shell**              |
+| ------------------------ | -------------------- | ---------------------- |
+| **`DAYTONA_SHELL`**      | **`cmd.exe`**        | Command prompt (default) |
+| **`DAYTONA_SHELL`**      | **`powershell.exe`** | Windows PowerShell     |
+| **`DAYTONA_SHELL`**      | **`pwsh.exe`**       | PowerShell 7           |
+
+The command prompt rejects command lines longer than 8191 characters. For longer commands, use a [session command](https://www.daytona.io/docs/en/process-code-execution.md) or PowerShell.
+
+## Lifecycle
+
+Every Windows sandbox moves through a lifecycle. A Windows sandbox can have several different states. Each state reflects the status of your sandbox. A Windows sandbox transitions between states in response to user actions, or automatically when one of its [timeouts](#timeouts) elapses.
+
+<SandboxDiagram variant="windows" />
+
+| **Feature**                                           | **Persistent** | **Ephemeral** |
+| ----------------------------------------------------- | -------------- | ------------- |
+| **Stop and start**                    | ✓              | ✗             |
+| **Pause and resume**                | ✓              | ✗             |
+| **Fork**                                     | ✓              | ✓             |
+| **Archive**                                           | ✗              | ✗             |
+| **Delete**                                 | ✓              | ✓             |
+| **Filesystem persistence** | ✓              | ✗             |
+| **Memory persistence**         | ✓              | ✗             |
+| **Memory snapshot**               | ✓              | ✓             |
+| **Filesystem snapshot**       | ✓              | ✗             |
+| **Desktop**                                           | ✓ Computer Use | ✓ Computer Use |
+
+<Collapsible title="Sandbox states">
+
+| **State**            | **Description**                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| **Pulling Snapshot** | The sandbox is pulling a snapshot.                                            |
+| **Creating**         | The sandbox is being created.                                                                       |
+| **Starting**         | The sandbox is starting.                                                                            |
+| **Started**          | The sandbox is running and accepts requests.                                                        |
+| **Stopping**         | The sandbox is stopping and does not accept new requests.                                           |
+| **Stopped**          | The sandbox is stopped. The filesystem is kept and memory is cleared.                               |
+| **Pausing**          | The sandbox is pausing.                                                                             |
+| **Paused**           | The sandbox is paused with its filesystem and memory preserved.                                     |
+| **Resuming**         | The sandbox is resuming from the paused state.                                                      |
+| **Restoring**        | The sandbox is being restored.                                                                      |
+| **Resizing**         | The sandbox resources are being changed.                                                            |
+| **Snapshotting**     | The sandbox is creating a memory snapshot or a filesystem snapshot.                                       |
+| **Forking**          | The sandbox is being forked.                                                               |
+| **Deleting**         | The sandbox is being deleted.                                                                       |
+| **Deleted**          | The sandbox is deleted.                                                                             |
+| **Error**            | The sandbox hit an error. A recoverable error can be recovered. |
+
+</Collapsible>
+
+<Collapsible title="State transitions">
+
+| **Initial state** | **Target state** | **Trigger**                                                         |
+| ----------------- | ---------------- | ------------------------------------------------------------------- |
+| **Started**       | **Stopping**     | A stop is requested, or the auto-stop interval elapses.             |
+| **Stopping**      | **Stopped**      | The shutdown completes. The filesystem is kept and memory is cleared. |
+| **Stopped**       | **Starting**     | A start is requested.                                               |
+| **Started**       | **Pausing**      | A pause is requested, or the auto-pause interval elapses.           |
+| **Pausing**       | **Paused**       | The filesystem and memory are preserved.                            |
+| **Paused**        | **Resuming**     | A start is requested on a paused sandbox.                           |
+| **Paused**        | **Stopping**     | A stop is requested on a paused sandbox.                            |
+| **Resuming**      | **Started**      | The sandbox resumes from memory and is running.                     |
+| **Started**       | **Snapshotting** | A memory snapshot is requested.                                     |
+| **Stopped**       | **Snapshotting** | A filesystem snapshot is requested.                                 |
+| **Started**       | **Forking**      | A fork is requested.                                                |
+| **Started**       | **Deleting**     | A delete is requested, or an ephemeral sandbox is stopped.          |
+| **Stopped**       | **Deleting**     | A delete is requested, or the auto-delete interval elapses.         |
+| **Deleting**      | **Deleted**      | The sandbox is removed and its resources are released.              |
+
+</Collapsible>
+
+### Wait for state
+
+Wait until a Windows sandbox reaches the started or stopped state.
+
+
+```python
+sandbox.wait_for_sandbox_start(timeout=60)
+sandbox.wait_for_sandbox_stop(timeout=60)
+```
+
+
+```typescript
+await sandbox.waitUntilStarted(60)
+await sandbox.waitUntilStopped(60)
+```
+
+
+```ruby
+sandbox.wait_for_sandbox_start(60)
+sandbox.wait_for_sandbox_stop(60)
+```
+
+
+```go
+err := sandbox.WaitForStart(ctx, 60*time.Second)
+err = sandbox.WaitForStop(ctx, 60*time.Second)
+```
+
+
+```java
+sandbox.waitUntilStarted(60);
+sandbox.waitUntilStopped(60);
+```
+
+
+### Stop / start
+
+Stop a sandbox. The sandbox moves to the **stopped** state when shutdown completes. While a stop is in progress, the sandbox is in the **stopping** state and does not accept new requests.
+
+Stopping shuts down the virtual machine while preserving the filesystem. Memory state is cleared. To preserve running process state without consuming CPU, use [pause / resume](#pause--resume).
+
+Start a sandbox.
+
+1. Go to [Daytona Sandboxes ↗](https://app.daytona.io/dashboard/sandboxes)
+2. Click the stop icon <Button>⏹</Button> next to the sandbox you want to stop
+3. Click the start icon <Button>▶</Button> next to the sandbox you want to start
+
+
+```python
+sandbox.stop()
+sandbox.start()
+```
+
+
+```typescript
+await sandbox.stop()
+await sandbox.start()
+```
+
+
+```ruby
+sandbox.stop
+sandbox.start
+```
+
+
+```go
+sandbox.Stop(ctx)
+sandbox.Start(ctx)
+```
+
+
+```java
+sandbox.stop();
+sandbox.start();
+```
+
+
+```bash
+daytona stop [SANDBOX_ID] | [SANDBOX_NAME]
+daytona start [SANDBOX_ID] | [SANDBOX_NAME]
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/stop' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/start' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+### Pause / resume
+
+Pause and resume a sandbox.
+
+The filesystem and memory state are preserved, and CPU is no longer consumed.
+
+
+```python
+sandbox.pause()
+
+# Resume the paused sandbox
+sandbox.start()
+```
+
+
+```typescript
+await sandbox.pause()
+
+// Resume the paused sandbox
+await sandbox.start()
+```
+
+
+```ruby
+sandbox.pause
+
+# Resume the paused sandbox
+sandbox.start
+```
+
+
+```go
+sandbox.Pause(ctx)
+
+// Resume the paused sandbox
+sandbox.Start(ctx)
+```
+
+
+```java
+sandbox.pause();
+
+// Resume the paused sandbox
+sandbox.start();
+```
+
+
+```bash
+daytona pause [SANDBOX_ID] | [SANDBOX_NAME]
+
+# Resume the paused sandbox
+daytona start [SANDBOX_ID] | [SANDBOX_NAME]
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/pause' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# Resume the paused sandbox
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/start' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+### Fork
+
+Fork a sandbox.
+
+Forking creates a duplicate of a Windows sandbox's filesystem and memory state in a new sandbox. The forked sandbox is fully independent: it can be started, stopped, and deleted without affecting the original.
+
+Daytona tracks the parent-child relationship in a fork tree, so you can trace a fork's lineage back to the sandbox it was created from. You can fork a fork to build branches. The parent sandbox cannot be deleted while it has active fork children.
+
+1. Go to [Daytona Sandboxes ↗](https://app.daytona.io/dashboard/sandboxes)
+2. Click the three-dot menu (**⋮**) next to the started Windows sandbox you want to fork
+3. Select <Button>Fork</Button>
+
+
+```python
+forked = sandbox.fork(name="my-forked-sandbox")
+```
+
+
+```typescript
+const forked = await sandbox.fork({ name: 'my-forked-sandbox' })
+```
+
+
+```ruby
+forked = sandbox.fork(name: 'my-forked-sandbox')
+```
+
+
+```go
+name := "my-forked-sandbox"
+forked, err := sandbox.Fork(ctx, &name)
+if err != nil {
+	return err
+}
+```
+
+
+```java
+Sandbox forked = sandbox.fork("my-forked-sandbox", 60);
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/fork' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "name": "my-forked-sandbox"
+}'
+
+# List the direct forks of a sandbox
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/forks' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# Get the parent of a fork
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/parent' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+
+# Get the ancestor chain of a fork
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/ancestors' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+### Delete
+
+Delete a sandbox.
+
+:::note
+By default delete is fire-and-forget: it returns as soon as the API accepts the deletion request, without waiting for the sandbox to be destroyed. Pass the `wait` flag to block until the sandbox reaches the destroyed state.
+:::
+
+1. Go to [Daytona Sandboxes ↗](https://app.daytona.io/dashboard/sandboxes)
+2. Click <Button>Delete</Button> next to the sandbox you want to delete
+
+
+```python
+sandbox.delete()
+
+# Block until the sandbox is deleted
+sandbox.delete(timeout=60, wait=True)
+```
+
+
+```typescript
+await sandbox.delete()
+
+// Block until the sandbox is deleted
+await sandbox.delete(60, true)
+```
+
+
+```ruby
+sandbox.delete
+
+# Block until the sandbox is deleted
+sandbox.delete(60, wait: true)
+```
+
+
+```go
+err = sandbox.Delete(ctx)
+
+// Block until the sandbox is deleted
+err = sandbox.DeleteAndWait(ctx, 60*time.Second)
+```
+
+
+```java
+sandbox.delete();
+
+// Block until the sandbox is deleted
+sandbox.delete(60, true);
+```
+
+
+```bash
+daytona delete [SANDBOX_ID] | [SANDBOX_NAME]
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}' \
+  --request DELETE \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+
+### Timeouts
+
+Daytona stops, pauses, or deletes a Windows sandbox when a timeout elapses. Each timeout is set in minutes. Zero disables auto-stop, auto-pause, and wall-clock TTL. Zero does not disable auto-delete: auto-delete set to zero deletes the sandbox as soon as it stops. To disable auto-delete, set it to -1. Windows sandboxes do not support auto-archive.
+
+| **Interval**                                           | **Default**                                    | **Action**                                             |
+| ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------ |
+| **Auto-stop**     | Disabled when auto-pause is active             | Stops the sandbox after inactivity.                    |
+| **Auto-pause**                              | 60 minutes when neither interval is set        | Pauses the sandbox after inactivity.                   |
+| **Auto-delete** | Not set                                        | Deletes a stopped sandbox.                             |
+| **Wall-clock TTL**                      | Not set                                        | Deletes the sandbox at a fixed deadline, in any state. |
+
+#### Auto-pause
+
+The auto-pause interval sets the amount of time after which an idle VM sandbox is automatically [paused](#pause--resume). Auto-pause applies only to [VM sandboxes](https://www.daytona.io/docs/en/sandboxes.md#vm-sandboxes) and is mutually exclusive with the [auto-stop interval](https://www.daytona.io/docs/en/sandboxes.md#auto-stop-interval): at most one of the two intervals may be non-zero. Ephemeral sandboxes cannot have auto-pause enabled.
+
+The interval is set in minutes:
+
+- **`0`**: disables the auto-pause functionality
+- if neither auto-pause nor auto-stop is set, non-ephemeral sandbox classes that support pausing default to an auto-pause interval of 60 minutes with auto-stop disabled
+
+The sandbox pauses after no new events occur for the specified interval. Events include sandbox state changes and interactions with the sandbox through the SDK. Interactions through [sandbox previews](https://www.daytona.io/docs/en/preview.md) do not reset the timer.
+
+
+```python
+from daytona import CreateSandboxFromSnapshotParams
+
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(
+    snapshot="windows-small",
+    auto_pause_interval=60,
+))
+
+# Change the interval on an existing sandbox
+sandbox.set_auto_pause_interval(30)
+```
+
+
+```typescript
+const sandbox = await daytona.create({
+  snapshot: 'windows-small',
+  autoPauseInterval: 60,
+})
+
+// Change the interval on an existing sandbox
+await sandbox.setAutoPauseInterval(30)
+```
+
+
+```ruby
+sandbox = daytona.create(
+  Daytona::CreateSandboxFromSnapshotParams.new(
+    snapshot: 'windows-small',
+    auto_pause_interval: 60
+  )
+)
+
+# Change the interval on an existing sandbox
+sandbox.auto_pause_interval = 30
+```
+
+
+```go
+autoPauseInterval := 60
+sandbox, err := client.Create(ctx, types.SnapshotParams{
+	Snapshot: "windows-small",
+	SandboxBaseParams: types.SandboxBaseParams{
+		AutoPauseInterval: &autoPauseInterval,
+	},
+})
+```
+
+
+```java
+CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+params.setSnapshot("windows-small");
+params.setAutoPauseInterval(60);
+Sandbox sandbox = daytona.create(params);
+
+// Change the interval on an existing sandbox
+sandbox.setAutoPauseInterval(30);
+```
+
+
+#### Wall-clock TTL
+
+The wall-clock TTL (time-to-live) sets a hard upper bound on how long a sandbox may exist. Unlike the [auto-delete interval](https://www.daytona.io/docs/en/sandboxes.md#auto-delete-interval), which counts time only while the sandbox is stopped, TTL runs as wall-clock time from creation (or from the moment you last set it) and destroys the sandbox in any state: started, stopped, paused, or archived.
+
+Set `ttl_minutes` when creating a sandbox, or update it later. The value is in minutes:
+
+- **`0`**: disables the TTL
+- if not set, the sandbox has no TTL deadline
+
+Calling `set_ttl` after creation resets the deadline from the current moment. Use wall-clock TTL for agent sessions, CI jobs, and any sandbox that must not outlive a fixed deadline.
+
+
+```python
+sandbox = daytona.create(CreateSandboxFromSnapshotParams(
+    snapshot="windows-small",
+    ttl_minutes=120,
+))
+
+# Reset the deadline to 60 minutes from now
+sandbox.set_ttl(60)
+```
+
+
+```typescript
+const sandbox = await daytona.create({
+  snapshot: 'windows-small',
+  ttlMinutes: 120,
+})
+
+// Reset the deadline to 60 minutes from now
+await sandbox.setTtl(60)
+```
+
+
+```ruby
+sandbox = daytona.create(
+  Daytona::CreateSandboxFromSnapshotParams.new(
+    snapshot: 'windows-small',
+    ttl_minutes: 120
+  )
+)
+
+# Reset the deadline to 60 minutes from now
+sandbox.ttl_minutes = 60
+```
+
+
+```go
+ttlMinutes := 120
+sandbox, err := client.Create(ctx, types.SnapshotParams{
+	Snapshot: "windows-small",
+	SandboxBaseParams: types.SandboxBaseParams{
+		TtlMinutes: &ttlMinutes,
+	},
+})
+```
+
+
+```java
+CreateSandboxFromSnapshotParams params = new CreateSandboxFromSnapshotParams();
+params.setSnapshot("windows-small");
+params.setTtlMinutes(120);
+Sandbox sandbox = daytona.create(params);
+
+// Reset the deadline to 60 minutes from now
+sandbox.setTtl(60);
+```
+
+
+```bash
+daytona create --snapshot windows-small --ttl 120
+```
+
+
+```bash
+curl 'https://app.daytona.io/api/sandbox' \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "snapshot": "windows-small",
+  "ttlMinutes": 120
+}'
+
+# Reset the deadline to 60 minutes from now
+curl 'https://app.daytona.io/api/sandbox/{sandboxIdOrName}/ttl/60' \
+  --request POST \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```

@@ -1,0 +1,272 @@
+[
+  {
+    "slug": "overview",
+    "path": "en.md",
+    "url": "https://www.daytona.io/docs/en.md"
+  },
+  {
+    "slug": "authentication",
+    "path": "en/authentication.md",
+    "url": "https://www.daytona.io/docs/en/authentication.md"
+  },
+  {
+    "slug": "sandboxes",
+    "path": "en/sandboxes.md",
+    "url": "https://www.daytona.io/docs/en/sandboxes.md"
+  },
+  {
+    "slug": "linux-sandboxes",
+    "path": "en/linux-sandboxes.md",
+    "url": "https://www.daytona.io/docs/en/linux-sandboxes.md"
+  },
+  {
+    "slug": "windows-sandboxes",
+    "path": "en/windows-sandboxes.md",
+    "url": "https://www.daytona.io/docs/en/windows-sandboxes.md"
+  },
+  {
+    "slug": "macos-sandboxes",
+    "path": "en/macos-sandboxes.md",
+    "url": "https://www.daytona.io/docs/en/macos-sandboxes.md"
+  },
+  {
+    "slug": "gpu-sandboxes",
+    "path": "en/gpu-sandboxes.md",
+    "url": "https://www.daytona.io/docs/en/gpu-sandboxes.md"
+  },
+  {
+    "slug": "isolation",
+    "path": "en/isolation.md",
+    "url": "https://www.daytona.io/docs/en/isolation.md"
+  },
+  {
+    "slug": "persistence",
+    "path": "en/persistence.md",
+    "url": "https://www.daytona.io/docs/en/persistence.md"
+  },
+  {
+    "slug": "scale",
+    "path": "en/scale.md",
+    "url": "https://www.daytona.io/docs/en/scale.md"
+  },
+  {
+    "slug": "snapshots",
+    "path": "en/snapshots.md",
+    "url": "https://www.daytona.io/docs/en/snapshots.md"
+  },
+  {
+    "slug": "warm-pools",
+    "path": "en/warm-pools.md",
+    "url": "https://www.daytona.io/docs/en/warm-pools.md"
+  },
+  {
+    "slug": "declarative-builder",
+    "path": "en/declarative-builder.md",
+    "url": "https://www.daytona.io/docs/en/declarative-builder.md"
+  },
+  {
+    "slug": "volumes",
+    "path": "en/volumes.md",
+    "url": "https://www.daytona.io/docs/en/volumes.md"
+  },
+  {
+    "slug": "mount-external-storage",
+    "path": "en/mount-external-storage.md",
+    "url": "https://www.daytona.io/docs/en/mount-external-storage.md"
+  },
+  {
+    "slug": "regions",
+    "path": "en/regions.md",
+    "url": "https://www.daytona.io/docs/en/regions.md"
+  },
+  {
+    "slug": "file-system-operations",
+    "path": "en/file-system-operations.md",
+    "url": "https://www.daytona.io/docs/en/file-system-operations.md"
+  },
+  {
+    "slug": "git-operations",
+    "path": "en/git-operations.md",
+    "url": "https://www.daytona.io/docs/en/git-operations.md"
+  },
+  {
+    "slug": "language-server-protocol",
+    "path": "en/language-server-protocol.md",
+    "url": "https://www.daytona.io/docs/en/language-server-protocol.md"
+  },
+  {
+    "slug": "process-code-execution",
+    "path": "en/process-code-execution.md",
+    "url": "https://www.daytona.io/docs/en/process-code-execution.md"
+  },
+  {
+    "slug": "pty",
+    "path": "en/pty.md",
+    "url": "https://www.daytona.io/docs/en/pty.md"
+  },
+  {
+    "slug": "log-streaming",
+    "path": "en/log-streaming.md",
+    "url": "https://www.daytona.io/docs/en/log-streaming.md"
+  },
+  {
+    "slug": "mcp",
+    "path": "en/mcp.md",
+    "url": "https://www.daytona.io/docs/en/mcp.md"
+  },
+  {
+    "slug": "computer-use",
+    "path": "en/computer-use.md",
+    "url": "https://www.daytona.io/docs/en/computer-use.md"
+  },
+  {
+    "slug": "agent-skills",
+    "path": "en/agent-skills.md",
+    "url": "https://www.daytona.io/docs/en/agent-skills.md"
+  },
+  {
+    "slug": "web-terminal",
+    "path": "en/web-terminal.md",
+    "url": "https://www.daytona.io/docs/en/web-terminal.md"
+  },
+  {
+    "slug": "ssh-access",
+    "path": "en/ssh-access.md",
+    "url": "https://www.daytona.io/docs/en/ssh-access.md"
+  },
+  {
+    "slug": "vnc-access",
+    "path": "en/vnc-access.md",
+    "url": "https://www.daytona.io/docs/en/vnc-access.md"
+  },
+  {
+    "slug": "vpn-connections",
+    "path": "en/vpn-connections.md",
+    "url": "https://www.daytona.io/docs/en/vpn-connections.md"
+  },
+  {
+    "slug": "preview",
+    "path": "en/preview.md",
+    "url": "https://www.daytona.io/docs/en/preview.md"
+  },
+  {
+    "slug": "custom-preview-proxy",
+    "path": "en/custom-preview-proxy.md",
+    "url": "https://www.daytona.io/docs/en/custom-preview-proxy.md"
+  },
+  {
+    "slug": "playground",
+    "path": "en/playground.md",
+    "url": "https://www.daytona.io/docs/en/playground.md"
+  },
+  {
+    "slug": "webhooks",
+    "path": "en/webhooks.md",
+    "url": "https://www.daytona.io/docs/en/webhooks.md"
+  },
+  {
+    "slug": "network-limits",
+    "path": "en/network-limits.md",
+    "url": "https://www.daytona.io/docs/en/network-limits.md"
+  },
+  {
+    "slug": "secrets",
+    "path": "en/secrets.md",
+    "url": "https://www.daytona.io/docs/en/secrets.md"
+  },
+  {
+    "slug": "audit-logs",
+    "path": "en/audit-logs.md",
+    "url": "https://www.daytona.io/docs/en/audit-logs.md"
+  },
+  {
+    "slug": "observability-otel-collection",
+    "path": "en/observability/otel-collection.md",
+    "url": "https://www.daytona.io/docs/en/observability/otel-collection.md"
+  },
+  {
+    "slug": "bring-your-own-compute",
+    "path": "en/bring-your-own-compute.md",
+    "url": "https://www.daytona.io/docs/en/bring-your-own-compute.md"
+  },
+  {
+    "slug": "architecture",
+    "path": "en/architecture.md",
+    "url": "https://www.daytona.io/docs/en/architecture.md"
+  },
+  {
+    "slug": "organizations",
+    "path": "en/organizations.md",
+    "url": "https://www.daytona.io/docs/en/organizations.md"
+  },
+  {
+    "slug": "api-keys",
+    "path": "en/api-keys.md",
+    "url": "https://www.daytona.io/docs/en/api-keys.md"
+  },
+  {
+    "slug": "sso",
+    "path": "en/sso.md",
+    "url": "https://www.daytona.io/docs/en/sso.md"
+  },
+  {
+    "slug": "limits",
+    "path": "en/limits.md",
+    "url": "https://www.daytona.io/docs/en/limits.md"
+  },
+  {
+    "slug": "billing",
+    "path": "en/billing.md",
+    "url": "https://www.daytona.io/docs/en/billing.md"
+  },
+  {
+    "slug": "acceptable-use",
+    "path": "en/acceptable-use.md",
+    "url": "https://www.daytona.io/docs/en/acceptable-use.md"
+  },
+  {
+    "slug": "linked-accounts",
+    "path": "en/linked-accounts.md",
+    "url": "https://www.daytona.io/docs/en/linked-accounts.md"
+  },
+  {
+    "slug": "troubleshooting",
+    "path": "en/troubleshooting.md",
+    "url": "https://www.daytona.io/docs/en/troubleshooting.md"
+  },
+  {
+    "slug": "typescript-sdk",
+    "path": "en/typescript-sdk.md",
+    "url": "https://www.daytona.io/docs/en/typescript-sdk.md"
+  },
+  {
+    "slug": "python-sdk",
+    "path": "en/python-sdk.md",
+    "url": "https://www.daytona.io/docs/en/python-sdk.md"
+  },
+  {
+    "slug": "go-sdk",
+    "path": "en/go-sdk.md",
+    "url": "https://www.daytona.io/docs/en/go-sdk.md"
+  },
+  {
+    "slug": "java-sdk",
+    "path": "en/java-sdk.md",
+    "url": "https://www.daytona.io/docs/en/java-sdk.md"
+  },
+  {
+    "slug": "ruby-sdk",
+    "path": "en/ruby-sdk.md",
+    "url": "https://www.daytona.io/docs/en/ruby-sdk.md"
+  },
+  {
+    "slug": "tools-cli",
+    "path": "en/tools/cli.md",
+    "url": "https://www.daytona.io/docs/en/tools/cli.md"
+  },
+  {
+    "slug": "tools-api",
+    "path": "en/tools/api.md",
+    "url": "https://www.daytona.io/docs/en/tools/api.md"
+  }
+]

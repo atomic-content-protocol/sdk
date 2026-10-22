@@ -2,6 +2,10 @@
   "tokenizer": "cl100k_base",
   "tiktoken_version": "1.0.22",
   "read_model": "claude-haiku-4-5",
+  "bm25": {
+    "k1": 1.2,
+    "b": 0.75
+  },
   "input_usd_per_million": 1,
   "output_usd_per_million": 5,
   "policy": "mcp-find-similar-top3",
@@ -20,13 +24,22 @@
         "printing-press",
         "ada-lovelace"
       ],
+      "search_opened_slugs": [
+        "alan-turing",
+        "public-key-cryptography",
+        "rsa"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562635,
+      "search_tokens": 31602,
       "acp_tokens": 81874,
-      "baseline_assembly_ms": 462.63,
-      "acp_assembly_ms": 55.51
+      "baseline_assembly_ms": 489.24,
+      "search_assembly_ms": 23.46,
+      "acp_assembly_ms": 58.57
     },
     {
       "id": "q02",
@@ -40,13 +53,22 @@
         "tcp",
         "voyager-1"
       ],
+      "search_opened_slugs": [
+        "ada-lovelace",
+        "alan-turing",
+        "turing-machine"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562634,
+      "search_tokens": 34612,
       "acp_tokens": 81796,
-      "baseline_assembly_ms": 371.52,
-      "acp_assembly_ms": 55.38
+      "baseline_assembly_ms": 405.45,
+      "search_assembly_ms": 24.06,
+      "acp_assembly_ms": 58.47
     },
     {
       "id": "q03",
@@ -60,13 +82,22 @@
         "tim-berners-lee",
         "quicksort"
       ],
+      "search_opened_slugs": [
+        "grace-hopper",
+        "apollo-11",
+        "antikythera"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562631,
+      "search_tokens": 38900,
       "acp_tokens": 76943,
-      "baseline_assembly_ms": 370.1,
-      "acp_assembly_ms": 53.48
+      "baseline_assembly_ms": 388.7,
+      "search_assembly_ms": 26.25,
+      "acp_assembly_ms": 59.01
     },
     {
       "id": "q04",
@@ -80,13 +111,22 @@
         "linus-torvalds",
         "postgresql"
       ],
+      "search_opened_slugs": [
+        "margaret-hamilton",
+        "apollo-11",
+        "james-webb"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562634,
+      "search_tokens": 37560,
       "acp_tokens": 65121,
-      "baseline_assembly_ms": 379.67,
-      "acp_assembly_ms": 45.3
+      "baseline_assembly_ms": 395.52,
+      "search_assembly_ms": 27.59,
+      "acp_assembly_ms": 49.97
     },
     {
       "id": "q05",
@@ -100,13 +140,22 @@
         "sahara",
         "mariana-trench"
       ],
+      "search_opened_slugs": [
+        "tim-berners-lee",
+        "postgresql",
+        "antikythera"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562631,
+      "search_tokens": 26620,
       "acp_tokens": 69969,
-      "baseline_assembly_ms": 372.22,
-      "acp_assembly_ms": 48.06
+      "baseline_assembly_ms": 397.57,
+      "search_assembly_ms": 17.63,
+      "acp_assembly_ms": 50.27
     },
     {
       "id": "q06",
@@ -120,13 +169,22 @@
         "antikythera",
         "tcp"
       ],
+      "search_opened_slugs": [
+        "linus-torvalds",
+        "rust",
+        "kubernetes"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562628,
+      "search_tokens": 18603,
       "acp_tokens": 81650,
-      "baseline_assembly_ms": 380.83,
-      "acp_assembly_ms": 54.83
+      "baseline_assembly_ms": 393.14,
+      "search_assembly_ms": 12.45,
+      "acp_assembly_ms": 59
     },
     {
       "id": "q07",
@@ -140,13 +198,22 @@
         "rust",
         "grace-hopper"
       ],
+      "search_opened_slugs": [
+        "python",
+        "rust",
+        "grace-hopper"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562628,
+      "search_tokens": 24060,
       "acp_tokens": 71988,
-      "baseline_assembly_ms": 372.28,
-      "acp_assembly_ms": 49.42
+      "baseline_assembly_ms": 400.15,
+      "search_assembly_ms": 16.44,
+      "acp_assembly_ms": 68.6
     },
     {
       "id": "q08",
@@ -160,13 +227,22 @@
         "python",
         "grace-hopper"
       ],
+      "search_opened_slugs": [
+        "rust",
+        "python",
+        "postgresql"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562634,
+      "search_tokens": 25567,
       "acp_tokens": 71995,
-      "baseline_assembly_ms": 375.91,
-      "acp_assembly_ms": 54.17
+      "baseline_assembly_ms": 414.62,
+      "search_assembly_ms": 17.39,
+      "acp_assembly_ms": 51.89
     },
     {
       "id": "q09",
@@ -180,13 +256,22 @@
         "rsa",
         "olympic-games"
       ],
+      "search_opened_slugs": [
+        "postgresql",
+        "hubble",
+        "python"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562633,
+      "search_tokens": 36592,
       "acp_tokens": 88922,
-      "baseline_assembly_ms": 382.13,
-      "acp_assembly_ms": 65.82
+      "baseline_assembly_ms": 385.91,
+      "search_assembly_ms": 23.65,
+      "acp_assembly_ms": 62.25
     },
     {
       "id": "q10",
@@ -200,13 +285,22 @@
         "quicksort",
         "turing-machine"
       ],
+      "search_opened_slugs": [
+        "kubernetes",
+        "postgresql",
+        "linus-torvalds"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562635,
+      "search_tokens": 19383,
       "acp_tokens": 83217,
-      "baseline_assembly_ms": 383.88,
-      "acp_assembly_ms": 58.63
+      "baseline_assembly_ms": 393.32,
+      "search_assembly_ms": 13.56,
+      "acp_assembly_ms": 60.22
     },
     {
       "id": "q11",
@@ -220,13 +314,22 @@
         "periodic-table",
         "kyoto-protocol"
       ],
+      "search_opened_slugs": [
+        "tcp",
+        "rust",
+        "public-key-cryptography"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562637,
+      "search_tokens": 28744,
       "acp_tokens": 96717,
-      "baseline_assembly_ms": 375.11,
-      "acp_assembly_ms": 64.4
+      "baseline_assembly_ms": 399.11,
+      "search_assembly_ms": 19.73,
+      "acp_assembly_ms": 73.41
     },
     {
       "id": "q12",
@@ -240,13 +343,22 @@
         "alan-turing",
         "tim-berners-lee"
       ],
+      "search_opened_slugs": [
+        "quicksort",
+        "alan-turing",
+        "pi"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562636,
+      "search_tokens": 49990,
       "acp_tokens": 84804,
-      "baseline_assembly_ms": 372.62,
-      "acp_assembly_ms": 57.87
+      "baseline_assembly_ms": 399.56,
+      "search_assembly_ms": 44.75,
+      "acp_assembly_ms": 59.14
     },
     {
       "id": "q13",
@@ -260,13 +372,22 @@
         "periodic-table",
         "antikythera"
       ],
+      "search_opened_slugs": [
+        "turing-machine",
+        "ada-lovelace",
+        "go-game"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562637,
+      "search_tokens": 35504,
       "acp_tokens": 93751,
-      "baseline_assembly_ms": 371.47,
-      "acp_assembly_ms": 63.71
+      "baseline_assembly_ms": 377.15,
+      "search_assembly_ms": 22.8,
+      "acp_assembly_ms": 63.66
     },
     {
       "id": "q14",
@@ -280,13 +401,22 @@
         "rsa",
         "tcp"
       ],
+      "search_opened_slugs": [
+        "public-key-cryptography",
+        "rsa",
+        "tcp"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562636,
+      "search_tokens": 32905,
       "acp_tokens": 82800,
-      "baseline_assembly_ms": 371,
-      "acp_assembly_ms": 58.18
+      "baseline_assembly_ms": 377.05,
+      "search_assembly_ms": 22.46,
+      "acp_assembly_ms": 58.45
     },
     {
       "id": "q15",
@@ -300,13 +430,22 @@
         "public-key-cryptography",
         "quicksort"
       ],
+      "search_opened_slugs": [
+        "rsa",
+        "public-key-cryptography",
+        "quicksort"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562640,
+      "search_tokens": 32202,
       "acp_tokens": 84308,
-      "baseline_assembly_ms": 382.64,
-      "acp_assembly_ms": 61.94
+      "baseline_assembly_ms": 378.68,
+      "search_assembly_ms": 23.7,
+      "acp_assembly_ms": 60.28
     },
     {
       "id": "q16",
@@ -320,13 +459,22 @@
         "hubble",
         "perseverance"
       ],
+      "search_opened_slugs": [
+        "voyager-1",
+        "hubble",
+        "james-webb"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562634,
+      "search_tokens": 41543,
       "acp_tokens": 82059,
-      "baseline_assembly_ms": 434.95,
-      "acp_assembly_ms": 56.86
+      "baseline_assembly_ms": 376.97,
+      "search_assembly_ms": 26.1,
+      "acp_assembly_ms": 57.12
     },
     {
       "id": "q17",
@@ -340,13 +488,22 @@
         "perseverance",
         "voyager-1"
       ],
+      "search_opened_slugs": [
+        "apollo-11",
+        "perseverance",
+        "margaret-hamilton"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562629,
+      "search_tokens": 30151,
       "acp_tokens": 81339,
-      "baseline_assembly_ms": 377.82,
-      "acp_assembly_ms": 55.12
+      "baseline_assembly_ms": 377.69,
+      "search_assembly_ms": 19.2,
+      "acp_assembly_ms": 56.31
     },
     {
       "id": "q18",
@@ -360,13 +517,22 @@
         "voyager-1",
         "james-webb"
       ],
+      "search_opened_slugs": [
+        "hubble",
+        "james-webb",
+        "apollo-11"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562633,
+      "search_tokens": 51542,
       "acp_tokens": 89550,
-      "baseline_assembly_ms": 373.34,
-      "acp_assembly_ms": 61.13
+      "baseline_assembly_ms": 378.43,
+      "search_assembly_ms": 33.26,
+      "acp_assembly_ms": 61.38
     },
     {
       "id": "q19",
@@ -380,13 +546,22 @@
         "hubble",
         "antikythera"
       ],
+      "search_opened_slugs": [
+        "james-webb",
+        "hubble",
+        "apollo-11"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562629,
+      "search_tokens": 51538,
       "acp_tokens": 95152,
-      "baseline_assembly_ms": 372.57,
-      "acp_assembly_ms": 63.25
+      "baseline_assembly_ms": 389.52,
+      "search_assembly_ms": 32.83,
+      "acp_assembly_ms": 65.09
     },
     {
       "id": "q20",
@@ -400,85 +575,128 @@
         "apollo-11",
         "margaret-hamilton"
       ],
+      "search_opened_slugs": [
+        "perseverance",
+        "apollo-11",
+        "hubble"
+      ],
       "retrieval_hit": true,
+      "search_retrieval_hit": true,
       "baseline_answer_supported": true,
+      "search_answer_supported": true,
       "acp_answer_supported": true,
       "baseline_tokens": 562630,
+      "search_tokens": 44135,
       "acp_tokens": 78042,
-      "baseline_assembly_ms": 377.04,
-      "acp_assembly_ms": 52.76
+      "baseline_assembly_ms": 379.71,
+      "search_assembly_ms": 28.32,
+      "acp_assembly_ms": 54.79
     }
   ],
   "scale": [
     {
       "n": 1,
       "baseline_tokens": 562635,
+      "search_tokens": 31602,
       "acp_tokens": 81874,
       "tokens_saved": 480761,
       "percent_saved": 85.44811467470029,
+      "tokens_saved_vs_search": -50272,
+      "percent_saved_vs_search": -159.07853933295362,
       "baseline_input_usd": 0.562635,
+      "search_input_usd": 0.031602,
       "acp_input_usd": 0.081874,
       "usd_saved": 0.480761,
+      "usd_saved_vs_search": -0.050272,
       "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 462.63,
-      "acp_assembly_ms": 55.51
+      "baseline_assembly_ms": 489.24,
+      "search_assembly_ms": 23.46,
+      "acp_assembly_ms": 58.57
     },
     {
       "n": 10,
       "baseline_tokens": 5626323,
+      "search_tokens": 293499,
       "acp_tokens": 773475,
       "tokens_saved": 4852848,
       "percent_saved": 86.25256672963853,
+      "tokens_saved_vs_search": -479976,
+      "percent_saved_vs_search": -163.5358212464097,
       "baseline_input_usd": 5.626323,
+      "search_input_usd": 0.293499,
       "acp_input_usd": 0.773475,
       "usd_saved": 4.852848,
+      "usd_saved_vs_search": -0.479976,
       "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 3851.17,
-      "acp_assembly_ms": 540.6
+      "baseline_assembly_ms": 4063.62,
+      "search_assembly_ms": 202.48,
+      "acp_assembly_ms": 578.25
     },
     {
       "n": 50,
       "baseline_tokens": 28131651,
+      "search_tokens": 1677005,
       "acp_tokens": 4057469,
       "tokens_saved": 24074182,
       "percent_saved": 85.57685434104098,
+      "tokens_saved_vs_search": -2380464,
+      "percent_saved_vs_search": -141.94734064597304,
       "baseline_input_usd": 28.131651,
+      "search_input_usd": 1.677005,
       "acp_input_usd": 4.057469,
       "usd_saved": 24.074182,
+      "usd_saved_vs_search": -2.380464,
       "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 19170.63,
-      "acp_assembly_ms": 2812.24
+      "baseline_assembly_ms": 19858.6,
+      "search_assembly_ms": 1153.74,
+      "acp_assembly_ms": 2954.01
     },
     {
       "n": 100,
       "baseline_tokens": 56263320,
+      "search_tokens": 3458765,
       "acp_tokens": 8209985,
       "tokens_saved": 48053335,
       "percent_saved": 85.40792651411256,
+      "tokens_saved_vs_search": -4751220,
+      "percent_saved_vs_search": -137.36752858317928,
       "baseline_input_usd": 56.26332,
+      "search_input_usd": 3.458765,
       "acp_input_usd": 8.209985,
       "usd_saved": 48.053335,
+      "usd_saved_vs_search": -4.75122,
       "retrieval_hit_rate": 1,
+      "search_retrieval_hit_rate": 1,
       "acp_answer_support_rate": 1,
+      "search_answer_support_rate": 1,
       "baseline_answer_support_rate": 1,
-      "baseline_assembly_ms": 38298.65,
-      "acp_assembly_ms": 5679.1
+      "baseline_assembly_ms": 39487.45,
+      "search_assembly_ms": 2378.15,
+      "acp_assembly_ms": 5939.4
     }
   ],
   "enrichment": {
-    "note": "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger.",
+    "note": "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even against the naive full-read is an upper bound. Break-even against search-then-read is the realistic comparison. Null means ACP did not accumulate a token or dollar saving against that arm within 100,000 forks.",
     "measured_prompt_input_tokens": 50696,
     "estimated_output_tokens": 15000,
     "estimated_output_source": "estimateEnrichmentCost(..., \"standard\") outputTokens constant, not a completion",
     "package_estimate_usd": 0.1425,
     "modeled_usd": 0.125696,
     "measured_token_break_even_forks": 1,
-    "modeled_usd_break_even_forks": 1
+    "modeled_usd_break_even_forks": 1,
+    "measured_token_break_even_vs_search_forks": null,
+    "modeled_usd_break_even_vs_search_forks": null
   }
 }

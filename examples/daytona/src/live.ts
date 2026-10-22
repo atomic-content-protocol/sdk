@@ -16,6 +16,11 @@
  *
  * ACP_LIVE_N (default `1,10,50,100`) selects the rows. The harness runs the
  * largest N once. Smaller rows are prefixes of that sequence.
+ *
+ * ACP_LIVE_BASELINE (default `search`) chooses the non-ACP arm:
+ * - `search`: BM25 search-then-read, top 3. This fits a normal context window.
+ * - `naive`: full-read of every page. Upper bound. Often rejected by the model.
+ * - `both`: search and naive. Naive usage stays empty when the provider rejects it.
  */
 
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -40,9 +45,12 @@ interface QuestionRun {
   fork_ms: number;
   agent_ms: number;
   opened_slugs: string[];
+  search_opened_slugs: string[];
   retrieval_hit: boolean | null;
+  search_retrieval_hit: boolean | null;
   acp: ModelBlock;
-  baseline: ModelBlock;
+  search: ModelBlock | null;
+  naive: ModelBlock | null;
 }
 
 interface LiveReport {
@@ -59,11 +67,15 @@ interface LiveReport {
     complete: boolean;
     acp_input_tokens: number | null;
     acp_output_tokens: number | null;
-    baseline_input_tokens: number | null;
-    baseline_output_tokens: number | null;
+    search_input_tokens: number | null;
+    search_output_tokens: number | null;
+    naive_input_tokens: number | null;
+    naive_output_tokens: number | null;
     retrieval_hit_rate: number | null;
+    search_retrieval_hit_rate: number | null;
     acp_answer_support_rate: number | null;
-    baseline_answer_support_rate: number | null;
+    search_answer_support_rate: number | null;
+    naive_answer_support_rate: number | null;
     sum_fork_ms: number;
     sum_agent_ms: number;
   }>;
@@ -152,6 +164,7 @@ async function runAgent(
     ACP_QUESTIONS: paths.questions,
     ACP_POLICY: paths.policy,
   };
+  env.ACP_LIVE_BASELINE = process.env.ACP_LIVE_BASELINE ?? "search";
   if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (process.env.OPENAI_API_KEY) env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const started = Date.now();
@@ -167,15 +180,19 @@ async function runAgent(
     throw new Error(parsed["error"]);
   }
   const opened = Array.isArray(parsed["opened_slugs"]) ? parsed["opened_slugs"].map(String) : [];
+  const searchOpened = Array.isArray(parsed["search_opened_slugs"]) ? parsed["search_opened_slugs"].map(String) : [];
   return {
     id: question.id,
     sandbox_id: sandbox.id,
     fork_ms: 0,
     agent_ms: agentMs,
     opened_slugs: opened,
+    search_opened_slugs: searchOpened,
     retrieval_hit: question.gold_slugs.every((slug) => opened.includes(slug)),
+    search_retrieval_hit: question.gold_slugs.every((slug) => searchOpened.includes(slug)),
     acp: modelBlock(parsed["acp"], question.expected_answer),
-    baseline: modelBlock(parsed["baseline"], question.expected_answer),
+    search: parsed["search"] == null ? null : modelBlock(parsed["search"], question.expected_answer),
+    naive: parsed["naive"] == null ? null : modelBlock(parsed["naive"], question.expected_answer),
   };
 }
 
@@ -199,11 +216,15 @@ function scaleRows(questions: QuestionRun[], sizes: number[]): LiveReport["scale
       complete,
       acp_input_tokens: complete ? sumIfComplete(slice.map((row) => row.acp.input_tokens)) : null,
       acp_output_tokens: complete ? sumIfComplete(slice.map((row) => row.acp.output_tokens)) : null,
-      baseline_input_tokens: complete ? sumIfComplete(slice.map((row) => row.baseline.input_tokens)) : null,
-      baseline_output_tokens: complete ? sumIfComplete(slice.map((row) => row.baseline.output_tokens)) : null,
+      search_input_tokens: complete ? sumIfComplete(slice.map((row) => row.search?.input_tokens ?? null)) : null,
+      search_output_tokens: complete ? sumIfComplete(slice.map((row) => row.search?.output_tokens ?? null)) : null,
+      naive_input_tokens: complete ? sumIfComplete(slice.map((row) => row.naive?.input_tokens ?? null)) : null,
+      naive_output_tokens: complete ? sumIfComplete(slice.map((row) => row.naive?.output_tokens ?? null)) : null,
       retrieval_hit_rate: complete ? rate(slice.map((row) => row.retrieval_hit)) : null,
+      search_retrieval_hit_rate: complete ? rate(slice.map((row) => row.search_retrieval_hit)) : null,
       acp_answer_support_rate: complete ? rate(slice.map((row) => row.acp.answer_supported)) : null,
-      baseline_answer_support_rate: complete ? rate(slice.map((row) => row.baseline.answer_supported)) : null,
+      search_answer_support_rate: complete ? rate(slice.map((row) => row.search?.answer_supported ?? null)) : null,
+      naive_answer_support_rate: complete ? rate(slice.map((row) => row.naive?.answer_supported ?? null)) : null,
       sum_fork_ms: slice.reduce((total, row) => total + row.fork_ms, 0),
       sum_agent_ms: slice.reduce((total, row) => total + row.agent_ms, 0),
     };
@@ -216,6 +237,7 @@ function renderLive(report: LiveReport): string {
   if (report.error) lines.push("", `Error: ${report.error}`);
   lines.push(
     "",
+    "The default comparison is ACP against search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.",
     "Token columns are the provider's reported usage. A null means that call did not return usage. Nothing here is estimated.",
     ""
   );
@@ -224,24 +246,26 @@ function renderLive(report: LiveReport): string {
     return `${lines.join("\n")}\n`;
   }
   lines.push(
-    "| N | Complete | ACP input | ACP output | Baseline input | Baseline output | Retrieval hit | ACP answer support | Baseline answer support | Sum fork ms | Sum agent ms |",
-    "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
+    "| N | Complete | ACP input | ACP output | Search input | Search output | Naive input | Naive output | ACP hit | Search hit | ACP answer | Search answer | Sum fork ms | Sum agent ms |",
+    "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
   );
   for (const row of report.scale) {
     const cell = (value: number | null) => (value === null ? "" : value.toLocaleString("en-US"));
     const rateCell = (value: number | null) => (value === null ? "" : `${(value * 100).toFixed(1)}%`);
     lines.push(
-      `| ${row.n} | ${row.complete ? "yes" : "no"} | ${cell(row.acp_input_tokens)} | ${cell(row.acp_output_tokens)} | ${cell(row.baseline_input_tokens)} | ${cell(row.baseline_output_tokens)} | ${rateCell(row.retrieval_hit_rate)} | ${rateCell(row.acp_answer_support_rate)} | ${rateCell(row.baseline_answer_support_rate)} | ${row.sum_fork_ms} | ${row.sum_agent_ms} |`
+      `| ${row.n} | ${row.complete ? "yes" : "no"} | ${cell(row.acp_input_tokens)} | ${cell(row.acp_output_tokens)} | ${cell(row.search_input_tokens)} | ${cell(row.search_output_tokens)} | ${cell(row.naive_input_tokens)} | ${cell(row.naive_output_tokens)} | ${rateCell(row.retrieval_hit_rate)} | ${rateCell(row.search_retrieval_hit_rate)} | ${rateCell(row.acp_answer_support_rate)} | ${rateCell(row.search_answer_support_rate)} | ${row.sum_fork_ms} | ${row.sum_agent_ms} |`
     );
   }
   lines.push("", "## Per question", "");
-  lines.push("| Question | Sandbox | Opened | Retrieval | ACP in/out | Baseline in/out | ACP error | Baseline error |");
-  lines.push("|---|---|---|---|---:|---:|---|---|");
+  lines.push(
+    "| Question | Sandbox | ACP opened | Search opened | ACP hit | Search hit | ACP in/out | Search in/out | Naive in/out | ACP error | Search error | Naive error |"
+  );
+  lines.push("|---|---|---|---|---|---|---:|---:|---:|---|---|---|");
   for (const row of report.questions) {
-    const pair = (block: ModelBlock) =>
-      block.input_tokens === null ? "" : `${block.input_tokens}/${block.output_tokens ?? ""}`;
+    const pair = (block: ModelBlock | null) =>
+      block === null || block.input_tokens === null ? "" : `${block.input_tokens}/${block.output_tokens ?? ""}`;
     lines.push(
-      `| ${row.id} | ${row.sandbox_id} | ${row.opened_slugs.join(", ")} | ${row.retrieval_hit ? "yes" : "no"} | ${pair(row.acp)} | ${pair(row.baseline)} | ${row.acp.error ?? ""} | ${row.baseline.error ?? ""} |`
+      `| ${row.id} | ${row.sandbox_id} | ${row.opened_slugs.join(", ")} | ${row.search_opened_slugs.join(", ")} | ${row.retrieval_hit ? "yes" : "no"} | ${row.search_retrieval_hit ? "yes" : "no"} | ${pair(row.acp)} | ${pair(row.search)} | ${pair(row.naive)} | ${row.acp.error ?? ""} | ${row.search?.error ?? ""} | ${row.naive?.error ?? ""} |`
     );
   }
   return `${lines.join("\n")}\n`;
@@ -334,7 +358,7 @@ async function main(): Promise<void> {
     created.push(seeder);
     await exec(
       seeder,
-      `mkdir -p ${VOLUME_MOUNT}/vault ${VOLUME_MOUNT}/pages && cp -a /opt/acp/vault/. ${VOLUME_MOUNT}/vault/ && cp -a /opt/acp/pages/. ${VOLUME_MOUNT}/pages/ && cp /opt/acp/manifest.json /opt/acp/questions.json /opt/acp/policy.json /opt/acp/agent.mjs ${VOLUME_MOUNT}/`
+      `mkdir -p ${VOLUME_MOUNT}/vault ${VOLUME_MOUNT}/pages && cp -a /opt/acp/vault/. ${VOLUME_MOUNT}/vault/ && cp -a /opt/acp/pages/. ${VOLUME_MOUNT}/pages/ && cp /opt/acp/manifest.json /opt/acp/questions.json /opt/acp/policy.json /opt/acp/agent.mjs /opt/acp/bm25.mjs ${VOLUME_MOUNT}/`
     );
     report.enrich_once_ms = Date.now() - enrichStarted;
 
@@ -368,6 +392,7 @@ async function main(): Promise<void> {
         { source: path.join(EXAMPLE_ROOT, "corpus", "questions.json"), destination: "/opt/acp/questions.json" },
         { source: path.join(EXAMPLE_ROOT, "policy.json"), destination: "/opt/acp/policy.json" },
         { source: path.join(EXAMPLE_ROOT, "sandbox", "agent.mjs"), destination: "/opt/acp/agent.mjs" },
+        { source: path.join(EXAMPLE_ROOT, "sandbox", "bm25.mjs"), destination: "/opt/acp/bm25.mjs" },
       ];
       await parent.fs.uploadFiles(uploads);
       const enriched = `acp-enriched-${stamp}`;
