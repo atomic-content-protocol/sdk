@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@atomic-content-protocol/core": "^0.3.1",
-    "@atomic-content-protocol/enrichment": "^0.3.1",
+    "@atomic-content-protocol/core": "^0.3.2",
+    "@atomic-content-protocol/enrichment": "^0.3.2",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "express": "^4.22.2",
     "cors": "^2.8.6",
