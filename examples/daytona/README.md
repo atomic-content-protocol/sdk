@@ -37,9 +37,9 @@ Wikipedia is measured in the browser with the same `scoreCorpus` function as `np
 
 Daytona docs stay recorded. The raw page text is not in the page. `https://www.daytona.io` does not send `Access-Control-Allow-Origin`, so the browser cannot fetch the docs and measure them locally.
 
-Preview from this branch: [ACP offline benchmark](https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html).
+Preview from this branch: [ACP offline benchmark](https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html). That host asks you to open the file once, then the page runs. `raw.githubusercontent.com` serves the same file as plain text, so it does not run as a page.
 
-`.github/workflows/benchmark-page.yml` publishes `web/site` to GitHub Pages on push to this branch. Pages is not turned on for this repository yet. The one step that enables that URL is: repository Settings, Pages, Build and deployment, Source: GitHub Actions. That site would be the benchmark page only. It does not replace atomiccontentprotocol.org.
+`.github/workflows/benchmark-page.yml` builds `web/site` and deploys it with GitHub Pages on push to this branch. The build on this push succeeded. The deploy returned HTTP 404 because Pages is not enabled. The one step that enables it: repository Settings, Pages, Build and deployment, Source: GitHub Actions, then re-run the Benchmark page workflow. That site would be the benchmark page only. It does not replace atomiccontentprotocol.org.
 
 ## Wikipedia, N=100 cycles of 20 questions
 
