@@ -25,6 +25,22 @@ That rewrites the Wikipedia `results/` files. It needs no API keys. If a local D
 
 Tokenizer: `cl100k_base` through `computeTokenCounts` (tiktoken 1.0.22). Dollar columns are Haiku 4.5 input at $1 per million tokens. They are not invoices. Output tokens are not included. Summary-first tokens are two cl100k encodings added together: the decision prompt (including the decision line) plus any opened markdown. N=1 is the first question only. Larger N cycles the question bank.
 
+## In the browser
+
+```bash
+npm run web
+```
+
+That starts a static page on port 5173. It needs no API key, no backend, and it does not call Daytona. Pick a corpus, set N, and press Run.
+
+Wikipedia is measured in the browser with the same `scoreCorpus` function as `npm run bench`, the same MCP `list_acos` / `find_similar` / `read_aco` handlers, and `js-tiktoken` `cl100k_base`. `npm run check:web` checks those counts against `results/offline.json`. The built page is one HTML file (`npm run web:build`, output `web/site/index.html`) so a phone can open it from a single URL. The file is about 7 MB because it includes the Wikipedia extracts and the tokenizer.
+
+Daytona docs stay recorded. The raw page text is not in the page. `https://www.daytona.io` does not send `Access-Control-Allow-Origin`, so the browser cannot fetch the docs and measure them locally.
+
+Preview from this branch: [ACP offline benchmark](https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html).
+
+`.github/workflows/benchmark-page.yml` publishes `web/site` to GitHub Pages on push to this branch. Pages is not turned on for this repository yet. The one step that enables that URL is: repository Settings, Pages, Build and deployment, Source: GitHub Actions. That site would be the benchmark page only. It does not replace atomiccontentprotocol.org.
+
 ## Wikipedia, N=100 cycles of 20 questions
 
 | N | Naive tokens | Search tokens | Summary-first tokens | Legacy tokens | Summary vs naive | Summary vs search | Legacy vs search | Naive $ | Search $ | Summary $ | Legacy $ |

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ACP offline benchmark</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>ACP offline benchmark</h1>
+      <p>
+        This page runs the offline measurement in your browser. It does not use an API key, a backend, or a live
+        Daytona sandbox.
+      </p>
+    </header>
+    <form id="controls">
+      <label>
+        Corpus
+        <select id="corpus" name="corpus">
+          <option value="wikipedia">Wikipedia (measure in this browser)</option>
+          <option value="docs">Daytona docs (recorded results)</option>
+        </select>
+      </label>
+      <label>
+        Forks (N)
+        <span class="n-controls">
+          <input id="n-range" name="n-range" type="range" min="1" max="100" value="100" />
+          <input id="n" name="n" type="number" min="1" max="100" value="100" inputmode="numeric" />
+        </span>
+      </label>
+      <button id="run" type="submit">Run in this browser</button>
+    </form>
+    <p id="caveat"></p>
+    <p id="status" role="status"></p>
+    <div id="output"></div>
+    <details id="attribution">
+      <summary>Wikipedia attribution (CC BY-SA 4.0)</summary>
+      <div id="articles"></div>
+    </details>
+    <footer>
+      <p>
+        Wikipedia article text is English Wikipedia, retrieved 2026-10-22 through the MediaWiki API, and is licensed
+        <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Titles and source URLs are listed
+        above. Summaries on the ACOs were derived from that text by the example's extractive rules, not by a model.
+        The benchmark code is Apache-2.0, the same as this repository.
+      </p>
+      <p>
+        Dollar figures are Claude Haiku 4.5 input at $1 per million tokens. They are not invoices. Output tokens are
+        not included. The tokenizer is <code>cl100k_base</code>.
+      </p>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

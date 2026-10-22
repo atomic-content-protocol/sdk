@@ -34,9 +34,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { computeTokenCounts, FilesystemAdapter } from "@atomic-content-protocol/core";
 import { buildUnifiedPrompt, estimateEnrichmentCost, pricingFor } from "@atomic-content-protocol/enrichment";
-import { ACPMCPServer, type ToolOutput } from "@atomic-content-protocol/mcp";
-import { BM25_B, BM25_K1, bm25Search, searchMaterial, summaryFirst } from "../sandbox/bm25.mjs";
-import { contentQuery, EXAMPLE_ROOT, loadPolicy, promptPrefix, type Question } from "./policy.js";
+import { ACPMCPServer } from "@atomic-content-protocol/mcp";
+import { BM25_B, BM25_K1 } from "../sandbox/bm25.mjs";
+import { EXAMPLE_ROOT, loadPolicy, type Question } from "./policy.js";
+import {
+  breakEven,
+  type QuestionMeasurement,
+  roundUsd,
+  type ScaleRow,
+  scaleRow,
+  scoreCorpus,
+  type ToolRunner,
+  usd,
+} from "./score.js";
+
+export type { QuestionMeasurement, ScaleRow };
 
 const require = createRequire(import.meta.url);
 
@@ -50,67 +62,6 @@ function tiktokenVersion(): string {
 
 const READ_MODEL = "claude-haiku-4-5";
 const ENRICH_DEPTH = "standard" as const;
-
-export interface QuestionMeasurement {
-  id: string;
-  question: string;
-  gold_slugs: string[];
-  content_query: string;
-  candidate_slugs: string[];
-  opened_slugs: string[];
-  decision: "answer" | "open";
-  cover_need: number;
-  search_opened_slugs: string[];
-  legacy_opened_slugs: string[];
-  retrieval_hit: boolean;
-  search_retrieval_hit: boolean;
-  legacy_retrieval_hit: boolean;
-  baseline_answer_supported: boolean;
-  search_answer_supported: boolean;
-  acp_answer_supported: boolean;
-  legacy_answer_supported: boolean;
-  baseline_tokens: number;
-  search_tokens: number;
-  summary_decision_tokens: number;
-  summary_body_tokens: number;
-  acp_tokens: number;
-  legacy_tokens: number;
-  baseline_assembly_ms: number;
-  search_assembly_ms: number;
-  acp_assembly_ms: number;
-  legacy_assembly_ms: number;
-}
-
-export interface ScaleRow {
-  n: number;
-  baseline_tokens: number;
-  search_tokens: number;
-  acp_tokens: number;
-  legacy_tokens: number;
-  tokens_saved: number;
-  percent_saved: number;
-  tokens_saved_vs_search: number;
-  percent_saved_vs_search: number;
-  legacy_tokens_saved_vs_search: number;
-  legacy_percent_saved_vs_search: number;
-  baseline_input_usd: number;
-  search_input_usd: number;
-  acp_input_usd: number;
-  legacy_input_usd: number;
-  usd_saved: number;
-  usd_saved_vs_search: number;
-  retrieval_hit_rate: number;
-  search_retrieval_hit_rate: number;
-  legacy_retrieval_hit_rate: number;
-  acp_answer_support_rate: number;
-  search_answer_support_rate: number;
-  legacy_answer_support_rate: number;
-  baseline_answer_support_rate: number;
-  baseline_assembly_ms: number;
-  search_assembly_ms: number;
-  acp_assembly_ms: number;
-  legacy_assembly_ms: number;
-}
 
 export interface Measurement {
   tokenizer: string;
@@ -151,58 +102,12 @@ interface ManifestEntry {
 const WIKI_NOTE =
   "Committed ACO metadata is extractive (Wikipedia lead, MediaWiki categories, a proper-noun scan). No model was called, so measured model spend for this corpus is $0. The figures below are the size of the real UnifiedPipeline prompt plus the package's estimated output, priced with MODEL_PRICING. They are not an invoice. buildUnifiedPrompt truncates each body to 4000 characters, which is what that prompt builder sends. A job that uploaded every full page would be larger. Break-even for the headline summary-first policy is against the naive full-read (an upper bound) and against search-then-read. The legacy catalog policy has its own break-even rows. Null means that policy did not accumulate a token saving against that arm within 100,000 forks.";
 
-function wire(result: ToolOutput): string {
-  return JSON.stringify(result, null, 2);
-}
-
 async function cl100k(text: string): Promise<number> {
   const counts = await computeTokenCounts(text);
   if (counts.cl100k === undefined) {
     throw new Error("cl100k_base is unavailable. Install the tiktoken package and rerun.");
   }
   return counts.cl100k;
-}
-
-function usd(tokens: number, perMillion: number): number {
-  return (tokens * perMillion) / 1_000_000;
-}
-
-function roundUsd(value: number): number {
-  return Number(value.toFixed(8));
-}
-
-function data(result: ToolOutput, tool: string): Record<string, unknown> {
-  if (!result.success || result.data === null || result.data === undefined || typeof result.data !== "object") {
-    throw new Error(`${tool} failed: ${result.error ?? "no data"}`);
-  }
-  return result.data as Record<string, unknown>;
-}
-
-function supports(haystack: string, expected: string): boolean {
-  return haystack.toLowerCase().includes(expected.toLowerCase());
-}
-
-function sumAssigned(values: number[], n: number): number {
-  let total = 0;
-  for (let i = 0; i < n; i++) total += values[i % values.length] ?? 0;
-  return total;
-}
-
-function rateAssigned(flags: boolean[], n: number): number {
-  let hits = 0;
-  for (let i = 0; i < n; i++) if (flags[i % flags.length]) hits += 1;
-  return hits / n;
-}
-
-/** Smallest fork count whose cumulative saving covers `cost`. Null if not within `limit`. */
-function breakEven(savedPerQuestion: number[], cost: number, limit = 100_000): number | null {
-  if (cost <= 0) return 0;
-  let saved = 0;
-  for (let n = 1; n <= limit; n++) {
-    saved += savedPerQuestion[(n - 1) % savedPerQuestion.length] ?? 0;
-    if (saved >= cost) return n;
-  }
-  return null;
 }
 
 export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOTE): Promise<Measurement> {
@@ -224,138 +129,15 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     url: entry.source_url,
     body: readFileSync(path.join(pagesDir, `${entry.slug}.txt`), "utf8").replace(/\n$/, ""),
   }));
-  if (policy.catalog_limit < pages.length) {
-    throw new Error(`catalog_limit ${policy.catalog_limit} is below the page count ${pages.length}`);
-  }
-
   const vault = path.join(root, "corpus", "vault");
   const server = new ACPMCPServer({ storage: new FilesystemAdapter(vault) });
-  const listResult = await server.callTool("list_acos", {
-    limit: policy.catalog_limit,
-    sortBy: "title",
-    order: "asc",
-  });
-  const listData = data(listResult, "list_acos");
-  const items = listData["items"];
-  if (!Array.isArray(items) || items.length !== pages.length) {
-    throw new Error(`list_acos returned ${Array.isArray(items) ? items.length : "no"} items, expected ${pages.length}`);
-  }
-  const slugById = new Map<string, string>();
-  const metaBySlug = new Map<string, { summary: string; tags: string[] }>();
-  for (const item of items) {
-    const fm = item as Record<string, unknown>;
-    const slug = String(fm["corpus_slug"]);
-    slugById.set(String(fm["id"]), slug);
-    const tags = Array.isArray(fm["tags"]) ? fm["tags"].map((tag) => String(tag)) : [];
-    const summary = typeof fm["summary"] === "string" ? fm["summary"] : "";
-    metaBySlug.set(slug, { summary, tags });
-  }
-  const rankedPages = pages.map((page) => {
-    const meta = metaBySlug.get(page.slug);
-    if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
-    return { ...page, summary: meta.summary, tags: meta.tags };
-  });
-  const catalogWire = wire(listResult);
-
-  const bodies = pages.map((page) => `# ${page.title}\n\n${page.body}`).join("\n\n");
-  const baselineMaterial = `${policy.sections.pages}${bodies}`;
-
-  const perQuestion: QuestionMeasurement[] = [];
-  for (const question of questions) {
-    const query = contentQuery(question.question, policy.stopwords);
-    if (query.length === 0) throw new Error(`${question.id} has no content words`);
-
-    const prefix = promptPrefix(policy, question.question);
-    const baselinePrompt = `${prefix}${baselineMaterial}`;
-    const baselineStarted = performance.now();
-    const baselineTokens = await cl100k(baselinePrompt);
-    const baselineMs = performance.now() - baselineStarted;
-
-    const hits = bm25Search(pages, question.question, policy.stopwords, policy.limit);
-    const searchOpened = hits.map((hit) => hit.slug);
-    const searchBody = searchMaterial(pages, hits, policy.sections);
-    const searchPrompt = `${prefix}${searchBody}`;
-    const searchStarted = performance.now();
-    const searchTokens = await cl100k(searchPrompt);
-    const searchMs = performance.now() - searchStarted;
-
-    const summaryStarted = performance.now();
-    const triage = summaryFirst(rankedPages, question.question, policy.stopwords, {
-      summaryK: policy.summary_k,
-      maxBodies: policy.max_bodies,
-      coverFraction: policy.cover_fraction,
-    });
-    const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
-    const decisionTokens = await cl100k(decisionPrompt);
-    const bodyTokens = triage.bodyMaterial.length === 0 ? 0 : await cl100k(triage.bodyMaterial);
-    const summaryTokens = decisionTokens + bodyTokens;
-    const summaryMs = performance.now() - summaryStarted;
-    const summaryShown = `${triage.summaryBlock}\n${triage.bodyMaterial}`;
-
-    const similarResult = await server.callTool("find_similar", {
-      text: query,
-      limit: policy.limit,
-      threshold: policy.threshold,
-    });
-    const similarData = data(similarResult, "find_similar");
-    if (similarData["method"] !== "content_overlap") {
-      throw new Error(`${question.id}: find_similar used ${String(similarData["method"])}, expected content_overlap`);
-    }
-    const results = similarData["results"];
-    if (!Array.isArray(results)) throw new Error(`${question.id}: find_similar returned no results array`);
-    const openedIds = results.map((row) => String((row as Record<string, unknown>)["id"]));
-    const openedSlugs = openedIds.map((id) => {
-      const slug = slugById.get(id);
-      if (!slug) throw new Error(`find_similar returned unknown id ${id}`);
-      return slug;
-    });
-
-    const reads: ToolOutput[] = [];
-    for (const id of openedIds) {
-      reads.push(await server.callTool("read_aco", { id }));
-    }
-    const legacyPrompt = `${prefix}${policy.sections.catalog}${catalogWire}\n\n${policy.sections.ranking}${wire(similarResult)}\n\n${policy.sections.opened}${reads.map(wire).join("\n\n")}`;
-    const legacyStarted = performance.now();
-    const legacyTokens = await cl100k(legacyPrompt);
-    const legacyMs = performance.now() - legacyStarted;
-
-    const openedBodies = reads
-      .map((result) => {
-        const body = data(result, "read_aco")["body"];
-        return typeof body === "string" ? body : "";
-      })
-      .join("\n");
-
-    perQuestion.push({
-      id: question.id,
-      question: question.question,
-      gold_slugs: question.gold_slugs,
-      content_query: query,
-      candidate_slugs: triage.candidate_slugs,
-      opened_slugs: triage.opened_slugs,
-      decision: triage.decision,
-      cover_need: triage.cover_need,
-      search_opened_slugs: searchOpened,
-      legacy_opened_slugs: openedSlugs,
-      retrieval_hit: question.gold_slugs.every((slug) => triage.candidate_slugs.includes(slug)),
-      search_retrieval_hit: question.gold_slugs.every((slug) => searchOpened.includes(slug)),
-      legacy_retrieval_hit: question.gold_slugs.every((slug) => openedSlugs.includes(slug)),
-      baseline_answer_supported: supports(baselineMaterial, question.expected_answer),
-      search_answer_supported: supports(searchBody, question.expected_answer),
-      acp_answer_supported: supports(summaryShown, question.expected_answer),
-      legacy_answer_supported: supports(`${catalogWire}\n${openedBodies}`, question.expected_answer),
-      baseline_tokens: baselineTokens,
-      search_tokens: searchTokens,
-      summary_decision_tokens: decisionTokens,
-      summary_body_tokens: bodyTokens,
-      acp_tokens: summaryTokens,
-      legacy_tokens: legacyTokens,
-      baseline_assembly_ms: Number(baselineMs.toFixed(2)),
-      search_assembly_ms: Number(searchMs.toFixed(2)),
-      acp_assembly_ms: Number(summaryMs.toFixed(2)),
-      legacy_assembly_ms: Number(legacyMs.toFixed(2)),
-    });
-  }
+  const tools: ToolRunner = {
+    listAcos: (args) => server.callTool("list_acos", args),
+    findSimilar: (args) => server.callTool("find_similar", args),
+    readAco: (args) => server.callTool("read_aco", args),
+  };
+  const scored = await scoreCorpus({ policy, questions, pages, tools, countTokens: cl100k });
+  const perQuestion = scored.perQuestion;
 
   let measuredInput = 0;
   let estimatedOutput = 0;
@@ -375,98 +157,7 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
   const legacySavedTokens = perQuestion.map((row) => row.baseline_tokens - row.legacy_tokens);
   const legacySavedVsSearch = perQuestion.map((row) => row.search_tokens - row.legacy_tokens);
 
-  const scale: ScaleRow[] = policy.fork_sizes.map((n) => {
-    const baselineTokens = sumAssigned(
-      perQuestion.map((row) => row.baseline_tokens),
-      n
-    );
-    const searchTokens = sumAssigned(
-      perQuestion.map((row) => row.search_tokens),
-      n
-    );
-    const acpTokens = sumAssigned(
-      perQuestion.map((row) => row.acp_tokens),
-      n
-    );
-    const legacyTokens = sumAssigned(
-      perQuestion.map((row) => row.legacy_tokens),
-      n
-    );
-    const saved = baselineTokens - acpTokens;
-    const savedSearch = searchTokens - acpTokens;
-    const legacySavedSearch = searchTokens - legacyTokens;
-    return {
-      n,
-      baseline_tokens: baselineTokens,
-      search_tokens: searchTokens,
-      acp_tokens: acpTokens,
-      legacy_tokens: legacyTokens,
-      tokens_saved: saved,
-      percent_saved: baselineTokens === 0 ? 0 : (saved / baselineTokens) * 100,
-      tokens_saved_vs_search: savedSearch,
-      percent_saved_vs_search: searchTokens === 0 ? 0 : (savedSearch / searchTokens) * 100,
-      legacy_tokens_saved_vs_search: legacySavedSearch,
-      legacy_percent_saved_vs_search: searchTokens === 0 ? 0 : (legacySavedSearch / searchTokens) * 100,
-      baseline_input_usd: roundUsd(usd(baselineTokens, pricing.input)),
-      search_input_usd: roundUsd(usd(searchTokens, pricing.input)),
-      acp_input_usd: roundUsd(usd(acpTokens, pricing.input)),
-      legacy_input_usd: roundUsd(usd(legacyTokens, pricing.input)),
-      usd_saved: roundUsd(usd(saved, pricing.input)),
-      usd_saved_vs_search: roundUsd(usd(savedSearch, pricing.input)),
-      retrieval_hit_rate: rateAssigned(
-        perQuestion.map((row) => row.retrieval_hit),
-        n
-      ),
-      search_retrieval_hit_rate: rateAssigned(
-        perQuestion.map((row) => row.search_retrieval_hit),
-        n
-      ),
-      legacy_retrieval_hit_rate: rateAssigned(
-        perQuestion.map((row) => row.legacy_retrieval_hit),
-        n
-      ),
-      acp_answer_support_rate: rateAssigned(
-        perQuestion.map((row) => row.acp_answer_supported),
-        n
-      ),
-      search_answer_support_rate: rateAssigned(
-        perQuestion.map((row) => row.search_answer_supported),
-        n
-      ),
-      legacy_answer_support_rate: rateAssigned(
-        perQuestion.map((row) => row.legacy_answer_supported),
-        n
-      ),
-      baseline_answer_support_rate: rateAssigned(
-        perQuestion.map((row) => row.baseline_answer_supported),
-        n
-      ),
-      baseline_assembly_ms: Number(
-        sumAssigned(
-          perQuestion.map((row) => row.baseline_assembly_ms),
-          n
-        ).toFixed(2)
-      ),
-      search_assembly_ms: Number(
-        sumAssigned(
-          perQuestion.map((row) => row.search_assembly_ms),
-          n
-        ).toFixed(2)
-      ),
-      acp_assembly_ms: Number(
-        sumAssigned(
-          perQuestion.map((row) => row.acp_assembly_ms),
-          n
-        ).toFixed(2)
-      ),
-      legacy_assembly_ms: Number(
-        sumAssigned(
-          perQuestion.map((row) => row.legacy_assembly_ms),
-          n
-        ).toFixed(2)
-      ),
-    };
-  });
+  const scale = policy.fork_sizes.map((n) => scaleRow(perQuestion, n, pricing.input));
 
   return {
     tokenizer: "cl100k_base",

@@ -1,0 +1,40 @@
+# Publishes the static benchmark page from this branch.
+# GitHub Pages must use "GitHub Actions" as the source. The site is the
+# benchmark only. It does not replace atomiccontentprotocol.org.
+
+name: Benchmark page
+
+on:
+  push:
+    branches:
+      - cursor/daytona-acp-benchmark-5c49
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: benchmark-page
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run web:build -w @atomic-content-protocol/example-daytona
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: examples/daytona/web/site
+      - id: deployment
+        uses: actions/deploy-pages@v4

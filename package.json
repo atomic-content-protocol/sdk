@@ -13,6 +13,7 @@
     "lint": "turbo lint",
     "clean": "turbo clean",
     "bench": "npm run bench -w @atomic-content-protocol/example-daytona",
+    "web": "npm run web -w @atomic-content-protocol/example-daytona",
     "check": "biome check .",
     "format": "biome format --write .",
     "typecheck": "turbo lint"

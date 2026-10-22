@@ -11,9 +11,12 @@
     "measure": "tsx src/measure.ts",
     "measure:docs": "tsx src/measure-docs.ts",
     "bench": "tsx src/bench.ts",
+    "check:web": "tsx src/check-web.ts",
     "live": "tsx src/live.ts",
-    "lint": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx src/verify.ts"
+    "lint": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.tools.json",
+    "test": "tsx src/verify.ts && tsx src/check-web.ts",
+    "web": "vite --config web/vite.config.ts --host",
+    "web:build": "vite build --config web/vite.config.ts"
   },
   "dependencies": {
     "@atomic-content-protocol/cli": "0.3.2",
@@ -25,7 +28,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "js-tiktoken": "^1.0.21",
     "tsx": "^4.19.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vite": "^8.3.5",
+    "vite-plugin-singlefile": "^2.3.4"
   }
 }

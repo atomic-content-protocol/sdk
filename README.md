@@ -423,6 +423,8 @@ This fetches the URL, creates an ACO, enriches it in a single LLM call, and writ
 npm run bench
 ```
 
+The same offline measurement runs in a phone browser with `npm run web` (no API key). Wikipedia is measured in the browser and matches the Node bench. Daytona docs stay as recorded results, because that raw text is not in the repo and the docs host does not allow a browser fetch. Preview from this branch: https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html
+
 **Package structure:**
 
 ```

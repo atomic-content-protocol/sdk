@@ -5,7 +5,7 @@
  * hosted ACP service. Model calls are optional: without a key the process
  * still returns the triage decision and sets `error` on each model result.
  *
- * Keep `contentQuery` in sync with src/policy.ts. Both read policy.json.
+ * Keep `contentQuery` in sync with src/policy-logic.ts. Both read policy.json.
  *
  * The ACP arm is summary-first. `list_acos` is used only to read frontmatter
  * (title, summary, tags). That catalog is not placed in the model prompt.
