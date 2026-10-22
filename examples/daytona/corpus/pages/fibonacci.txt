@@ -1,0 +1,5957 @@
+In mathematics, the Fibonacci sequence is a sequence in which each element is the sum of the two elements that precede it.  Numbers that are part of the Fibonacci sequence are known as Fibonacci numbers, commonly denoted Fn . The initial elements of the sequence are F1 = 1 and F2 = 1, though many authors also include a zeroth element F0 = 0.  Starting from F0, the sequence begins
+
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, ... (sequence A000045 in the OEIS)
+
+The Fibonacci numbers were first described in Indian mathematics as early as 200 BC in work by Pingala on enumerating possible patterns of Sanskrit poetry formed from syllables of two lengths. They are named after the Italian mathematician Leonardo of Pisa, also known as Fibonacci, who introduced the sequence to Western European mathematics in his 1202 book Liber Abaci.
+Fibonacci numbers appear unexpectedly often in mathematics, so much so that there is an entire journal dedicated to their study, the Fibonacci Quarterly. Applications of Fibonacci numbers include computer algorithms such as the Fibonacci search technique and the Fibonacci heap data structure, and graphs called Fibonacci cubes used for interconnecting parallel and distributed systems. They also appear in biological settings, such as branching in trees, the arrangement of leaves on a stem, the fruit sprouts of a pineapple, the flowering of an artichoke, and the arrangement of a pine cone's bracts, though they do not occur in all species.
+Fibonacci numbers are also strongly related to the golden ratio: Binet's formula expresses the n-th Fibonacci number in terms of n and the golden ratio, and implies that the ratio of two consecutive Fibonacci numbers tends to the golden ratio as n increases. Fibonacci numbers are also closely related to Lucas numbers, which obey the same recurrence relation and with the Fibonacci numbers form a complementary pair of Lucas sequences.
+
+
+== Definition ==
+
+The Fibonacci numbers may be defined by the recurrence relation
+
+  
+    
+      
+        
+          F
+          
+            0
+          
+        
+        =
+        0
+        ,
+        
+        
+          F
+          
+            1
+          
+        
+        =
+        1
+        ,
+      
+    
+    {\displaystyle F_{0}=0,\quad F_{1}=1,}
+  
+
+and
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        +
+        
+          F
+          
+            n
+            −
+            2
+          
+        
+      
+    
+    {\displaystyle F_{n}=F_{n-1}+F_{n-2}}
+  
+
+for n > 1.
+Under some older definitions, the value 
+  
+    
+      
+        
+          F
+          
+            0
+          
+        
+        =
+        0
+      
+    
+    {\displaystyle F_{0}=0}
+  
+ is omitted, so that the sequence starts with 
+  
+    
+      
+        
+          F
+          
+            1
+          
+        
+        =
+        
+          F
+          
+            2
+          
+        
+        =
+        1
+      
+    
+    {\displaystyle F_{1}=F_{2}=1}
+  
+.
+The first 21 Fibonacci numbers Fn are:
+
+The Fibonacci sequence can be extended to negative integer indices by following the same recurrence relation in the negative direction (sequence A039834 in the OEIS): ⁠
+  
+    
+      
+        
+          F
+          
+            1
+          
+        
+        =
+        1
+      
+    
+    {\displaystyle F_{1}=1}
+  
+⁠, ⁠
+  
+    
+      
+        
+          F
+          
+            0
+          
+        
+        =
+        0
+      
+    
+    {\displaystyle F_{0}=0}
+  
+⁠, and ⁠
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n}=F_{n+2}-F_{n+1}}
+  
+⁠ for n < 0 . Nearly all properties of Fibonacci numbers do not depend upon whether the indices are positive or negative. The values for positive and negative indices obey the relation:
+
+  
+    
+      
+        
+          F
+          
+            −
+            n
+          
+        
+        =
+        (
+        −
+        1
+        
+          )
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            n
+          
+        
+        .
+      
+    
+    {\displaystyle F_{-n}=(-1)^{n+1}F_{n}.}
+  
+
+
+== History ==
+
+
+=== India ===
+
+The Fibonacci sequence appears in Indian mathematics, in connection with Sanskrit prosody. In the Sanskrit poetic tradition, there was interest in enumerating all patterns of long (L) syllables of 2 units duration, juxtaposed with short (S) syllables of 1 unit duration. Counting the different patterns of successive L and S with a given total duration results in the Fibonacci numbers: the number of patterns of duration m units is Fm+1.
+Knowledge of the Fibonacci sequence was expressed as early as Pingala (c. 450 BC–200 BC). Singh cites Pingala's cryptic formula misrau cha ("the two are mixed") and scholars who interpret it in context as saying that the number of patterns for m beats (Fm+1) is obtained by adding one [S] to the Fm cases and one [L] to the Fm−1 cases. Bharata Muni also expresses knowledge of the sequence in the Natya Shastra (c. 100 BC–c. 350 AD).
+However, the clearest exposition of the sequence arises in the work of Virahanka (c. 700 AD), whose own work is lost, but is available in a quotation by Gopala (c. 1135):
+
+Variations of two earlier meters [is the variation] ...  For example, for [a meter of length] four, variations of meters of two [and] three being mixed, five happens. [works out examples 8, 13, 21] ... In this way, the process should be followed in all mātrā-vṛttas [prosodic combinations].
+Hemachandra (c. 1150) is credited with knowledge of the sequence as well, writing that "the sum of the last and the one before the last is the number ... of the next mātrā-vṛtta."
+
+
+=== Europe ===
+
+The Fibonacci sequence first appears in the book Liber Abaci (The Book of Calculation, 1202) by Fibonacci, where it is used to calculate the growth of rabbit populations. Fibonacci considers the growth of an idealized (biologically unrealistic) rabbit population, assuming that: a newly born breeding pair of rabbits are put in a field; each breeding pair mates at the age of one month, and at the end of their second month they always produce another pair of rabbits; and rabbits never die, but continue breeding forever. Fibonacci posed the rabbit math problem: how many pairs will there be in one year?
+
+At the end of the first month, they mate, but there is still only 1 pair.
+At the end of the second month they produce a new pair, so there are 2 pairs in the field.
+At the end of the third month, the original pair produce a second pair, but the second pair only mate to gestate for a month, so there are 3 pairs in all.
+At the end of the fourth month, the original pair has produced yet another new pair, and the pair born two months ago also produces their first pair, making 5 pairs.
+At the end of the n-th month, the number of pairs of rabbits is equal to the number of mature pairs (that is, the number of pairs in month n – 2) plus the number of pairs alive last month (month n – 1). The number in the n-th month is the n-th Fibonacci number.
+The name "Fibonacci sequence" was first used by the 19th-century number theorist Édouard Lucas.
+
+
+== Relation to the golden ratio ==
+
+
+=== Closed-form expression ===
+Like every sequence defined by a homogeneous linear recurrence with constant coefficients, the Fibonacci numbers have a closed-form expression. It has become known as Binet's formula, named after French mathematician Jacques Philippe Marie Binet, though it was already known by Abraham de Moivre and Daniel Bernoulli:
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          
+            
+              
+                φ
+                
+                  n
+                
+              
+              −
+              
+                ψ
+                
+                  n
+                
+              
+            
+            
+              φ
+              −
+              ψ
+            
+          
+        
+        =
+        
+          
+            
+              
+                φ
+                
+                  n
+                
+              
+              −
+              
+                ψ
+                
+                  n
+                
+              
+            
+            
+              5
+            
+          
+        
+        ,
+      
+    
+    {\displaystyle F_{n}={\frac {\varphi ^{n}-\psi ^{n}}{\varphi -\psi }}={\frac {\varphi ^{n}-\psi ^{n}}{\sqrt {5}}},}
+  
+
+where ⁠
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+⁠ (phi) is the golden ratio and ⁠
+  
+    
+      
+        ψ
+      
+    
+    {\displaystyle \psi }
+  
+⁠ (psi) is its conjugate,
+
+  
+    
+      
+        
+          
+            
+              
+                φ
+              
+              
+                
+                =
+                
+                  
+                    
+                      1
+                      2
+                    
+                  
+                
+                
+                  
+                    (
+                  
+                
+                1
+                +
+                
+                  
+                    5
+                  
+                
+                 
+                
+                
+                  
+                    )
+                  
+                
+                =
+                
+                  
+                    
+                      −
+                    
+                  
+                
+                1.61803
+                …
+                ,
+              
+            
+            
+              
+                ψ
+              
+              
+                
+                =
+                
+                  
+                    
+                      1
+                      2
+                    
+                  
+                
+                
+                  
+                    (
+                  
+                
+                1
+                −
+                
+                  
+                    5
+                  
+                
+                 
+                
+                
+                  
+                    )
+                  
+                
+                =
+                −
+                0.61803
+                …
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}\varphi &={\tfrac {1}{2}}{\bigl (}1+{\sqrt {5}}~\!{\bigr )}={\phantom {-}}1.61803\ldots ,\\[5mu]\psi &={\tfrac {1}{2}}{\bigl (}1-{\sqrt {5}}~\!{\bigr )}=-0.61803\ldots .\end{aligned}}}
+  
+
+The numbers ⁠
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+⁠ and ⁠
+  
+    
+      
+        ψ
+      
+    
+    {\displaystyle \psi }
+  
+⁠ are the two solutions of the quadratic equation ⁠
+  
+    
+      
+        
+          
+            x
+            
+              2
+            
+          
+          −
+          x
+          −
+          1
+          =
+          0
+        
+      
+    
+    {\displaystyle \textstyle x^{2}-x-1=0}
+  
+⁠, that is, ⁠
+  
+    
+      
+        (
+        x
+        −
+        φ
+        )
+        (
+        x
+        −
+        ψ
+        )
+        =
+        
+          x
+          
+            2
+          
+        
+        −
+        x
+        −
+        1
+      
+    
+    {\displaystyle (x-\varphi )(x-\psi )=x^{2}-x-1}
+  
+⁠, and thus they satisfy the identities ⁠
+  
+    
+      
+        φ
+        +
+        ψ
+        =
+        1
+      
+    
+    {\displaystyle \varphi +\psi =1}
+  
+⁠ and ⁠
+  
+    
+      
+        φ
+        ψ
+        =
+        −
+        1
+      
+    
+    {\displaystyle \varphi \psi =-1}
+  
+⁠.
+Since 
+  
+    
+      
+        ψ
+        =
+        −
+        
+          φ
+          
+            −
+            1
+          
+        
+      
+    
+    {\displaystyle \psi =-\varphi ^{-1}}
+  
+, Binet's formula can also be written as
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          
+            
+              
+                φ
+                
+                  n
+                
+              
+              −
+              (
+              −
+              φ
+              
+                )
+                
+                  −
+                  n
+                
+              
+            
+            
+              5
+            
+          
+        
+        =
+        
+          
+            
+              
+                φ
+                
+                  n
+                
+              
+              −
+              (
+              −
+              φ
+              
+                )
+                
+                  −
+                  n
+                
+              
+            
+            
+              2
+              φ
+              −
+              1
+            
+          
+        
+        .
+      
+    
+    {\displaystyle F_{n}={\frac {\varphi ^{n}-(-\varphi )^{-n}}{\sqrt {5}}}={\frac {\varphi ^{n}-(-\varphi )^{-n}}{2\varphi -1}}.}
+  
+
+To see the relation between the sequence and these constants, note that 
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+ and 
+  
+    
+      
+        ψ
+      
+    
+    {\displaystyle \psi }
+  
+ are also roots of 
+  
+    
+      
+        
+          x
+          
+            n
+          
+        
+        =
+        
+          x
+          
+            n
+            −
+            1
+          
+        
+        +
+        
+          x
+          
+            n
+            −
+            2
+          
+        
+        ,
+      
+    
+    {\displaystyle x^{n}=x^{n-1}+x^{n-2},}
+  
+ so the powers of 
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+ and 
+  
+    
+      
+        ψ
+      
+    
+    {\displaystyle \psi }
+  
+ satisfy the Fibonacci recurrence. In other words,
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  φ
+                  
+                    n
+                  
+                
+              
+              
+                
+                =
+                
+                  φ
+                  
+                    n
+                    −
+                    1
+                  
+                
+                +
+                
+                  φ
+                  
+                    n
+                    −
+                    2
+                  
+                
+                ,
+              
+            
+            
+              
+                
+                  ψ
+                  
+                    n
+                  
+                
+              
+              
+                
+                =
+                
+                  ψ
+                  
+                    n
+                    −
+                    1
+                  
+                
+                +
+                
+                  ψ
+                  
+                    n
+                    −
+                    2
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}\varphi ^{n}&=\varphi ^{n-1}+\varphi ^{n-2},\\[3mu]\psi ^{n}&=\psi ^{n-1}+\psi ^{n-2}.\end{aligned}}}
+  
+
+It follows that for any values a and b, the sequence defined by
+
+  
+    
+      
+        
+          U
+          
+            n
+          
+        
+        =
+        a
+        
+          φ
+          
+            n
+          
+        
+        +
+        b
+        
+          ψ
+          
+            n
+          
+        
+      
+    
+    {\displaystyle U_{n}=a\varphi ^{n}+b\psi ^{n}}
+  
+
+satisfies the same recurrence. If a and b are chosen so that U0 = 0 and U1 = 1 then the resulting sequence Un must be the Fibonacci sequence. This is the same as requiring a and b satisfy the system of equations:
+
+  
+    
+      
+        
+          
+            
+              
+                a
+                
+                  φ
+                  
+                    0
+                  
+                
+                +
+                b
+                
+                  ψ
+                  
+                    0
+                  
+                
+              
+              
+                
+                =
+                0
+              
+            
+            
+              
+                a
+                
+                  φ
+                  
+                    1
+                  
+                
+                +
+                b
+                
+                  ψ
+                  
+                    1
+                  
+                
+              
+              
+                
+                =
+                1
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}a\varphi ^{0}+b\psi ^{0}&=0\\a\varphi ^{1}+b\psi ^{1}&=1\end{aligned}}}
+  
+
+which has solution
+
+  
+    
+      
+        a
+        =
+        
+          
+            1
+            
+              φ
+              −
+              ψ
+            
+          
+        
+        =
+        
+          
+            1
+            
+              5
+            
+          
+        
+        ,
+        
+        b
+        =
+        −
+        a
+        ,
+      
+    
+    {\displaystyle a={\frac {1}{\varphi -\psi }}={\frac {1}{\sqrt {5}}},\quad b=-a,}
+  
+
+producing the required formula.
+Taking the starting values U0 and U1 to be arbitrary constants and solving the system of equations gives the general solution
+
+  
+    
+      
+        
+          
+            
+              
+                a
+              
+              
+                
+                =
+                
+                  
+                    
+                      
+                        U
+                        
+                          1
+                        
+                      
+                      −
+                      
+                        U
+                        
+                          0
+                        
+                      
+                      ψ
+                    
+                    
+                      5
+                    
+                  
+                
+                ,
+              
+            
+            
+              
+                b
+              
+              
+                
+                =
+                
+                  
+                    
+                      
+                        U
+                        
+                          0
+                        
+                      
+                      φ
+                      −
+                      
+                        U
+                        
+                          1
+                        
+                      
+                    
+                    
+                      5
+                    
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}a&={\frac {U_{1}-U_{0}\psi }{\sqrt {5}}},\\[3mu]b&={\frac {U_{0}\varphi -U_{1}}{\sqrt {5}}}.\end{aligned}}}
+  
+
+In particular, choosing a = 1 makes the n-th element of the sequence closely approximate the n-th power of ⁠
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+⁠ for large enough values of n. This arises when U0 = 2 and U1 = 1, which produces the sequence of Lucas numbers.
+
+
+=== Computation by rounding ===
+Since
+
+  
+    
+      
+        
+          |
+          
+            
+              
+                ψ
+                
+                  n
+                
+              
+              
+                5
+              
+            
+          
+          |
+        
+        <
+        
+          
+            1
+            2
+          
+        
+      
+    
+    {\textstyle \left|{\frac {\psi ^{n}}{\sqrt {5}}}\right|<{\frac {1}{2}}}
+  
+ for all n ≥ 0, the number Fn is the closest integer to 
+  
+    
+      
+        
+          
+            
+              φ
+              
+                n
+              
+            
+            
+              5
+            
+          
+        
+      
+    
+    {\displaystyle {\frac {\varphi ^{n}}{\sqrt {5}}}}
+  
+. Therefore, it can be found by rounding, using the nearest integer function:
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          ⌊
+          
+            
+              
+                φ
+                
+                  n
+                
+              
+              
+                5
+              
+            
+          
+          ⌉
+        
+        ,
+         
+        n
+        ≥
+        0.
+      
+    
+    {\displaystyle F_{n}=\left\lfloor {\frac {\varphi ^{n}}{\sqrt {5}}}\right\rceil ,\ n\geq 0.}
+  
+
+In fact, the rounding error quickly becomes very small as n grows, being less than 0.1 for n ≥ 4, and less than 0.01 for n ≥ 8. This formula is easily inverted to find an index of a Fibonacci number F:
+
+  
+    
+      
+        n
+        (
+        F
+        )
+        =
+        
+          ⌊
+          
+            
+              log
+              
+                φ
+              
+            
+            ⁡
+            
+              
+                5
+              
+            
+            F
+          
+          ⌉
+        
+        ,
+         
+        F
+        ≥
+        1.
+      
+    
+    {\displaystyle n(F)=\left\lfloor \log _{\varphi }{\sqrt {5}}F\right\rceil ,\ F\geq 1.}
+  
+
+Instead using the floor function gives the largest index of a Fibonacci number that is not greater than F:
+
+  
+    
+      
+        
+          n
+          
+            
+              l
+              a
+              r
+              g
+              e
+              s
+              t
+            
+          
+        
+        (
+        F
+        )
+        =
+        
+          ⌊
+          
+            
+              log
+              
+                φ
+              
+            
+            ⁡
+            
+              
+                5
+              
+            
+            (
+            F
+            +
+            1
+            
+              /
+            
+            2
+            )
+          
+          ⌋
+        
+        ,
+         
+        F
+        ≥
+        0
+        ,
+      
+    
+    {\displaystyle n_{\mathrm {largest} }(F)=\left\lfloor \log _{\varphi }{\sqrt {5}}(F+1/2)\right\rfloor ,\ F\geq 0,}
+  
+
+where 
+  
+    
+      
+        
+          log
+          
+            φ
+          
+        
+        ⁡
+        (
+        x
+        )
+        =
+        ln
+        ⁡
+        (
+        x
+        )
+        
+          /
+        
+        ln
+        ⁡
+        (
+        φ
+        )
+        =
+        
+          log
+          
+            10
+          
+        
+        ⁡
+        (
+        x
+        )
+        
+          /
+        
+        
+          log
+          
+            10
+          
+        
+        ⁡
+        (
+        φ
+        )
+      
+    
+    {\displaystyle \log _{\varphi }(x)=\ln(x)/\ln(\varphi )=\log _{10}(x)/\log _{10}(\varphi )}
+  
+, 
+  
+    
+      
+        ln
+        ⁡
+        (
+        φ
+        )
+        =
+        0.481211
+        …
+      
+    
+    {\displaystyle \ln(\varphi )=0.481211\ldots }
+  
+, and 
+  
+    
+      
+        
+          log
+          
+            10
+          
+        
+        ⁡
+        (
+        φ
+        )
+        =
+        0.208987
+        …
+      
+    
+    {\displaystyle \log _{10}(\varphi )=0.208987\ldots }
+  
+.
+
+
+=== Magnitude ===
+Since Fn is asymptotic to 
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+        
+          /
+        
+        
+          
+            5
+          
+        
+      
+    
+    {\displaystyle \varphi ^{n}/{\sqrt {5}}}
+  
+, the number of digits in Fn is asymptotic to 
+  
+    
+      
+        n
+        
+          log
+          
+            10
+          
+        
+        ⁡
+        φ
+        ≈
+        0.2090
+        
+        n
+      
+    
+    {\displaystyle n\log _{10}\varphi \approx 0.2090\,n}
+  
+. As a consequence, for every integer d > 1 there are either 4 or 5 Fibonacci numbers with d decimal digits.
+More generally, in the base b representation, the number of digits in Fn is asymptotic to 
+  
+    
+      
+        n
+        
+          log
+          
+            b
+          
+        
+        ⁡
+        φ
+        =
+        
+          
+            
+              n
+              log
+              ⁡
+              φ
+            
+            
+              log
+              ⁡
+              b
+            
+          
+        
+        .
+      
+    
+    {\displaystyle n\log _{b}\varphi ={\frac {n\log \varphi }{\log b}}.}
+  
+
+
+=== Limit of consecutive quotients ===
+Johannes Kepler observed that the ratio of consecutive Fibonacci numbers converges. He wrote that "as 5 is to 8 so is 8 to 13, practically, and as 8 is to 13, so is 13 to 21 almost", and concluded that these ratios approach the golden ratio ⁠
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+⁠:
+
+  
+    
+      
+        
+          lim
+          
+            n
+            →
+            ∞
+          
+        
+        
+          
+            
+              F
+              
+                n
+                +
+                1
+              
+            
+            
+              F
+              
+                n
+              
+            
+          
+        
+        =
+        φ
+        .
+      
+    
+    {\displaystyle \lim _{n\to \infty }{\frac {F_{n+1}}{F_{n}}}=\varphi .}
+  
+
+This convergence holds regardless of the starting values 
+  
+    
+      
+        
+          U
+          
+            0
+          
+        
+      
+    
+    {\displaystyle U_{0}}
+  
+ and 
+  
+    
+      
+        
+          U
+          
+            1
+          
+        
+      
+    
+    {\displaystyle U_{1}}
+  
+, unless 
+  
+    
+      
+        
+          U
+          
+            1
+          
+        
+        =
+        −
+        
+          U
+          
+            0
+          
+        
+        
+          /
+        
+        φ
+      
+    
+    {\displaystyle U_{1}=-U_{0}/\varphi }
+  
+. This can be verified using Binet's formula. For example, the initial values 3 and 2 generate the sequence 3, 2, 5, 7, 12, 19, 31, 50, 81, 131, 212, 343, 555, ... . The ratio of consecutive elements in this sequence shows the same convergence towards the golden ratio.
+In general, 
+  
+    
+      
+        
+          lim
+          
+            n
+            →
+            ∞
+          
+        
+        
+          
+            
+              F
+              
+                n
+                +
+                m
+              
+            
+            
+              F
+              
+                n
+              
+            
+          
+        
+        =
+        
+          φ
+          
+            m
+          
+        
+      
+    
+    {\displaystyle \lim _{n\to \infty }{\frac {F_{n+m}}{F_{n}}}=\varphi ^{m}}
+  
+, because the ratios between consecutive Fibonacci numbers approaches 
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+.
+
+
+=== Decomposition of powers ===
+Since the golden ratio satisfies the equation
+
+  
+    
+      
+        
+          φ
+          
+            2
+          
+        
+        =
+        φ
+        +
+        1
+        ,
+      
+    
+    {\displaystyle \varphi ^{2}=\varphi +1,}
+  
+
+this expression can be used to decompose higher powers 
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+      
+    
+    {\displaystyle \varphi ^{n}}
+  
+ as a linear function of lower powers, which in turn can be decomposed all the way down to a linear combination of 
+  
+    
+      
+        φ
+      
+    
+    {\displaystyle \varphi }
+  
+ and 1. The resulting recurrence relationships yield Fibonacci numbers as the linear coefficients:
+
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        φ
+        +
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        .
+      
+    
+    {\displaystyle \varphi ^{n}=F_{n}\varphi +F_{n-1}.}
+  
+
+This equation can be proved by induction on n ≥ 1:
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  φ
+                  
+                    n
+                    +
+                    1
+                  
+                
+              
+              
+                
+                =
+                (
+                
+                  F
+                  
+                    n
+                  
+                
+                φ
+                +
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                )
+                φ
+                =
+                
+                  F
+                  
+                    n
+                  
+                
+                
+                  φ
+                  
+                    2
+                  
+                
+                +
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                φ
+              
+            
+            
+              
+              
+                
+                =
+                
+                  F
+                  
+                    n
+                  
+                
+                (
+                φ
+                +
+                1
+                )
+                +
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                φ
+                =
+                (
+                
+                  F
+                  
+                    n
+                  
+                
+                +
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                )
+                φ
+                +
+                
+                  F
+                  
+                    n
+                  
+                
+                =
+                
+                  F
+                  
+                    n
+                    +
+                    1
+                  
+                
+                φ
+                +
+                
+                  F
+                  
+                    n
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}\varphi ^{n+1}&=(F_{n}\varphi +F_{n-1})\varphi =F_{n}\varphi ^{2}+F_{n-1}\varphi \\&=F_{n}(\varphi +1)+F_{n-1}\varphi =(F_{n}+F_{n-1})\varphi +F_{n}=F_{n+1}\varphi +F_{n}.\end{aligned}}}
+  
+
+For 
+  
+    
+      
+        ψ
+        =
+        −
+        1
+        
+          /
+        
+        φ
+      
+    
+    {\displaystyle \psi =-1/\varphi }
+  
+, it is also the case that 
+  
+    
+      
+        
+          ψ
+          
+            2
+          
+        
+        =
+        ψ
+        +
+        1
+      
+    
+    {\displaystyle \psi ^{2}=\psi +1}
+  
+ and it is also the case that
+
+  
+    
+      
+        
+          ψ
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        ψ
+        +
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        .
+      
+    
+    {\displaystyle \psi ^{n}=F_{n}\psi +F_{n-1}.}
+  
+
+These expressions are also true for n < 1 if the Fibonacci sequence Fn is extended to negative integers using the Fibonacci rule 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        .
+      
+    
+    {\displaystyle F_{n}=F_{n+2}-F_{n+1}.}
+  
+
+
+=== Identification ===
+Binet's formula provides a proof that a positive integer x is a Fibonacci number if and only if at least one of 
+  
+    
+      
+        5
+        
+          x
+          
+            2
+          
+        
+        +
+        4
+      
+    
+    {\displaystyle 5x^{2}+4}
+  
+ or 
+  
+    
+      
+        5
+        
+          x
+          
+            2
+          
+        
+        −
+        4
+      
+    
+    {\displaystyle 5x^{2}-4}
+  
+ is a perfect square. This is because Binet's formula, which can be written as 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        (
+        
+          φ
+          
+            n
+          
+        
+        −
+        (
+        −
+        1
+        
+          )
+          
+            n
+          
+        
+        
+          φ
+          
+            −
+            n
+          
+        
+        )
+        
+          /
+        
+        
+          
+            5
+          
+        
+      
+    
+    {\displaystyle F_{n}=(\varphi ^{n}-(-1)^{n}\varphi ^{-n})/{\sqrt {5}}}
+  
+, can be multiplied by 
+  
+    
+      
+        
+          
+            5
+          
+        
+        
+          φ
+          
+            n
+          
+        
+      
+    
+    {\displaystyle {\sqrt {5}}\varphi ^{n}}
+  
+ and solved as a quadratic equation in 
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+      
+    
+    {\displaystyle \varphi ^{n}}
+  
+ via the quadratic formula:
+
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+        =
+        
+          
+            
+              
+                F
+                
+                  n
+                
+              
+              
+                
+                  5
+                
+              
+              ±
+              
+                
+                  5
+                  
+                    
+                      
+                        F
+                        
+                          n
+                        
+                      
+                    
+                    
+                      
+                      2
+                    
+                  
+                  +
+                  4
+                  
+                    
+                      (
+                      −
+                      1
+                      )
+                    
+                    
+                      n
+                    
+                  
+                
+              
+            
+            2
+          
+        
+        .
+      
+    
+    {\displaystyle \varphi ^{n}={\frac {F_{n}{\sqrt {5}}\pm {\sqrt {5{F_{n}}^{\!2}+4{(-1)}^{n}}}}{2}}.}
+  
+
+Comparing this to 
+  
+    
+      
+        
+          φ
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        φ
+        +
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        =
+        (
+        
+          F
+          
+            n
+          
+        
+        
+          
+            5
+          
+        
+        +
+        
+          F
+          
+            n
+          
+        
+        +
+        2
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        )
+        
+          /
+        
+        2
+      
+    
+    {\displaystyle \varphi ^{n}=F_{n}\varphi +F_{n-1}=(F_{n}{\sqrt {5}}+F_{n}+2F_{n-1})/2}
+  
+, it follows that
+
+  
+    
+      
+        5
+        
+          
+            
+              F
+              
+                n
+              
+            
+          
+          
+            
+            2
+          
+        
+        +
+        4
+        (
+        −
+        1
+        
+          )
+          
+            n
+          
+        
+        =
+        (
+        
+          F
+          
+            n
+          
+        
+        +
+        2
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        
+          )
+          
+            2
+          
+        
+        
+        .
+      
+    
+    {\displaystyle 5{F_{n}}^{\!2}+4(-1)^{n}=(F_{n}+2F_{n-1})^{2}\,.}
+  
+
+In particular, the left-hand side is a perfect square.
+
+
+== Matrix form ==
+A 2-dimensional system of linear difference equations that describes the Fibonacci sequence is
+
+  
+    
+      
+        
+          
+            (
+            
+              
+                
+                  
+                    F
+                    
+                      k
+                      +
+                      2
+                    
+                  
+                
+              
+              
+                
+                  
+                    F
+                    
+                      k
+                      +
+                      1
+                    
+                  
+                
+              
+            
+            )
+          
+        
+        =
+        
+          
+            (
+            
+              
+                
+                  1
+                
+                
+                  1
+                
+              
+              
+                
+                  1
+                
+                
+                  0
+                
+              
+            
+            )
+          
+        
+        
+          
+            (
+            
+              
+                
+                  
+                    F
+                    
+                      k
+                      +
+                      1
+                    
+                  
+                
+              
+              
+                
+                  
+                    F
+                    
+                      k
+                    
+                  
+                
+              
+            
+            )
+          
+        
+      
+    
+    {\displaystyle {\begin{pmatrix}F_{k+2}\\F_{k+1}\end{pmatrix}}={\begin{pmatrix}1&1\\1&0\end{pmatrix}}{\begin{pmatrix}F_{k+1}\\F_{k}\end{pmatrix}}}
+  
+
+alternatively denoted
+
+  
+    
+      
+        
+          
+            
+              
+                F
+                →
+              
+            
+          
+          
+            k
+            +
+            1
+          
+        
+        =
+        
+          A
+        
+        
+          
+            
+              
+                F
+                →
+              
+            
+          
+          
+            k
+          
+        
+        ,
+      
+    
+    {\displaystyle {\vec {F}}_{k+1}=\mathbf {A} {\vec {F}}_{k},}
+  
+
+which yields 
+  
+    
+      
+        
+          
+            
+              
+                F
+                →
+              
+            
+          
+          
+            n
+          
+        
+        =
+        
+          
+            A
+          
+          
+            n
+          
+        
+        
+          
+            
+              
+                F
+                →
+              
+            
+          
+          
+            0
+          
+        
+      
+    
+    {\displaystyle {\vec {F}}_{n}=\mathbf {A} ^{n}{\vec {F}}_{0}}
+  
+. The eigenvalues of the matrix A are 
+  
+    
+      
+        φ
+        =
+        
+          
+            
+              1
+              2
+            
+          
+        
+        
+          
+            (
+          
+        
+        1
+        +
+        
+          
+            5
+          
+        
+         
+        
+        
+          
+            )
+          
+        
+      
+    
+    {\displaystyle \varphi ={\tfrac {1}{2}}{\bigl (}1+{\sqrt {5}}~\!{\bigr )}}
+  
+ and 
+  
+    
+      
+        ψ
+        =
+        −
+        
+          φ
+          
+            −
+            1
+          
+        
+        =
+        
+          
+            
+              1
+              2
+            
+          
+        
+        
+          
+            (
+          
+        
+        1
+        −
+        
+          
+            5
+          
+        
+         
+        
+        
+          
+            )
+          
+        
+      
+    
+    {\displaystyle \psi =-\varphi ^{-1}={\tfrac {1}{2}}{\bigl (}1-{\sqrt {5}}~\!{\bigr )}}
+  
+ corresponding to the respective eigenvectors
+
+  
+    
+      
+        
+          
+            
+              μ
+              →
+            
+          
+        
+        =
+        
+          
+            (
+            
+              
+                
+                  φ
+                
+              
+              
+                
+                  1
+                
+              
+            
+            )
+          
+        
+        ,
+        
+        
+          
+            
+              ν
+              →
+            
+          
+        
+        =
+        
+          
+            (
+            
+              
+                
+                  −
+                  
+                    φ
+                    
+                      −
+                      1
+                    
+                  
+                
+              
+              
+                
+                  1
+                
+              
+            
+            )
+          
+        
+        .
+      
+    
+    {\displaystyle {\vec {\mu }}={\begin{pmatrix}\varphi \\1\end{pmatrix}},\quad {\vec {\nu }}={\begin{pmatrix}-\varphi ^{-1}\\1\end{pmatrix}}.}
+  
+
+As the initial value is
+
+  
+    
+      
+        
+          
+            
+              
+                F
+                →
+              
+            
+          
+          
+            0
+          
+        
+        =
+        
+          
+            (
+            
+              
+                
+                  1
+                
+              
+              
+                
+                  0
+                
+              
+            
+            )
+          
+        
+        =
+        
+          
+            1
+            
+              5
+            
+          
+        
+        
+          
+            
+              μ
+              →
+            
+          
+        
+        
+        −
+        
+        
+          
+            1
+            
+              5
+            
+          
+        
+        
+          
+            
+              ν
+              →
+            
+          
+        
+        ,
+      
+    
+    {\displaystyle {\vec {F}}_{0}={\begin{pmatrix}1\\0\end{pmatrix}}={\frac {1}{\sqrt {5}}}{\vec {\mu }}\,-\,{\frac {1}{\sqrt {5}}}{\vec {\nu }},}
+  
+
+it follows that the nth element is
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  
+                    
+                      
+                        F
+                        →
+                      
+                    
+                  
+                  
+                    n
+                  
+                
+                 
+              
+              
+                
+                =
+                
+                  
+                    1
+                    
+                      5
+                    
+                  
+                
+                
+                  A
+                  
+                    n
+                  
+                
+                
+                  
+                    
+                      μ
+                      →
+                    
+                  
+                
+                −
+                
+                  
+                    1
+                    
+                      5
+                    
+                  
+                
+                
+                  A
+                  
+                    n
+                  
+                
+                
+                  
+                    
+                      ν
+                      →
+                    
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    1
+                    
+                      5
+                    
+                  
+                
+                
+                  φ
+                  
+                    n
+                  
+                
+                
+                  
+                    
+                      μ
+                      →
+                    
+                  
+                
+                −
+                
+                  
+                    1
+                    
+                      5
+                    
+                  
+                
+                (
+                −
+                φ
+                
+                  )
+                  
+                    −
+                    n
+                  
+                
+                
+                  
+                    
+                      ν
+                      →
+                    
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    
+                      
+                        
+                      
+                      
+                        
+                          1
+                        
+                      
+                    
+                    
+                      
+                        
+                      
+                      
+                        
+                          
+                            5
+                          
+                        
+                      
+                    
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            
+                          
+                          
+                            
+                              1
+                              +
+                              
+                                
+                                  5
+                                
+                              
+                            
+                          
+                        
+                        
+                          
+                            
+                          
+                          
+                            
+                              2
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                  
+                    
+                    n
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          φ
+                        
+                      
+                      
+                        
+                          1
+                        
+                      
+                    
+                    )
+                  
+                
+                
+                −
+                
+                
+                  
+                    
+                      
+                        
+                      
+                      
+                        
+                          1
+                        
+                      
+                    
+                    
+                      
+                        
+                      
+                      
+                        
+                          
+                            5
+                          
+                        
+                      
+                    
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            
+                          
+                          
+                            
+                              1
+                              −
+                              
+                                
+                                  5
+                                
+                              
+                            
+                          
+                        
+                        
+                          
+                            
+                          
+                          
+                            
+                              2
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                  
+                    
+                    n
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            c
+                          
+                          −
+                          
+                            φ
+                            
+                              −
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          1
+                        
+                      
+                    
+                    )
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}{\vec {F}}_{n}\ &={\frac {1}{\sqrt {5}}}A^{n}{\vec {\mu }}-{\frac {1}{\sqrt {5}}}A^{n}{\vec {\nu }}\\&={\frac {1}{\sqrt {5}}}\varphi ^{n}{\vec {\mu }}-{\frac {1}{\sqrt {5}}}(-\varphi )^{-n}{\vec {\nu }}\\&={\cfrac {1}{\sqrt {5}}}\left({\cfrac {1+{\sqrt {5}}}{2}}\right)^{\!n}{\begin{pmatrix}\varphi \\1\end{pmatrix}}\,-\,{\cfrac {1}{\sqrt {5}}}\left({\cfrac {1-{\sqrt {5}}}{2}}\right)^{\!n}{\begin{pmatrix}{c}-\varphi ^{-1}\\1\end{pmatrix}}.\end{aligned}}}
+  
+
+From this, the nth element in the Fibonacci sequence may be read off directly as a closed-form expression:
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          
+            
+              
+                
+              
+              
+                
+                  1
+                
+              
+            
+            
+              
+                
+              
+              
+                
+                  
+                    5
+                  
+                
+              
+            
+          
+        
+        
+          
+            (
+            
+              
+                
+                  
+                    
+                  
+                  
+                    
+                      1
+                      +
+                      
+                        
+                          5
+                        
+                      
+                    
+                  
+                
+                
+                  
+                    
+                  
+                  
+                    
+                      2
+                    
+                  
+                
+              
+            
+            )
+          
+          
+            
+            n
+          
+        
+        −
+        
+        
+          
+            
+              
+                
+              
+              
+                
+                  1
+                
+              
+            
+            
+              
+                
+              
+              
+                
+                  
+                    5
+                  
+                
+              
+            
+          
+        
+        
+          
+            (
+            
+              
+                
+                  
+                    
+                  
+                  
+                    
+                      1
+                      −
+                      
+                        
+                          5
+                        
+                      
+                    
+                  
+                
+                
+                  
+                    
+                  
+                  
+                    
+                      2
+                    
+                  
+                
+              
+            
+            )
+          
+          
+            
+            n
+          
+        
+        .
+      
+    
+    {\displaystyle F_{n}={\cfrac {1}{\sqrt {5}}}\left({\cfrac {1+{\sqrt {5}}}{2}}\right)^{\!n}-\,{\cfrac {1}{\sqrt {5}}}\left({\cfrac {1-{\sqrt {5}}}{2}}\right)^{\!n}.}
+  
+
+Equivalently, the same computation may be performed by diagonalization of A through use of its eigendecomposition:
+
+  
+    
+      
+        
+          
+            
+              
+                A
+              
+              
+                
+                =
+                S
+                Λ
+                
+                  S
+                  
+                    −
+                    1
+                  
+                
+                ,
+              
+            
+            
+              
+                
+                  A
+                  
+                    n
+                  
+                
+              
+              
+                
+                =
+                S
+                
+                  Λ
+                  
+                    n
+                  
+                
+                
+                  S
+                  
+                    −
+                    1
+                  
+                
+                ,
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}A&=S\Lambda S^{-1},\\[3mu]A^{n}&=S\Lambda ^{n}S^{-1},\end{aligned}}}
+  
+
+where
+
+  
+    
+      
+        Λ
+        =
+        
+          
+            (
+            
+              
+                
+                  φ
+                
+                
+                  0
+                
+              
+              
+                
+                  0
+                
+                
+                  −
+                  
+                    φ
+                    
+                      −
+                      1
+                    
+                  
+                  
+                
+              
+            
+            )
+          
+        
+        ,
+        
+        S
+        =
+        
+          
+            (
+            
+              
+                
+                  φ
+                
+                
+                  −
+                  
+                    φ
+                    
+                      −
+                      1
+                    
+                  
+                
+              
+              
+                
+                  1
+                
+                
+                  1
+                
+              
+            
+            )
+          
+        
+        .
+      
+    
+    {\displaystyle \Lambda ={\begin{pmatrix}\varphi &0\\0&-\varphi ^{-1}\!\end{pmatrix}},\quad S={\begin{pmatrix}\varphi &-\varphi ^{-1}\\1&1\end{pmatrix}}.}
+  
+
+The closed-form expression for the nth element in the Fibonacci sequence is therefore given by
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            F
+                            
+                              n
+                              +
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          
+                            F
+                            
+                              n
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+              
+              
+                
+                =
+                
+                  A
+                  
+                    n
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            F
+                            
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          
+                            F
+                            
+                              0
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+                 
+              
+            
+            
+              
+              
+                
+                =
+                S
+                
+                  Λ
+                  
+                    n
+                  
+                
+                
+                  S
+                  
+                    −
+                    1
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            F
+                            
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          
+                            F
+                            
+                              0
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                S
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            φ
+                            
+                              n
+                            
+                          
+                        
+                        
+                          0
+                        
+                      
+                      
+                        
+                          0
+                        
+                        
+                          (
+                          −
+                          φ
+                          
+                            )
+                            
+                              −
+                              n
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+                
+                  S
+                  
+                    −
+                    1
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            F
+                            
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          
+                            F
+                            
+                              0
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    (
+                    
+                      
+                        
+                          φ
+                        
+                        
+                          −
+                          
+                            φ
+                            
+                              −
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          1
+                        
+                        
+                          1
+                        
+                      
+                    
+                    )
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          
+                            φ
+                            
+                              n
+                            
+                          
+                        
+                        
+                          0
+                        
+                      
+                      
+                        
+                          0
+                        
+                        
+                          (
+                          −
+                          φ
+                          
+                            )
+                            
+                              −
+                              n
+                            
+                          
+                        
+                      
+                    
+                    )
+                  
+                
+                
+                  
+                    1
+                    
+                      5
+                    
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          1
+                        
+                        
+                          
+                            φ
+                            
+                              −
+                              1
+                            
+                          
+                        
+                      
+                      
+                        
+                          −
+                          1
+                        
+                        
+                          φ
+                        
+                      
+                    
+                    )
+                  
+                
+                
+                  
+                    (
+                    
+                      
+                        
+                          1
+                        
+                      
+                      
+                        
+                          0
+                        
+                      
+                    
+                    )
+                  
+                
+                ,
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}{\begin{pmatrix}F_{n+1}\\F_{n}\end{pmatrix}}&=A^{n}{\begin{pmatrix}F_{1}\\F_{0}\end{pmatrix}}\ \\&=S\Lambda ^{n}S^{-1}{\begin{pmatrix}F_{1}\\F_{0}\end{pmatrix}}\\&=S{\begin{pmatrix}\varphi ^{n}&0\\0&(-\varphi )^{-n}\end{pmatrix}}S^{-1}{\begin{pmatrix}F_{1}\\F_{0}\end{pmatrix}}\\&={\begin{pmatrix}\varphi &-\varphi ^{-1}\\1&1\end{pmatrix}}{\begin{pmatrix}\varphi ^{n}&0\\0&(-\varphi )^{-n}\end{pmatrix}}{\frac {1}{\sqrt {5}}}{\begin{pmatrix}1&\varphi ^{-1}\\-1&\varphi \end{pmatrix}}{\begin{pmatrix}1\\0\end{pmatrix}},\end{aligned}}}
+  
+
+which again yields
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          
+            
+              
+                
+              
+              
+                
+                  
+                    φ
+                    
+                      n
+                    
+                  
+                  −
+                  (
+                  −
+                  φ
+                  
+                    )
+                    
+                      −
+                      n
+                    
+                  
+                
+              
+            
+            
+              
+                
+              
+              
+                
+                  
+                    5
+                  
+                
+              
+            
+          
+        
+        .
+      
+    
+    {\displaystyle F_{n}={\cfrac {\varphi ^{n}-(-\varphi )^{-n}}{\sqrt {5}}}.}
+  
+
+The matrix A has a determinant of −1, and thus it is a 2 × 2 unimodular matrix.
+This property can be understood in terms of the continued fraction representation for the golden ratio φ:
+
+  
+    
+      
+        φ
+        =
+        1
+        +
+        
+          
+            
+              
+                
+              
+              
+                
+                  1
+                
+              
+            
+            
+              
+                
+              
+              
+                
+                  1
+                  +
+                  
+                    
+                      
+                        
+                          
+                        
+                        
+                          
+                            1
+                          
+                        
+                      
+                      
+                        
+                          
+                        
+                        
+                          
+                            1
+                            +
+                            
+                              
+                                
+                                  
+                                    
+                                  
+                                  
+                                    
+                                      1
+                                    
+                                  
+                                
+                                
+                                  
+                                    
+                                  
+                                  
+                                    
+                                      1
+                                      +
+                                      ⋱
+                                    
+                                  
+                                
+                              
+                            
+                          
+                        
+                      
+                    
+                  
+                
+              
+            
+          
+        
+        .
+      
+    
+    {\displaystyle \varphi =1+{\cfrac {1}{1+{\cfrac {1}{1+{\cfrac {1}{1+\ddots }}}}}}.}
+  
+
+The convergents of the continued fraction for φ are ratios of successive Fibonacci numbers: φn = Fn+1 / Fn is the n-th convergent, and the (n + 1)-st convergent can be found from the recurrence relation φn+1 = 1 + 1 / φn. The matrix formed from successive convergents of any continued fraction has a determinant of +1 or −1. The matrix representation gives the following closed-form expression for the Fibonacci numbers:
+
+  
+    
+      
+        
+          
+            
+              (
+              
+                
+                  
+                    1
+                  
+                  
+                    1
+                  
+                
+                
+                  
+                    1
+                  
+                  
+                    0
+                  
+                
+              
+              )
+            
+          
+          
+            n
+          
+        
+        =
+        
+          
+            (
+            
+              
+                
+                  
+                    F
+                    
+                      n
+                      +
+                      1
+                    
+                  
+                
+                
+                  
+                    F
+                    
+                      n
+                    
+                  
+                
+              
+              
+                
+                  
+                    F
+                    
+                      n
+                    
+                  
+                
+                
+                  
+                    F
+                    
+                      n
+                      −
+                      1
+                    
+                  
+                
+              
+            
+            )
+          
+        
+        .
+      
+    
+    {\displaystyle {\begin{pmatrix}1&1\\1&0\end{pmatrix}}^{n}={\begin{pmatrix}F_{n+1}&F_{n}\\F_{n}&F_{n-1}\end{pmatrix}}.}
+  
+
+For a given n, this matrix can be computed in O(log n) arithmetic operations, using the exponentiation by squaring method.
+Taking the determinant of both sides of this equation yields Cassini's identity,
+
+  
+    
+      
+        (
+        −
+        1
+        
+          )
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        −
+        
+          
+            
+              F
+              
+                n
+              
+            
+          
+          
+            2
+          
+        
+        .
+      
+    
+    {\displaystyle (-1)^{n}=F_{n+1}F_{n-1}-{F_{n}}^{2}.}
+  
+
+Moreover, since AnAm = An+m for any square matrix A, the following identities can be derived (they are obtained from two different coefficients of the matrix product, and one may easily deduce the second one from the first one by changing n into n + 1),
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  
+                    F
+                    
+                      m
+                    
+                  
+                
+                
+                  
+                    F
+                    
+                      n
+                    
+                  
+                
+                +
+                
+                  
+                    F
+                    
+                      m
+                      −
+                      1
+                    
+                  
+                
+                
+                  
+                    F
+                    
+                      n
+                      −
+                      1
+                    
+                  
+                
+              
+              
+                
+                =
+                
+                  F
+                  
+                    m
+                    +
+                    n
+                    −
+                    1
+                  
+                
+                ,
+              
+            
+            
+              
+                
+                  F
+                  
+                    m
+                  
+                
+                
+                  F
+                  
+                    n
+                    +
+                    1
+                  
+                
+                +
+                
+                  F
+                  
+                    m
+                    −
+                    1
+                  
+                
+                
+                  F
+                  
+                    n
+                  
+                
+              
+              
+                
+                =
+                
+                  F
+                  
+                    m
+                    +
+                    n
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}{F_{m}}{F_{n}}+{F_{m-1}}{F_{n-1}}&=F_{m+n-1},\\[3mu]F_{m}F_{n+1}+F_{m-1}F_{n}&=F_{m+n}.\end{aligned}}}
+  
+
+In particular, with m = n,
+
+  
+    
+      
+        
+          
+            
+              
+                
+                  F
+                  
+                    2
+                    n
+                    −
+                    1
+                  
+                
+              
+              
+                
+                =
+                
+                  
+                    
+                      F
+                      
+                        n
+                      
+                    
+                  
+                  
+                    2
+                  
+                
+                +
+                
+                  
+                    
+                      F
+                      
+                        n
+                        −
+                        1
+                      
+                    
+                  
+                  
+                    2
+                  
+                
+              
+            
+            
+              
+                
+                  F
+                  
+                    2
+                    n
+                    
+                      
+                        
+                          
+
+                          
+                          −
+                          1
+                        
+                      
+                    
+                  
+                
+              
+              
+                
+                =
+                (
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                +
+                
+                  F
+                  
+                    n
+                    +
+                    1
+                  
+                
+                )
+                
+                  F
+                  
+                    n
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                (
+                2
+                
+                  F
+                  
+                    n
+                    −
+                    1
+                  
+                
+                +
+                
+                  F
+                  
+                    n
+                  
+                
+                )
+                
+                  F
+                  
+                    n
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                (
+                2
+                
+                  F
+                  
+                    n
+                    +
+                    1
+                  
+                
+                −
+                
+                  F
+                  
+                    n
+                  
+                
+                )
+                
+                  F
+                  
+                    n
+                  
+                
+                .
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}F_{2n-1}&={F_{n}}^{2}+{F_{n-1}}^{2}\\[6mu]F_{2n{\phantom {{}-1}}}&=(F_{n-1}+F_{n+1})F_{n}\\[3mu]&=(2F_{n-1}+F_{n})F_{n}\\[3mu]&=(2F_{n+1}-F_{n})F_{n}.\end{aligned}}}
+  
+
+These last two identities provide a way to compute Fibonacci numbers recursively in O(log n) arithmetic operations. This matches the time for computing the n-th Fibonacci number from the closed-form matrix formula, but with fewer redundant steps if one avoids recomputing an already computed Fibonacci number (recursion with memoization).
+
+
+== Combinatorial identities ==
+
+
+=== Combinatorial proofs ===
+Most identities involving Fibonacci numbers can be proved using combinatorial arguments using the fact that 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+      
+    
+    {\displaystyle F_{n}}
+  
+ can be interpreted as the number of (possibly empty) sequences of 1s and 2s whose sum is 
+  
+    
+      
+        n
+        −
+        1
+      
+    
+    {\displaystyle n-1}
+  
+. This can be taken as the definition of 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+      
+    
+    {\displaystyle F_{n}}
+  
+ with the conventions 
+  
+    
+      
+        
+          F
+          
+            0
+          
+        
+        =
+        0
+      
+    
+    {\displaystyle F_{0}=0}
+  
+, meaning no such sequence exists whose sum is −1, and 
+  
+    
+      
+        
+          F
+          
+            1
+          
+        
+        =
+        1
+      
+    
+    {\displaystyle F_{1}=1}
+  
+, meaning the empty sequence "adds up" to 0. In the following, 
+  
+    
+      
+        
+          |
+        
+        
+          .
+          .
+          .
+        
+        
+          |
+        
+      
+    
+    {\displaystyle |{...}|}
+  
+ is the cardinality of a set:
+
+  
+    
+      
+        
+          F
+          
+            0
+          
+        
+        =
+        0
+        =
+        
+          |
+        
+        {
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{0}=0=|\{\}|}
+  
+
+  
+    
+      
+        
+          F
+          
+            1
+          
+        
+        =
+        1
+        =
+        
+          |
+        
+        {
+        (
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{1}=1=|\{()\}|}
+  
+
+  
+    
+      
+        
+          F
+          
+            2
+          
+        
+        =
+        1
+        =
+        
+          |
+        
+        {
+        (
+        1
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{2}=1=|\{(1)\}|}
+  
+
+  
+    
+      
+        
+          F
+          
+            3
+          
+        
+        =
+        2
+        =
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        1
+        )
+        ,
+        (
+        2
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{3}=2=|\{(1,1),(2)\}|}
+  
+
+  
+    
+      
+        
+          F
+          
+            4
+          
+        
+        =
+        3
+        =
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        1
+        ,
+        1
+        )
+        ,
+        (
+        1
+        ,
+        2
+        )
+        ,
+        (
+        2
+        ,
+        1
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{4}=3=|\{(1,1,1),(1,2),(2,1)\}|}
+  
+
+  
+    
+      
+        
+          F
+          
+            5
+          
+        
+        =
+        5
+        =
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        1
+        ,
+        1
+        ,
+        1
+        )
+        ,
+        (
+        1
+        ,
+        1
+        ,
+        2
+        )
+        ,
+        (
+        1
+        ,
+        2
+        ,
+        1
+        )
+        ,
+        (
+        2
+        ,
+        1
+        ,
+        1
+        )
+        ,
+        (
+        2
+        ,
+        2
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{5}=5=|\{(1,1,1,1),(1,1,2),(1,2,1),(2,1,1),(2,2)\}|}
+  
+
+In this manner the recurrence relation
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        +
+        
+          F
+          
+            n
+            −
+            2
+          
+        
+      
+    
+    {\displaystyle F_{n}=F_{n-1}+F_{n-2}}
+  
+
+may be understood by dividing the 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+      
+    
+    {\displaystyle F_{n}}
+  
+ sequences into two non-overlapping sets where all sequences either begin with 1 or 2:
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        .
+        .
+        .
+        )
+        ,
+        (
+        1
+        ,
+        .
+        .
+        .
+        )
+        ,
+        .
+        .
+        .
+        }
+        
+          |
+        
+        +
+        
+          |
+        
+        {
+        (
+        2
+        ,
+        .
+        .
+        .
+        )
+        ,
+        (
+        2
+        ,
+        .
+        .
+        .
+        )
+        ,
+        .
+        .
+        .
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{n}=|\{(1,...),(1,...),...\}|+|\{(2,...),(2,...),...\}|}
+  
+
+Excluding the first element, the remaining terms in each sequence sum to 
+  
+    
+      
+        n
+        −
+        2
+      
+    
+    {\displaystyle n-2}
+  
+ or 
+  
+    
+      
+        n
+        −
+        3
+      
+    
+    {\displaystyle n-3}
+  
+ and the cardinality of each set is 
+  
+    
+      
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n-1}}
+  
+ or 
+  
+    
+      
+        
+          F
+          
+            n
+            −
+            2
+          
+        
+      
+    
+    {\displaystyle F_{n-2}}
+  
+ giving a total of 
+  
+    
+      
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        +
+        
+          F
+          
+            n
+            −
+            2
+          
+        
+      
+    
+    {\displaystyle F_{n-1}+F_{n-2}}
+  
+ sequences, showing this is equal to 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+      
+    
+    {\displaystyle F_{n}}
+  
+.
+In a similar manner it may be shown that the sum of the first Fibonacci numbers up to the n-th is equal to the (n + 2)-th Fibonacci number minus 1.   In symbols:
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        1
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}=F_{n+2}-1}
+  
+
+This may be seen by dividing all sequences summing to 
+  
+    
+      
+        n
+        +
+        1
+      
+    
+    {\displaystyle n+1}
+  
+ based on the location of the first 2. Specifically, each set consists of those sequences that start 
+  
+    
+      
+        (
+        2
+        ,
+        .
+        .
+        .
+        )
+        ,
+        (
+        1
+        ,
+        2
+        ,
+        .
+        .
+        .
+        )
+        ,
+        .
+        .
+        .
+        ,
+      
+    
+    {\displaystyle (2,...),(1,2,...),...,}
+  
+ until the last two sets 
+  
+    
+      
+        {
+        (
+        1
+        ,
+        1
+        ,
+        .
+        .
+        .
+        ,
+        1
+        ,
+        2
+        )
+        }
+        ,
+        {
+        (
+        1
+        ,
+        1
+        ,
+        .
+        .
+        .
+        ,
+        1
+        )
+        }
+      
+    
+    {\displaystyle \{(1,1,...,1,2)\},\{(1,1,...,1)\}}
+  
+ each with cardinality 1.
+Following the same logic as before, by summing the cardinality of each set we see that
+
+  
+    
+      
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        +
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        +
+        .
+        .
+        .
+        +
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        1
+        ,
+        .
+        .
+        .
+        ,
+        1
+        ,
+        2
+        )
+        }
+        
+          |
+        
+        +
+        
+          |
+        
+        {
+        (
+        1
+        ,
+        1
+        ,
+        .
+        .
+        .
+        ,
+        1
+        )
+        }
+        
+          |
+        
+      
+    
+    {\displaystyle F_{n+2}=F_{n}+F_{n-1}+...+|\{(1,1,...,1,2)\}|+|\{(1,1,...,1)\}|}
+  
+
+... where the last two terms have the value 
+  
+    
+      
+        
+          F
+          
+            1
+          
+        
+        =
+        1
+      
+    
+    {\displaystyle F_{1}=1}
+  
+. From this it follows that 
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        1
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}=F_{n+2}-1}
+  
+.
+A similar argument, grouping the sums by the position of the first 1 rather than the first 2 gives two more identities:
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            0
+          
+          
+            n
+            −
+            1
+          
+        
+        
+          F
+          
+            2
+            i
+            +
+            1
+          
+        
+        =
+        
+          F
+          
+            2
+            n
+          
+        
+      
+    
+    {\displaystyle \sum _{i=0}^{n-1}F_{2i+1}=F_{2n}}
+  
+
+and
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            2
+            i
+          
+        
+        =
+        
+          F
+          
+            2
+            n
+            +
+            1
+          
+        
+        −
+        1.
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{2i}=F_{2n+1}-1.}
+  
+
+In words, the sum of the first Fibonacci numbers with odd index up to 
+  
+    
+      
+        
+          F
+          
+            2
+            n
+            −
+            1
+          
+        
+      
+    
+    {\displaystyle F_{2n-1}}
+  
+ is the (2n)-th Fibonacci number, and the sum of the first Fibonacci numbers with even index up to 
+  
+    
+      
+        
+          F
+          
+            2
+            n
+          
+        
+      
+    
+    {\displaystyle F_{2n}}
+  
+ is the (2n + 1)-th Fibonacci number minus 1.
+A different trick may be used to prove
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+          
+            2
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}^{2}=F_{n}F_{n+1}}
+  
+
+or in words, the sum of the squares of the first Fibonacci numbers up to 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+      
+    
+    {\displaystyle F_{n}}
+  
+ is the product of the n-th and (n + 1)-th Fibonacci numbers. To see this, begin with a Fibonacci rectangle of size 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        ×
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n}\times F_{n+1}}
+  
+ and decompose it into squares of size 
+  
+    
+      
+        
+          F
+          
+            n
+          
+        
+        ,
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        ,
+        .
+        .
+        .
+        ,
+        
+          F
+          
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n},F_{n-1},...,F_{1}}
+  
+; from this the identity follows by comparing areas:
+
+
+=== Induction proofs ===
+Fibonacci identities often can be easily proved using mathematical induction.
+For example, reconsider
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        1.
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}=F_{n+2}-1.}
+  
+
+Adding 
+  
+    
+      
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n+1}}
+  
+ to both sides gives
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+        
+        +
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        +
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        1
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}+F_{n+1}=F_{n+1}+F_{n+2}-1}
+  
+
+and so we have the formula for 
+  
+    
+      
+        n
+        +
+        1
+      
+    
+    {\displaystyle n+1}
+  
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            i
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            3
+          
+        
+        −
+        1
+      
+    
+    {\displaystyle \sum _{i=1}^{n+1}F_{i}=F_{n+3}-1}
+  
+
+Similarly, add 
+  
+    
+      
+        
+          
+            
+              F
+              
+                n
+                +
+                1
+              
+            
+          
+          
+            2
+          
+        
+      
+    
+    {\displaystyle {F_{n+1}}^{2}}
+  
+ to both sides of
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+          
+            2
+          
+        
+        =
+        
+          F
+          
+            n
+          
+        
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}^{2}=F_{n}F_{n+1}}
+  
+
+to give
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+          
+            2
+          
+        
+        +
+        
+          
+            
+              F
+              
+                n
+                +
+                1
+              
+            
+          
+          
+            2
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        
+          (
+          
+            
+              F
+              
+                n
+              
+            
+            +
+            
+              F
+              
+                n
+                +
+                1
+              
+            
+          
+          )
+        
+      
+    
+    {\displaystyle \sum _{i=1}^{n}F_{i}^{2}+{F_{n+1}}^{2}=F_{n+1}\left(F_{n}+F_{n+1}\right)}
+  
+
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            i
+          
+          
+            2
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+      
+    
+    {\displaystyle \sum _{i=1}^{n+1}F_{i}^{2}=F_{n+1}F_{n+2}}
+  
+
+
+=== Binet formula proofs ===
+The Binet formula is
+
+  
+    
+      
+        
+          
+            5
+          
+        
+        
+          F
+          
+            n
+          
+        
+        =
+        
+          φ
+          
+            n
+          
+        
+        −
+        
+          ψ
+          
+            n
+          
+        
+        .
+      
+    
+    {\displaystyle {\sqrt {5}}F_{n}=\varphi ^{n}-\psi ^{n}.}
+  
+
+This can be used to prove Fibonacci identities.
+For example, to prove that 
+  
+    
+      
+        
+          ∑
+          
+            i
+            =
+            1
+          
+          
+            n
+          
+        
+        
+          F
+          
+            i
+          
+        
+        =
+        
+          F
+          
+            n
+            +
+            2
+          
+        
+        −
+        1
+      
+    
+    {\textstyle \sum _{i=1}^{n}F_{i}=F_{n+2}-1}
+  
+
+note that the left hand side multiplied by 
+  
+    
+      
+        
+          
+            5
+          
+        
+      
+    
+    {\displaystyle {\sqrt {5}}}
+  
+ becomes
+
+  
+    
+      
+        
+          
+            
+              
+                1
+                +
+              
+              
+                φ
+                +
+                
+                  φ
+                  
+                    2
+                  
+                
+                +
+                ⋯
+                +
+                
+                  φ
+                  
+                    n
+                  
+                
+                −
+                
+                  (
+                  
+                    1
+                    +
+                    ψ
+                    +
+                    
+                      ψ
+                      
+                        2
+                      
+                    
+                    +
+                    ⋯
+                    +
+                    
+                      ψ
+                      
+                        n
+                      
+                    
+                  
+                  )
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    
+                      
+                        φ
+                        
+                          n
+                          +
+                          1
+                        
+                      
+                      −
+                      1
+                    
+                    
+                      φ
+                      −
+                      1
+                    
+                  
+                
+                −
+                
+                  
+                    
+                      
+                        ψ
+                        
+                          n
+                          +
+                          1
+                        
+                      
+                      −
+                      1
+                    
+                    
+                      ψ
+                      −
+                      1
+                    
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    
+                      
+                        φ
+                        
+                          n
+                          +
+                          1
+                        
+                      
+                      −
+                      1
+                    
+                    
+                      −
+                      ψ
+                    
+                  
+                
+                −
+                
+                  
+                    
+                      
+                        ψ
+                        
+                          n
+                          +
+                          1
+                        
+                      
+                      −
+                      1
+                    
+                    
+                      −
+                      φ
+                    
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    
+                      −
+                      
+                        φ
+                        
+                          n
+                          +
+                          2
+                        
+                      
+                      +
+                      φ
+                      +
+                      
+                        ψ
+                        
+                          n
+                          +
+                          2
+                        
+                      
+                      −
+                      ψ
+                    
+                    
+                      φ
+                      ψ
+                    
+                  
+                
+              
+            
+            
+              
+              
+                
+                =
+                
+                  φ
+                  
+                    n
+                    +
+                    2
+                  
+                
+                −
+                
+                  ψ
+                  
+                    n
+                    +
+                    2
+                  
+                
+                −
+                (
+                φ
+                −
+                ψ
+                )
+              
+            
+            
+              
+              
+                
+                =
+                
+                  
+                    5
+                  
+                
+                (
+                
+                  F
+                  
+                    n
+                    +
+                    2
+                  
+                
+                −
+                1
+                )
+              
+            
+          
+        
+      
+    
+    {\displaystyle {\begin{aligned}1+&\varphi +\varphi ^{2}+\dots +\varphi ^{n}-\left(1+\psi +\psi ^{2}+\dots +\psi ^{n}\right)\\&={\frac {\varphi ^{n+1}-1}{\varphi -1}}-{\frac {\psi ^{n+1}-1}{\psi -1}}\\&={\frac {\varphi ^{n+1}-1}{-\psi }}-{\frac {\psi ^{n+1}-1}{-\varphi }}\\&={\frac {-\varphi ^{n+2}+\varphi +\psi ^{n+2}-\psi }{\varphi \psi }}\\&=\varphi ^{n+2}-\psi ^{n+2}-(\varphi -\psi )\\&={\sqrt {5}}(F_{n+2}-1)\\\end{aligned}}}
+  
+
+as required, using the facts 
+  
+    
+      
+        φ
+        ψ
+        =
+        −
+        1
+      
+    
+    {\textstyle \varphi \psi =-1}
+  
+ and 
+  
+    
+      
+        φ
+        −
+        ψ
+        =
+        
+          
+            5
+          
+        
+      
+    
+    {\textstyle \varphi -\psi ={\sqrt {5}}}
+  
+ to simplify the equations.
+
+
+== Other identities ==
+Numerous other identities can be derived using various methods. Here are some of them:
+
+
+=== Cassini's and Catalan's identities ===
+
+Cassini's identity states that
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+          
+            2
+          
+        
+        −
+        
+          F
+          
+            n
+            +
+            1
+          
+        
+        
+          F
+          
+            n
+            −
+            1
+          
+        
+        =
+        (
+        −
+        1
+        
+          )
+          
+            n
+            −
+            1
+          
+        
+      
+    
+    {\displaystyle F_{n}^{2}-F_{n+1}F_{n-1}=(-1)^{n-1}}
+  
+
+Catalan's identity is a generalization:
+
+  
+    
+      
+        
+          F
+          
+            n
+          
+          
+            2
+          
+        
+        −
+        
+          F
+          
+            n

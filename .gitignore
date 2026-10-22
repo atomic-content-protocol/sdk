@@ -5,6 +5,8 @@ dist/
 .env
 .env.local
 .acp/
+!examples/daytona/corpus/vault/.acp/
+!examples/daytona/corpus/vault/.acp/**
 .DS_Store
 coverage/
 demo-vault/

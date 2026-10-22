@@ -1,0 +1,728 @@
+{
+  "version": 1,
+  "entries": {
+    "01a1649f-7475-7789-92be-f792f3925e59": {
+      "title": "Alan Turing",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:54.069Z",
+      "tags": [
+        "1912-births",
+        "1954-deaths",
+        "1954-suicides",
+        "20th-century-british-statisticians",
+        "20th-century-english-lgbtq-people",
+        "20th-century-english-mathematicians",
+        "20th-century-english-philosophers"
+      ],
+      "status": "final"
+    },
+    "01a1649f-760b-7484-8263-936320ee2b50": {
+      "title": "Ada Lovelace",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:54.475Z",
+      "tags": [
+        "1815-births",
+        "1852-deaths",
+        "19th-century-british-women-mathematicians",
+        "19th-century-english-inventors",
+        "19th-century-english-mathematicians",
+        "19th-century-english-nobility",
+        "19th-century-english-women-poets"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7750-7342-bcf0-4aeb2b3e274e": {
+      "title": "Grace Hopper",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:54.800Z",
+      "tags": [
+        "1906-births",
+        "1992-deaths",
+        "20th-century-american-engineers",
+        "20th-century-american-inventors",
+        "20th-century-american-mathematicians",
+        "20th-century-american-naval-officers",
+        "20th-century-american-women-mathematicians"
+      ],
+      "status": "final"
+    },
+    "01a1649f-78e8-73fc-a37a-3474d6809983": {
+      "title": "Margaret Hamilton (software engineer)",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:55.208Z",
+      "tags": [
+        "1936-births",
+        "2026-deaths",
+        "20th-century-american-women-academics",
+        "20th-century-american-women-scientists",
+        "21st-century-american-women-academics",
+        "21st-century-american-women-scientists",
+        "american-computer-programmers"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7a20-73da-9ace-5fcd99e001f7": {
+      "title": "Tim Berners-Lee",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:55.520Z",
+      "tags": [
+        "1955-births",
+        "academics-of-the-university-of-southampton",
+        "alumni-of-the-queen-s-college-oxford",
+        "british-fellows-of-the-royal-society",
+        "english-atheists",
+        "english-computer-scientists",
+        "english-expatriates-in-the-united-states"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7beb-7646-807a-cd75d7efbbe7": {
+      "title": "Linus Torvalds",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:55.979Z",
+      "tags": [
+        "1969-births",
+        "academic-staff-of-the-university-of-helsinki",
+        "american-agnostics",
+        "american-atheists",
+        "american-bloggers",
+        "american-computer-programmers",
+        "american-male-bloggers"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7d35-74d6-972d-39eac1aea665": {
+      "title": "Python (programming language)",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:56.309Z",
+      "tags": [
+        "class-based-programming-languages",
+        "computer-science-in-the-netherlands",
+        "concurrent-programming-languages",
+        "cross-platform-free-software",
+        "cross-platform-software",
+        "dutch-inventions",
+        "dynamically-typed-programming-languages"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7e6e-76b1-8c8b-0932f941e809": {
+      "title": "Rust (programming language)",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:56.622Z",
+      "tags": [
+        "compiled-programming-languages",
+        "concurrent-programming-languages",
+        "free-and-open-source-compilers",
+        "free-software-projects",
+        "functional-languages",
+        "mozilla",
+        "multi-paradigm-programming-languages"
+      ],
+      "status": "final"
+    },
+    "01a1649f-7fa9-743e-b04c-0a65a546d5ee": {
+      "title": "PostgreSQL",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:56.937Z",
+      "tags": [
+        "1996-software",
+        "client-server-database-management-systems",
+        "cross-platform-software",
+        "free-database-management-systems",
+        "free-software-programmed-in-c",
+        "ordbms-software-for-linux",
+        "postgresql"
+      ],
+      "status": "final"
+    },
+    "01a1649f-80cb-775f-b9c1-77ef01bfe5d0": {
+      "title": "Kubernetes",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:57.227Z",
+      "tags": [
+        "2014-software",
+        "cloud-infrastructure",
+        "containerization-software",
+        "free-software-for-cloud-computing",
+        "free-software-programmed-in-go",
+        "linux-foundation-projects",
+        "linux-containerization"
+      ],
+      "status": "final"
+    },
+    "01a1649f-81f3-730b-86b0-57c9aef512b2": {
+      "title": "Transmission Control Protocol",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:57.523Z",
+      "tags": [
+        "computer-related-introductions-in-1974",
+        "transmission-control-protocol",
+        "transport-layer-protocols"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8338-7149-a659-ced8bddc8715": {
+      "title": "Quicksort",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:57.848Z",
+      "tags": [
+        "1961-in-computing",
+        "comparison-sorts",
+        "divide-and-conquer-algorithms",
+        "tony-hoare"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8467-748e-9aa3-9918214315b0": {
+      "title": "Turing machine",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:58.151Z",
+      "tags": [
+        "1936-in-computing",
+        "1937-in-computing",
+        "abstract-machines",
+        "alan-turing",
+        "automata-computation",
+        "computability-theory",
+        "educational-abstract-machines"
+      ],
+      "status": "final"
+    },
+    "01a1649f-858b-75ad-9a6c-34e467fc1479": {
+      "title": "Public-key cryptography",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:58.443Z",
+      "tags": [
+        "anonymity-networks",
+        "banking-technology",
+        "cryptographic-protocols",
+        "cryptographic-software",
+        "network-architecture",
+        "public-key-cryptography",
+        "public-key-infrastructure"
+      ],
+      "status": "final"
+    },
+    "01a1649f-86d3-77ea-98a4-c30838866109": {
+      "title": "RSA cryptosystem",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:58.771Z",
+      "tags": [
+        "broken-cryptographic-algorithms",
+        "digital-signature-schemes",
+        "public-key-encryption-schemes"
+      ],
+      "status": "final"
+    },
+    "01a1649f-880a-756c-9d80-571312269b82": {
+      "title": "Voyager 1",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:59.082Z",
+      "tags": [
+        "1977-in-spaceflight",
+        "1977-in-the-united-states",
+        "1977-robots",
+        "individual-spacecraft",
+        "jet-propulsion-laboratory-space-probes",
+        "missions-to-europa-moon",
+        "missions-to-jupiter"
+      ],
+      "status": "final"
+    },
+    "01a1649f-895b-77f2-bceb-9b00c940cd41": {
+      "title": "Apollo 11",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:59.419Z",
+      "tags": [
+        "1969-on-the-moon",
+        "apollo-11",
+        "buzz-aldrin",
+        "crewed-apollo-missions",
+        "lq12-quadrangle",
+        "michael-collins-astronaut",
+        "nasa-crewed-missions-to-the-moon"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8ad4-7049-a3a9-97bfda2c4309": {
+      "title": "Hubble Space Telescope",
+      "source_type": "link",
+      "created": "2026-10-22T17:18:59.796Z",
+      "tags": [
+        "edwin-hubble",
+        "european-space-agency-satellites",
+        "great-observatories-program",
+        "hubble-space-telescope",
+        "infrared-telescopes",
+        "lockheed-martin-spacecraft",
+        "nasa-space-telescopes"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8c48-73e8-b94b-5da24532ebff": {
+      "title": "James Webb Space Telescope",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:00.168Z",
+      "tags": [
+        "2021-in-french-guiana",
+        "2021-in-science",
+        "artificial-satellites-at-earth-sun-lagrange-points",
+        "european-space-agency-space-telescopes",
+        "exoplanet-search-projects",
+        "goddard-space-flight-center",
+        "infrared-telescopes"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8e24-7329-92d6-d9fae0e869ef": {
+      "title": "Perseverance (rover)",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:00.644Z",
+      "tags": [
+        "2020-in-florida",
+        "2020-robots",
+        "2021-on-mars",
+        "individual-space-vehicles",
+        "jet-propulsion-laboratory-space-probes",
+        "july-2020-in-the-united-states",
+        "mars-2020"
+      ],
+      "status": "final"
+    },
+    "01a1649f-8f53-70a9-b7f8-9cef1d9ccfc2": {
+      "title": "Photosynthesis",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:00.947Z",
+      "tags": [
+        "agronomy",
+        "biological-processes",
+        "botany",
+        "cellular-respiration",
+        "ecosystems",
+        "metabolism",
+        "photosynthesis"
+      ],
+      "status": "final"
+    },
+    "01a1649f-908f-7576-8ed6-2e8c1c43f7ed": {
+      "title": "CRISPR",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:01.263Z",
+      "tags": [
+        "1987-in-biotechnology",
+        "2015-in-biotechnology",
+        "biological-engineering",
+        "biotechnology",
+        "genetic-engineering",
+        "genome-editing",
+        "immune-system"
+      ],
+      "status": "final"
+    },
+    "01a1649f-91c3-7227-b57b-e2320fa17e06": {
+      "title": "Penicillin",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:01.571Z",
+      "tags": [
+        "1928-in-biology",
+        "drugs-developed-by-eli-lilly-and-company",
+        "drugs-developed-by-pfizer",
+        "gabaa-receptor-negative-allosteric-modulators",
+        "hepatotoxins",
+        "penicillins",
+        "penicillium"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9312-7586-a65f-551f821b52c2": {
+      "title": "Insulin",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:01.906Z",
+      "tags": [
+        "animal-products",
+        "autophagosomes",
+        "genes-on-human-chromosome-11",
+        "hormones-of-glucose-metabolism",
+        "human-hormones",
+        "insulin",
+        "insulin-like-growth-factor-receptor-agonists"
+      ],
+      "status": "final"
+    },
+    "01a1649f-945b-73e0-beeb-a2c9f26c75af": {
+      "title": "Mitochondria",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:02.235Z",
+      "tags": [
+        "cell-biology",
+        "cellular-respiration",
+        "endosymbiotic-events",
+        "mitochondrial-outer-membrane",
+        "organelles"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9592-753c-8a94-8c52eb8985df": {
+      "title": "Plate tectonics",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:02.546Z",
+      "tags": [
+        "geodynamics",
+        "geology-theories",
+        "lithosphere",
+        "plate-tectonics",
+        "seismology"
+      ],
+      "status": "final"
+    },
+    "01a1649f-970f-73fd-86d5-71a46689e739": {
+      "title": "Mount Everest",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:02.927Z",
+      "tags": [
+        "china-nepal-border",
+        "eight-thousanders-of-the-himalayas",
+        "extreme-points-of-asia",
+        "first-100-iugs-geological-heritage-sites",
+        "highest-points-of-chinese-provinces",
+        "highest-points-of-countries",
+        "international-mountains-of-asia"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9857-732a-8a98-07da72016a4a": {
+      "title": "Mariana Trench",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:03.255Z",
+      "tags": [
+        "extreme-points-of-earth",
+        "lowest-points-of-the-world-ocean",
+        "oceanic-trenches-of-the-pacific-ocean",
+        "philippine-sea",
+        "subduction-zones"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9994-73cb-be24-9278c0919052": {
+      "title": "Amazon River",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:03.572Z",
+      "tags": [
+        "amazon-river",
+        "amazon-basin",
+        "amazon-rainforest",
+        "colombia-peru-border",
+        "international-rivers-of-south-america",
+        "rivers-of-amap",
+        "rivers-of-amazonas-brazilian-state"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9ada-7727-95f3-a63fbb581089": {
+      "title": "Sahara",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:03.898Z",
+      "tags": [
+        "deserts-and-xeric-shrublands",
+        "deserts-of-africa",
+        "geography-of-north-africa",
+        "geography-of-the-arab-world",
+        "palearctic-realm",
+        "physiographic-provinces",
+        "sahara"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9c3e-73cf-af6c-3f6c01195478": {
+      "title": "Kyoto Protocol",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:04.254Z",
+      "tags": [
+        "1997-in-japan",
+        "2005-in-the-environment",
+        "carbon-dioxide",
+        "carbon-finance",
+        "december-1997-in-japan",
+        "environmental-treaties",
+        "history-of-kyoto"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9d9a-753b-b83d-cb24a425f009": {
+      "title": "Paris Agreement",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:04.602Z",
+      "tags": [
+        "2015-in-paris",
+        "2015-in-the-environment",
+        "december-2015-in-france",
+        "environmental-treaties",
+        "foreign-policy-of-the-obama-administration",
+        "human-rights-instruments",
+        "international-law"
+      ],
+      "status": "final"
+    },
+    "01a1649f-9ee7-7738-aeb0-74da25ee0361": {
+      "title": "Magna Carta",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:04.935Z",
+      "tags": [
+        "1210s-in-law",
+        "1215-in-england",
+        "1215-works",
+        "13th-century-manuscripts",
+        "barons-wars",
+        "civil-rights-and-liberties-in-the-united-kingdom",
+        "civil-rights-and-liberties-legislation"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a067-722a-a8b7-be2b94e7d7ad": {
+      "title": "Treaty of Waitangi",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:05.319Z",
+      "tags": [
+        "1840-in-new-zealand",
+        "1840-treaties",
+        "aboriginal-title-in-new-zealand",
+        "constitution-of-new-zealand",
+        "february-1840",
+        "government-of-new-zealand",
+        "history-of-the-bay-of-islands"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a1ba-741c-927b-5a1441a1daea": {
+      "title": "Printing press",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:05.658Z",
+      "tags": [
+        "1440-in-europe",
+        "1440s-in-the-holy-roman-empire",
+        "15th-century-introductions",
+        "15th-century-inventions",
+        "german-inventions",
+        "johannes-gutenberg",
+        "printing-devices"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a2d7-70e9-8a8e-0280858fc1e4": {
+      "title": "Rosetta Stone",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:05.943Z",
+      "tags": [
+        "1799-archaeological-discoveries",
+        "1799-in-egypt",
+        "196-bc",
+        "2nd-century-bc-steles",
+        "ancient-egyptian-language",
+        "ancient-egyptian-objects-in-the-british-museum",
+        "ancient-egyptian-stelas"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a432-757a-a97a-94e74431586b": {
+      "title": "Antikythera mechanism",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:06.290Z",
+      "tags": [
+        "1902-archaeological-discoveries",
+        "1902-in-greece",
+        "1st-century-bc-artifacts",
+        "2nd-century-bc-artifacts",
+        "3rd-century-bc-artifacts",
+        "analog-computers",
+        "ancient-greek-astronomy"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a56e-7119-b9b2-5cefe64ebf7c": {
+      "title": "Library of Alexandria",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:06.606Z",
+      "tags": [
+        "290s-disestablishments-in-the-roman-empire",
+        "3rd-century-bc-establishments-in-egypt",
+        "3rd-century-disestablishments-in-egypt",
+        "ancient-libraries",
+        "archaeological-sites-in-egypt",
+        "aurelian",
+        "buildings-and-structures-completed-in-the-3rd-century-bc"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a6b8-7468-97ea-d98f77ec310e": {
+      "title": "Silk Road",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:06.936Z",
+      "tags": [
+        "ancient-mesopotamia",
+        "ancient-history-of-afghanistan",
+        "ancient-history-of-transport",
+        "ancient-international-relations",
+        "ancient-roads-and-tracks",
+        "china-roman-empire-relations",
+        "economic-history-of-iran"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a7fd-7428-91ac-1082e8a43360": {
+      "title": "Fibonacci sequence",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:07.261Z",
+      "tags": [
+        "fibonacci-numbers",
+        "integer-sequences"
+      ],
+      "status": "final"
+    },
+    "01a1649f-a976-71a0-883d-26df375cf50f": {
+      "title": "Pi",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:07.638Z",
+      "tags": [
+        "complex-analysis",
+        "mathematical-constants",
+        "pi",
+        "real-transcendental-numbers",
+        "series-mathematics"
+      ],
+      "status": "final"
+    },
+    "01a1649f-aacd-7304-a395-7e03978972ca": {
+      "title": "Golden ratio",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:07.981Z",
+      "tags": [
+        "ancient-greek-mathematics",
+        "composition-in-visual-art",
+        "euclidean-plane-geometry",
+        "golden-ratio",
+        "mathematics-and-art",
+        "metaphors-referring-to-gemstones-and-metals",
+        "visual-arts-theory"
+      ],
+      "status": "final"
+    },
+    "01a1649f-ac32-7119-ab42-60abf79d6658": {
+      "title": "Chess",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:08.338Z",
+      "tags": [
+        "abstract-strategy-games",
+        "chess",
+        "games-related-to-chaturanga",
+        "individual-sports",
+        "mind-sports",
+        "partially-solved-games",
+        "sports-originating-in-india"
+      ],
+      "status": "final"
+    },
+    "01a1649f-ad77-703f-8790-45ae850ef3f7": {
+      "title": "Go (game)",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:08.663Z",
+      "tags": [
+        "abstract-strategy-games",
+        "board-games",
+        "chinese-ancient-games",
+        "chinese-games",
+        "go-game",
+        "individual-sports",
+        "japanese-games"
+      ],
+      "status": "final"
+    },
+    "01a1649f-aed7-74ec-b230-1c50e79b59f9": {
+      "title": "Olympic Games",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:09.015Z",
+      "tags": [
+        "athletic-culture-based-on-greek-antiquity",
+        "french-inventions",
+        "international-olympic-committee-competitions",
+        "multi-sport-events",
+        "olympic-games",
+        "recurring-sporting-events-established-in-1896"
+      ],
+      "status": "final"
+    },
+    "01a1649f-b002-750f-bef4-f634ca0481f3": {
+      "title": "Bauhaus",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:09.314Z",
+      "tags": [
+        "1919-establishments-in-germany",
+        "1933-disestablishments-in-germany",
+        "architecture-in-germany",
+        "architecture-schools",
+        "art-movements",
+        "bauhaus",
+        "design-schools-in-germany"
+      ],
+      "status": "final"
+    },
+    "01a1649f-b136-7028-99d1-08046850d648": {
+      "title": "Haiku",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:09.622Z",
+      "tags": [
+        "haiku",
+        "japanese-literary-terminology",
+        "japanese-poetry",
+        "poetic-forms",
+        "stanzaic-form"
+      ],
+      "status": "final"
+    },
+    "01a1649f-b270-7427-894d-f65edc6e075f": {
+      "title": "Jazz",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:09.936Z",
+      "tags": [
+        "african-american-cultural-history",
+        "african-american-music",
+        "american-styles-of-music",
+        "jazz",
+        "jazz-terminology",
+        "musical-improvisation",
+        "popular-music"
+      ],
+      "status": "final"
+    },
+    "01a1649f-b390-76c8-8a7b-93f6974640cc": {
+      "title": "Sourdough",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:10.224Z",
+      "tags": [
+        "california-gold-rush",
+        "cuisine-of-california",
+        "cuisine-of-the-southwestern-united-states",
+        "doughs",
+        "fermented-foods",
+        "sourdough-breads"
+      ],
+      "status": "final"
+    },
+    "01a1649f-b4ed-7368-93e8-edf0a79774ec": {
+      "title": "Periodic table",
+      "source_type": "link",
+      "created": "2026-10-22T17:19:10.573Z",
+      "tags": [
+        "1869-works",
+        "chemical-elements",
+        "dmitri-mendeleev",
+        "infographics",
+        "periodic-table",
+        "science-education-materials",
+        "tables-information"
+      ],
+      "status": "final"
+    }
+  },
+  "updated_at": "2026-10-22T17:19:10.590Z"
+}

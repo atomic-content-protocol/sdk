@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="78" y="28" font-size="16" font-family="sans-serif" fill="#111827">Context tokens by fork count</text>
+  <text x="648" y="28" text-anchor="end" font-size="12" font-family="sans-serif" fill="#b45309">Baseline</text>
+  <text x="696" y="28" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">ACP</text>
+  <line x1="78" y1="366.0" x2="696" y2="366.0" stroke="#e5e7eb" />
+  <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0.00M</text>
+  <line x1="78" y1="286.0" x2="696" y2="286.0" stroke="#e5e7eb" />
+  <text x="70" y="290.0" text-anchor="end" font-size="12" fill="#374151">14.07M</text>
+  <line x1="78" y1="206.0" x2="696" y2="206.0" stroke="#e5e7eb" />
+  <text x="70" y="210.0" text-anchor="end" font-size="12" fill="#374151">28.13M</text>
+  <line x1="78" y1="126.0" x2="696" y2="126.0" stroke="#e5e7eb" />
+  <text x="70" y="130.0" text-anchor="end" font-size="12" fill="#374151">42.20M</text>
+  <line x1="78" y1="46.0" x2="696" y2="46.0" stroke="#e5e7eb" />
+  <text x="70" y="50.0" text-anchor="end" font-size="12" fill="#374151">56.26M</text>
+  <polyline fill="none" stroke="#b45309" stroke-width="2" points="84.2,362.8 139.8,334.0 387.0,206.0 696.0,46.0"/>
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,365.5 139.8,361.6 387.0,342.9 696.0,319.3"/>
+  <circle cx="84.2" cy="362.8" r="4" fill="#b45309" />
+  <circle cx="139.8" cy="334.0" r="4" fill="#b45309" />
+  <circle cx="387.0" cy="206.0" r="4" fill="#b45309" />
+  <circle cx="696.0" cy="46.0" r="4" fill="#b45309" />
+  <circle cx="84.2" cy="365.5" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="361.6" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="342.9" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="319.3" r="4" fill="#0f766e" />
+  <text x="84.2" y="402" text-anchor="middle" font-size="12" fill="#374151">1</text>
+  <text x="139.8" y="402" text-anchor="middle" font-size="12" fill="#374151">10</text>
+  <text x="387.0" y="402" text-anchor="middle" font-size="12" fill="#374151">50</text>
+  <text x="696.0" y="402" text-anchor="middle" font-size="12" fill="#374151">100</text>
+  <text x="387" y="418" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#374151">Forks (N)</text>
+</svg>

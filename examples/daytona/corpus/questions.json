@@ -1,0 +1,122 @@
+[
+  {
+    "id": "q01",
+    "question": "Which mathematician helped the Allies decipher messages encrypted by the German Enigma machine?",
+    "expected_answer": "German Enigma machine",
+    "gold_slugs": ["alan-turing"]
+  },
+  {
+    "id": "q02",
+    "question": "Who recognised that Charles Babbage's analytical engine had applications beyond pure calculation?",
+    "expected_answer": "analytical engine",
+    "gold_slugs": ["ada-lovelace"]
+  },
+  {
+    "id": "q03",
+    "question": "Which computer scientist was a United States Navy rear admiral?",
+    "expected_answer": "United States Navy rear admiral",
+    "gold_slugs": ["grace-hopper"]
+  },
+  {
+    "id": "q04",
+    "question": "Who led development of the on-board flight software for the Apollo Guidance Computer?",
+    "expected_answer": "Apollo Guidance Computer",
+    "gold_slugs": ["margaret-hamilton"]
+  },
+  {
+    "id": "q05",
+    "question": "Who is described as the inventor of the World Wide Web?",
+    "expected_answer": "inventor of the World Wide Web",
+    "gold_slugs": ["tim-berners-lee"]
+  },
+  {
+    "id": "q06",
+    "question": "Who created the distributed version control system Git?",
+    "expected_answer": "distributed version control system Git",
+    "gold_slugs": ["linus-torvalds"]
+  },
+  {
+    "id": "q07",
+    "question": "Which programming language emphasizes readability through significant indentation?",
+    "expected_answer": "significant indentation",
+    "gold_slugs": ["python"]
+  },
+  {
+    "id": "q08",
+    "question": "Which programming language emphasizes performance, type safety, concurrency, and memory safety?",
+    "expected_answer": "performance, type safety, concurrency, and memory safety",
+    "gold_slugs": ["rust"]
+  },
+  {
+    "id": "q09",
+    "question": "Which relational database is described as featuring materialized views and stored procedures?",
+    "expected_answer": "materialized views",
+    "gold_slugs": ["postgresql"]
+  },
+  {
+    "id": "q10",
+    "question": "Which container orchestration system has its trademark held by the Cloud Native Computing Foundation?",
+    "expected_answer": "Cloud Native Computing Foundation",
+    "gold_slugs": ["kubernetes"]
+  },
+  {
+    "id": "q11",
+    "question": "Which protocol provides reliable, ordered, and error-checked delivery of a stream of octets?",
+    "expected_answer": "error-checked delivery of a stream of octets",
+    "gold_slugs": ["tcp"]
+  },
+  {
+    "id": "q12",
+    "question": "Which sorting algorithm was developed by British computer scientist Tony Hoare in 1959?",
+    "expected_answer": "Tony Hoare in 1959",
+    "gold_slugs": ["quicksort"]
+  },
+  {
+    "id": "q13",
+    "question": "What mathematical model manipulates symbols on a strip of tape according to a table of rules?",
+    "expected_answer": "strip of tape",
+    "gold_slugs": ["turing-machine"]
+  },
+  {
+    "id": "q14",
+    "question": "What field of cryptographic systems uses pairs of related keys, one public and one private?",
+    "expected_answer": "pairs of related keys",
+    "gold_slugs": ["public-key-cryptography"]
+  },
+  {
+    "id": "q15",
+    "question": "In what year did Rivest, Shamir, and Adleman publicly describe their public-key algorithm?",
+    "expected_answer": "publicly described the algorithm in 1977",
+    "gold_slugs": ["rsa"]
+  },
+  {
+    "id": "q16",
+    "question": "Which NASA space probe was launched on September 5, 1977?",
+    "expected_answer": "September 5, 1977",
+    "gold_slugs": ["voyager-1"]
+  },
+  {
+    "id": "q17",
+    "question": "Which NASA mission first landed humans on the Moon?",
+    "expected_answer": "first landed humans on the Moon",
+    "gold_slugs": ["apollo-11"]
+  },
+  {
+    "id": "q18",
+    "question": "Which space telescope was launched into low Earth orbit in 1990?",
+    "expected_answer": "low Earth orbit in 1990",
+    "gold_slugs": ["hubble"]
+  },
+  {
+    "id": "q19",
+    "question": "Which space telescope is designed to conduct infrared astronomy?",
+    "expected_answer": "conduct infrared astronomy",
+    "gold_slugs": ["james-webb"]
+  },
+  {
+    "id": "q20",
+    "question": "Which NASA rover landed in Jezero Crater?",
+    "expected_answer": "Jezero Crater",
+    "gold_slugs": ["perseverance"]
+  }
+]

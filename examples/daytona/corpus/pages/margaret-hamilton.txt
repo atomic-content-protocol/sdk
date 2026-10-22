@@ -1,0 +1,117 @@
+Margaret Elaine Hamilton (née Heafield; August 17, 1936 – September 30, 2026) was an American computer scientist. She directed the Software Engineering Division at the MIT Instrumentation Laboratory, where she led the development of the on-board flight software for NASA's Apollo Guidance Computer for the Apollo program. She later founded the software companies Higher Order Software in 1976 and Hamilton Technologies in 1986 — both in Cambridge, Massachusetts.
+Hamilton published more than 130 papers, proceedings, and reports, about sixty projects, and six major programs. She coined the term software engineering, stating, "I began to use the term 'software engineering' to distinguish it from hardware and other kinds of engineering, yet treat each type of engineering as part of the overall systems engineering process."
+On November 22, 2016, Hamilton received the Presidential Medal of Freedom from President Barack Obama for her work leading to the development of on-board flight software for NASA's Apollo moon missions.
+
+
+== Early life and education ==
+Margaret Heafield was born on August 17, 1936, in Paoli, Indiana, to Kenneth Heafield and Ruth Esther Heafield (née Partington). The family later moved to the Upper Peninsula of Michigan, and Margaret graduated from Hancock High School in 1954.
+She studied mathematics at the University of Michigan in 1955 before transferring to Earlham College in Indiana, where her mother had been a student. She earned a Bachelor of Arts (BA) degree in mathematics with a minor in philosophy in 1958. She cited Florence Long, the head of the math department at Earlham, as helping with her desire to pursue abstract mathematics and become a mathematics professor. She said her poet father and headmaster grandfather inspired her to include a minor in philosophy in her studies.
+
+
+== Career ==
+In Boston, Hamilton initially intended to enroll in graduate study in abstract mathematics at Brandeis University. However, in mid-1959, Hamilton began working for Edward Norton Lorenz, in the meteorology department at Massachusetts Institute of Technology (MIT). She developed software for predicting weather, programming on the LGP-30 and the PDP-1 computers at Marvin Minsky's Project MAC. Her work contributed to Lorenz's future publications on chaos theory, as acknowledged by Lorenz himself. At the time, computer science and software engineering were not yet established disciplines; instead, programmers learned on the job with hands-on experience. She moved on to another project in the summer of 1961, and hired and trained Ellen Fetter as her replacement.
+
+
+=== SAGE Project ===
+From 1961 to 1963, Hamilton worked on the Semi-Automatic Ground Environment (SAGE) Project at the MIT Lincoln Lab, where she was one of the programmers who wrote software for the prototype AN/FSQ-7 computer (the XD-1), used by the U.S. Air Force to search for possibly unfriendly aircraft. She also wrote software for a satellite tracking project at the Air Force Cambridge Research Laboratories. The SAGE Project was an extension of Project Whirlwind, started by MIT to create a computer system that could be used as a flight simulator. By September 1951, SAGE had been modified to serve military purposes more directly, and Whirlwind computers had been repurposed for use with radar systems in air defense.
+Hamilton said of her work on SAGE:
+
+What they used to do when you came into this organization as a beginner, was to assign you this program which nobody was able to ever figure out or get to run. When I was the beginner they gave it to me as well. And what had happened was it was tricky programming, and the person who wrote it took delight in the fact that all of his comments were in Greek and Latin. So I was assigned this program and I actually got it to work. It even printed out its answers in Latin and Greek. I was the first one to get it to work.
+
+Hamilton also recalled that it was while working on SAGE that she began to understand the importance of software quality, particularly software stability. A program crash would trigger an alarm visible to other programmers and SAGE system operators.
+
+
+=== MIT Instrumentation Laboratory and the Apollo Guidance Computer ===
+
+Hamilton learned of the Apollo project in 1965 and wanted to get involved due to it being "very exciting" as a Moon program. She joined the MIT Instrumentation Laboratory, which developed the Apollo Guidance Computer for the Apollo lunar exploration program. Hamilton was initially hired as a programmer for this process but moved on into systems design.
+Her first program for the Apollo mission involved lunar landmark tables for an unmanned mission to the Moon. After the mission had already launched, it was discovered that the tables had been entered in reverse order. Nevertheless, the mission was ultimately successful.
+Hamilton recalled that during the next mission, she was still treated as a novice programmer. She believed this was why she had been assigned to write a contingency program that was never expected to be executed. She even named the program "Forget It". However, the program proved crucial when the unlikely scenario actually occurred. Hamilton became the mission expert, and control was handed over to "Forget It".
+With time she became Director of the new Software Engineering Division. She was responsible for the team writing and testing all onboard in-flight software for the Apollo spacecraft's Command and Lunar Module and for the subsequent Skylab space station. Another part of her team designed and developed the systems software. This included error detection and recovery software such as restarts and the Display Interface Routines (also known as the Priority Displays), which Hamilton designed and developed. She worked to gain hands-on experience during a time when computer science courses were uncommon and software engineering courses did not exist.
+Olivier de Weck, the Apollo Program Professor at MIT, later called Hamilton "a pioneer" in the new field of software engineering and "a fundamental contributor" to the Apollo program. He added that she not only was an advanced systems programmer in her own right, but also headed a team that developed "one of the most complex systems humanity had ever achieved".
+
+
+==== Apollo 11 landing ====
+In one of the critical moments of the Apollo 11 mission, the Apollo Guidance Computer, together with the on-board flight software, averted an abort of the landing on the Moon. Three minutes before the lunar lander reached the Moon's surface, several computer alarms were triggered. According to software engineer Robert Wills, Buzz Aldrin entered the codes to request that the computer display altitude and other data on the computer's screen. The system was designed to support seven simultaneous programs running, but Aldrin's request was the eighth. This action was something he requested many times while working in the simulator. The result was a series of unexpected error codes during the live descent. The on-board flight software captured these alarms with the "never supposed to happen displays" interrupting the astronauts with priority alarm displays.
+Hamilton had prepared for just this situation years before:
+
+There was one other failsafe that Hamilton likes to remember. Her "priority display" innovation had created a knock-on risk that astronaut and computer would slip out of sync just when it mattered most. As the alarms went off and priority displays replaced normal ones, the actual switchover to new programmes behind the screens was happening "a step slower" than it would today.
+Hamilton had thought long and hard about this. It meant that if Aldrin, say, hit a button on the priority display too quickly, he might still get a "normal" response. Her solution: when you see a priority display, first count to five.
+
+By some accounts, the astronauts had inadvertently left the rendezvous radar switch on (this is disputed by Robert Wills with the National Museum of Computing), causing these alarms to be triggered. The computer was overloaded with interrupts caused by incorrectly phased power supplied to the lander's rendezvous radar. The program alarms indicated "executive overflows", meaning the guidance computer could not complete all of its tasks in real time and had to postpone some of them. The asynchronous executive designed by J. Halcombe Laning was used by Hamilton's team to develop asynchronous flight software:
+
+Because of the flight software's system-software's error detection and recovery techniques that included its system-wide "kill and recompute" from a "safe place" restart approach to its snapshot and rollback techniques, the Display Interface Routines (AKA the priority displays) together with its man-in-the-loop capabilities were able to be created in order to have the capability to interrupt the astronauts' normal mission displays with priority displays of critical alarms in case of an emergency. This depended on our assigning a unique priority to every process in the software in order to ensure that all of its events would take place in the correct order and at the right time relative to everything else that was going on.
+
+Hamilton's priority alarm displays interrupted the astronauts' normal displays to warn them that there was an emergency "giving the astronauts a go/no-go decision (to land or not to land)". Jack Garman, a NASA computer engineer in mission control, recognized the meaning of the errors that were presented to the astronauts by the priority displays and shouted, "Go, go!" and they continued. Paul Curto, a senior technologist who nominated Hamilton for a NASA Space Act Award, called Hamilton's work "the foundation for ultra-reliable software design".
+Hamilton later wrote of the incident:
+
+The computer (or rather the software in it) was smart enough to recognize that it was being asked to perform more tasks than it should be performing. It then sent out an alarm, which meant to the astronaut, 'I'm overloaded with more tasks than I should be doing at this time and I'm going to keep only the more important tasks'; i.e., the ones needed for landing ... Actually, the computer was programmed to do more than recognize error conditions. A complete set of recovery programs was incorporated into the software. The software's action, in this case, was to eliminate lower priority tasks and re-establish the more important ones ... If the computer hadn't recognized this problem and taken recovery action, I doubt if Apollo 11 would have been the successful Moon landing it was.
+
+
+=== Businesses ===
+Hamilton co-founded with Saydean Zeldin a company called Higher Order Software (HOS) to further develop ideas about error prevention and fault tolerance emerging from their experience at MIT working on the Apollo program. They created a product called USE.IT, based on the HOS methodology they developed at MIT. It was successfully used in numerous government programs including a project to formalize and implement C-IDEF, an automated version of IDEF, a modeling language developed by the U.S. Air Force in the Integrated Computer-Aided Manufacturing (ICAM) project. In 1980, British-Israeli computer scientist David Harel published a proposal for a structured programming language derived from HOS from the viewpoint of and/or subgoals. Others have used HOS to formalize the semantics of linguistic quantifiers, and to formalize the design of reliable real-time embedded systems.
+Hamilton was the CEO of HOS and left the company later on. In March 1986, she founded Hamilton Technologies, Inc. in Cambridge, Massachusetts. The company was developed around the Universal Systems Language (USL) and its associated automated environment, the 001 Tool Suite, based on her paradigm of development before the fact for systems design and software development.
+
+
+== Legacy ==
+
+Hamilton has been credited with naming the discipline of "software engineering". Hamilton detailed how she came to make up the term "software engineering":
+
+When I first came up with the term, no one had heard of it before, at least in our world. It was an ongoing joke for a long time. They liked to kid me about my radical ideas. It was a memorable day when one of the most respected hardware gurus explained to everyone in a meeting that he agreed with me that the process of building software should also be considered an engineering discipline, just like with hardware. Not because of his acceptance of the new 'term' per se, but because we had earned his and the acceptance of the others in the room as being in an engineering field in its own right.
+
+When Hamilton started using the term "software engineering" during the early Apollo missions, software development was not taken seriously compared to other engineering disciplines, something she aimed to change. Over time the term "software engineering" gained the same respect as any other technical discipline. The IEEE Software September/October 2018 issue celebrates the 50th anniversary of software engineering. Hamilton talked about "Errors" and how they influenced her work related to software engineering and how her language, USL, could be used to prevent the majority of "Errors" in a system. With USL, rather than continuing to test for errors, her program was designed to keep most errors out of the system from the beginning. USL was created after her knowledge and experience from the Apollo mission, in which she determined a mathematical theory for systems and software. This method was then, and still is, highly impactful to the field of software engineering. Writing in Wired, Robert McMillan noted: "At MIT she assisted in the creation of the core principles in computer programming as she worked with her colleagues in writing code for the world's first portable computer". Hamilton's innovations go beyond playing an important role in getting humans to the Moon. According to Wired's Karen Tegan Padir: "She, along with that other early programming pioneer, COBOL inventor [sic] Grace Hopper, also deserve tremendous credit for helping to open the door for more women to enter and succeed in STEM fields like software."
+
+
+=== Tributes ===
+In 2017, a "Women of NASA" Lego set went on sale featuring minifigures of Hamilton, astronauts Mae Jemison and Sally Ride, and NASA's first Chief of Astronomy, Nancy Grace Roman. The set was initially proposed by Maia Weinstock as a tribute to the women's contributions to NASA history, and Hamilton's section of the set features a recreation of her famous 1969 photo posing with a stack of her software listings.
+In 2019, to celebrate the 50-year anniversary of the Apollo 11 mission, Google made a tribute to Hamilton. The mirrors at the Ivanpah Solar Power Facility were configured to create a picture of Hamilton alongside Apollo 11 designs that appeared under moonlight.
+Margo Madison, a fictional NASA engineer in the alternate history series For All Mankind, was inspired by Hamilton.
+
+
+== Personal life and death ==
+Hamilton had a sister, Kathryn Heafield. She met her first husband, James Cox Hamilton, in the mid-1950s while attending college. They married on June 15, 1958, the summer after she graduated from Earlham. She briefly taught high school mathematics and French at a public school in Boston, Indiana. The couple then moved to Boston, Massachusetts, where they had a daughter, Lauren, born on November 10, 1959. They divorced in 1967 and Margaret married Dan Lickly two years later. Margaret and Dan Lickly divorced in the early 1970s.
+Hamilton died on September 30, 2026 at the age of 90, at a hospital in Cambridge, Massachusetts, due to multiple organ failure.
+
+
+== Awards ==
+
+In 1986, Hamilton received the Augusta Ada Lovelace Award by the Association for Women in Computing.
+In 2003, she was given the NASA Exceptional Space Act Award for scientific and technical contributions. The award included $37,200, the largest amount awarded to any individual in NASA's history.
+In 2009, she received the Outstanding Alumni Award from Earlham College.
+In 2016, she received the Presidential Medal of Freedom from Barack Obama, the highest civilian honor in the United States.
+On April 28, 2017, she received the Computer History Museum Fellow Award, which honors exceptional men and women whose computing ideas have changed the world.
+In 2018, she was awarded an honorary doctorate degree by the Polytechnic University of Catalonia.
+In 2019, she was awarded The Washington Award.
+In 2019, she was awarded an honorary doctorate degree by Bard College.
+In 2019, she was awarded the Intrepid Lifetime Achievement Award.
+In 2022, she was inducted into the National Aviation Hall of Fame in Dayton, Ohio.
+
+
+== Publications ==
+Hamilton, M.; Zeldin, S. (March 1976). "Higher Order Software—A Methodology for Defining Software". IEEE Transactions on Software Engineering. SE-2 (1): 9–32. doi:10.1109/TSE.1976.233798. S2CID 7799553.
+Hamilton, M.; Zeldin, S. (January 1, 1979). "The relationship between design and verification". Journal of Systems and Software. 1: 29–56. doi:10.1016/0164-1212(79)90004-9.
+Hamilton, M. (April 1994). "Inside Development Before the Fact". (Cover story). Special Editorial Supplement. 8ES-24ES. Electronic Design.
+Hamilton, M. (June 1994). "001: A Full Life Cycle Systems Engineering and Software Development Environment". (Cover story). Special Editorial Supplement. 22ES-30ES. Electronic Design.
+Hamilton, M.; Hackler, W. R. (2004). "Deeply Integrated Guidance Navigation Unit (DI-GNU) Common Software Architecture Principles". (Revised December 29, 2004). DAAAE30-02-D-1020 and DAAB07-98-D-H502/0180, Picatinny Arsenal, NJ, 2003–2004.
+Hamilton, M.; Hackler, W. R. (2007). "Universal Systems Language for Preventative Systems Engineering", Proc. 5th Ann. Conf. Systems Eng. Res. (CSER), Stevens Institute of Technology, Mar. 2007, paper #36.
+Hamilton, Margaret H.; Hackler, William R. (2007). "8.3.2 a Formal Universal Systems Semantics for SysML". Incose International Symposium. 17 (1). Wiley: 1333–1357. doi:10.1002/j.2334-5837.2007.tb02952.x. ISSN 2334-5837. S2CID 57214708.
+Hamilton, Margaret H.; Hackler, William R. (2008). "Universal Systems Language: Lessons Learned from Apollo". Computer. 41 (12). Institute of Electrical and Electronics Engineers (IEEE): 34–43. Bibcode:2008Compr..41l..34H. doi:10.1109/mc.2008.541. ISSN 0018-9162.
+Hamilton, M. H. (September 2018). "What the Errors Tell Us". IEEE Software. 35 (5): 32–37. Bibcode:2018ISoft..35e..32H. doi:10.1109/MS.2018.290110447. S2CID 52896962.
+
+
+== See also ==
+List of pioneers in computer science
+
+
+== References ==
+
+
+== Further reading ==
+Steafel, Eleanor (July 20, 2019). "One woman in a room full of men". The Telegraph Magazine. London: Daily Telegraph plc. pp. 56–59, 61. OCLC 69022829.
+
+
+== External links ==
+
+Hamilton Technologies, Inc.
+Margaret Hamilton profile and obituary, New York Times, Oct. 8, 2026
+NASA's Apollo moon missions relied on Margaret Hamilton and differential equations, Scientific American, May 12, 2026
+Margaret Hamilton '58 – Presidential Medal of Freedom Recipient; Archived July 30, 2019, at the Wayback Machine: Earlham College profile

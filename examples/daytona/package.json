@@ -1,0 +1,28 @@
+{
+  "name": "@atomic-content-protocol/example-daytona",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Reproducible benchmark: ACP inside Daytona sandboxes (enrich once, fork many).",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "build-corpus": "tsx src/build-corpus.ts",
+    "measure": "tsx src/measure.ts",
+    "live": "tsx src/live.ts",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx src/verify.ts"
+  },
+  "dependencies": {
+    "@atomic-content-protocol/cli": "0.3.2",
+    "@atomic-content-protocol/core": "0.3.2",
+    "@atomic-content-protocol/enrichment": "0.3.2",
+    "@atomic-content-protocol/mcp": "0.3.2",
+    "@daytonaio/sdk": "0.226.0",
+    "tiktoken": "^1.0.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

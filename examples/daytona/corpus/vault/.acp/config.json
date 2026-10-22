@@ -1,0 +1,10 @@
+{
+  "vault_path": ".",
+  "author": {
+    "id": "daytona-benchmark",
+    "name": "ACP Daytona Benchmark"
+  },
+  "enrichment": {
+    "quality": "fast"
+  }
+}
