@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
   <rect width="100%" height="100%" fill="#ffffff"/>
-  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">Summary-first, legacy ACP, and search</text>
+  <text x="78" y="22" font-size="16" font-family="sans-serif" fill="#111827">Summary-first, v1, legacy ACP, and search</text>
   <text x="696" y="18" text-anchor="end" font-size="12" font-family="sans-serif" fill="#1d4ed8">Search-then-read</text>
   <text x="696" y="34" text-anchor="end" font-size="12" font-family="sans-serif" fill="#0f766e">Summary-first ACP</text>
-  <text x="696" y="50" text-anchor="end" font-size="12" font-family="sans-serif" fill="#7c3aed">Legacy catalog ACP</text>
+  <text x="696" y="50" text-anchor="end" font-size="12" font-family="sans-serif" fill="#c2410c">Summary-first v1</text>
+  <text x="696" y="66" text-anchor="end" font-size="12" font-family="sans-serif" fill="#7c3aed">Legacy catalog ACP</text>
   <line x1="78" y1="366.0" x2="696" y2="366.0" stroke="#e5e7eb" />
   <text x="70" y="370.0" text-anchor="end" font-size="12" fill="#374151">0k</text>
   <line x1="78" y1="292.5" x2="696" y2="292.5" stroke="#e5e7eb" />
@@ -20,11 +21,16 @@
   <circle cx="139.8" cy="355.5" r="4" fill="#1d4ed8" />
   <circle cx="387.0" cy="305.9" r="4" fill="#1d4ed8" />
   <circle cx="696.0" cy="242.1" r="4" fill="#1d4ed8" />
-  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,366.0 139.8,365.9 387.0,365.5 696.0,365.0"/>
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,366.0 139.8,364.6 387.0,356.6 696.0,346.1"/>
   <circle cx="84.2" cy="366.0" r="4" fill="#0f766e" />
-  <circle cx="139.8" cy="365.9" r="4" fill="#0f766e" />
-  <circle cx="387.0" cy="365.5" r="4" fill="#0f766e" />
-  <circle cx="696.0" cy="365.0" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="364.6" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="356.6" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="346.1" r="4" fill="#0f766e" />
+  <polyline fill="none" stroke="#c2410c" stroke-width="2" points="84.2,366.0 139.8,365.9 387.0,365.5 696.0,365.0"/>
+  <circle cx="84.2" cy="366.0" r="4" fill="#c2410c" />
+  <circle cx="139.8" cy="365.9" r="4" fill="#c2410c" />
+  <circle cx="387.0" cy="365.5" r="4" fill="#c2410c" />
+  <circle cx="696.0" cy="365.0" r="4" fill="#c2410c" />
   <polyline fill="none" stroke="#7c3aed" stroke-width="2" points="84.2,363.1 139.8,338.3 387.0,220.7 696.0,72.0"/>
   <circle cx="84.2" cy="363.1" r="4" fill="#7c3aed" />
   <circle cx="139.8" cy="338.3" r="4" fill="#7c3aed" />

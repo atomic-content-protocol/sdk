@@ -425,7 +425,7 @@ npm run bench
 
 The same offline measurement runs in a phone browser with `npm run web` (no API key). Wikipedia is measured in the browser and matches the Node bench. Daytona docs stay as recorded results, because that raw text is not in the repo and the docs host does not allow a browser fetch. Preview from this branch (one confirm step on the host, then the page): https://raw.githack.com/atomic-content-protocol/sdk/cursor/daytona-acp-benchmark-5c49/examples/daytona/web/site/index.html
 
-A live N=20 Wikipedia run (region eu, Claude Haiku 4.5, container sandboxes because that account had no VM runners) is in `examples/daytona/results/live.md`. Summary-first used 6,357 input and 1,266 output tokens. Search-then-read used 783,559 and 1,788. Both arms were 20/20.
+A live N=20 Wikipedia run (region eu, Claude Haiku 4.5, container sandboxes because that account had no VM runners) is in `examples/daytona/results/live.md`. That file labels the arm `summary-first`. At the time of the run that name meant the coverage rule now called `summary-first-v1`: 6,357 input and 1,266 output tokens against search-then-read's 783,559 and 1,788. Both arms were 20/20. The same rule on the docs corpus is in `examples/daytona/results/live-docs.md`. At N=20 it used 286,314 input and 2,260 output tokens against 643,400 and 3,005, with retrieval hit 90% vs 80% and model answers correct 60% vs 75%. The headline policy now asks the model to answer from the summaries or open a body. That policy has not been run live.
 
 **Package structure:**
 

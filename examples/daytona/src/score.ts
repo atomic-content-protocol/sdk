@@ -4,7 +4,7 @@
  * runs cannot drift apart.
  */
 
-import { bm25Search, searchMaterial, summaryFirst } from "../sandbox/bm25.mjs";
+import { bm25Search, searchMaterial, summaryFirst, summaryFirstV1 } from "../sandbox/bm25.mjs";
 import { contentQuery, type Policy, promptPrefix, type Question } from "./policy-logic.js";
 
 export interface ToolResult {
@@ -26,7 +26,7 @@ export interface CorpusPage {
   body: string;
 }
 
-export type PromptArm = "naive" | "search" | "summary-decision" | "summary-body" | "legacy";
+export type PromptArm = "naive" | "search" | "summary-decision" | "summary-body" | "summary-v1" | "legacy";
 
 export interface QuestionMeasurement {
   id: string;
@@ -39,19 +39,26 @@ export interface QuestionMeasurement {
   cover_need: number;
   search_opened_slugs: string[];
   legacy_opened_slugs: string[];
+  v1_opened_slugs: string[];
+  v1_decision: "answer" | "open";
   retrieval_hit: boolean;
   search_retrieval_hit: boolean;
   legacy_retrieval_hit: boolean;
+  v1_retrieval_hit: boolean;
   baseline_answer_supported: boolean;
   search_answer_supported: boolean;
   acp_answer_supported: boolean;
   legacy_answer_supported: boolean;
+  v1_answer_supported: boolean;
   baseline_tokens: number;
   search_tokens: number;
   summary_decision_tokens: number;
   summary_body_tokens: number;
   acp_tokens: number;
   legacy_tokens: number;
+  v1_tokens: number;
+  v1_decision_tokens: number;
+  v1_body_tokens: number;
   baseline_assembly_ms: number;
   search_assembly_ms: number;
   acp_assembly_ms: number;
@@ -64,24 +71,29 @@ export interface ScaleRow {
   search_tokens: number;
   acp_tokens: number;
   legacy_tokens: number;
+  v1_tokens: number;
   tokens_saved: number;
   percent_saved: number;
   tokens_saved_vs_search: number;
   percent_saved_vs_search: number;
   legacy_tokens_saved_vs_search: number;
   legacy_percent_saved_vs_search: number;
+  v1_percent_saved_vs_search: number;
   baseline_input_usd: number;
   search_input_usd: number;
   acp_input_usd: number;
   legacy_input_usd: number;
+  v1_input_usd: number;
   usd_saved: number;
   usd_saved_vs_search: number;
   retrieval_hit_rate: number;
   search_retrieval_hit_rate: number;
   legacy_retrieval_hit_rate: number;
+  v1_retrieval_hit_rate: number;
   acp_answer_support_rate: number;
   search_answer_support_rate: number;
   legacy_answer_support_rate: number;
+  v1_answer_support_rate: number;
   baseline_answer_support_rate: number;
   baseline_assembly_ms: number;
   search_assembly_ms: number;
@@ -142,25 +154,33 @@ export function scaleRow(perQuestion: QuestionMeasurement[], n: number, inputUsd
     perQuestion.map((row) => row.legacy_tokens),
     n
   );
+  const v1Tokens = sumAssigned(
+    perQuestion.map((row) => row.v1_tokens),
+    n
+  );
   const saved = baselineTokens - acpTokens;
   const savedSearch = searchTokens - acpTokens;
   const legacySavedSearch = searchTokens - legacyTokens;
+  const v1SavedSearch = searchTokens - v1Tokens;
   return {
     n,
     baseline_tokens: baselineTokens,
     search_tokens: searchTokens,
     acp_tokens: acpTokens,
     legacy_tokens: legacyTokens,
+    v1_tokens: v1Tokens,
     tokens_saved: saved,
     percent_saved: baselineTokens === 0 ? 0 : (saved / baselineTokens) * 100,
     tokens_saved_vs_search: savedSearch,
     percent_saved_vs_search: searchTokens === 0 ? 0 : (savedSearch / searchTokens) * 100,
     legacy_tokens_saved_vs_search: legacySavedSearch,
     legacy_percent_saved_vs_search: searchTokens === 0 ? 0 : (legacySavedSearch / searchTokens) * 100,
+    v1_percent_saved_vs_search: searchTokens === 0 ? 0 : (v1SavedSearch / searchTokens) * 100,
     baseline_input_usd: roundUsd(usd(baselineTokens, inputUsdPerMillion)),
     search_input_usd: roundUsd(usd(searchTokens, inputUsdPerMillion)),
     acp_input_usd: roundUsd(usd(acpTokens, inputUsdPerMillion)),
     legacy_input_usd: roundUsd(usd(legacyTokens, inputUsdPerMillion)),
+    v1_input_usd: roundUsd(usd(v1Tokens, inputUsdPerMillion)),
     usd_saved: roundUsd(usd(saved, inputUsdPerMillion)),
     usd_saved_vs_search: roundUsd(usd(savedSearch, inputUsdPerMillion)),
     retrieval_hit_rate: rateAssigned(
@@ -175,6 +195,10 @@ export function scaleRow(perQuestion: QuestionMeasurement[], n: number, inputUsd
       perQuestion.map((row) => row.legacy_retrieval_hit),
       n
     ),
+    v1_retrieval_hit_rate: rateAssigned(
+      perQuestion.map((row) => row.v1_retrieval_hit),
+      n
+    ),
     acp_answer_support_rate: rateAssigned(
       perQuestion.map((row) => row.acp_answer_supported),
       n
@@ -185,6 +209,10 @@ export function scaleRow(perQuestion: QuestionMeasurement[], n: number, inputUsd
     ),
     legacy_answer_support_rate: rateAssigned(
       perQuestion.map((row) => row.legacy_answer_supported),
+      n
+    ),
+    v1_answer_support_rate: rateAssigned(
+      perQuestion.map((row) => row.v1_answer_supported),
       n
     ),
     baseline_answer_support_rate: rateAssigned(
@@ -230,19 +258,24 @@ export function sameMeasurement(left: QuestionMeasurement, right: QuestionMeasur
     left.search_tokens === right.search_tokens &&
     left.acp_tokens === right.acp_tokens &&
     left.legacy_tokens === right.legacy_tokens &&
+    left.v1_tokens === right.v1_tokens &&
     left.summary_decision_tokens === right.summary_decision_tokens &&
     left.summary_body_tokens === right.summary_body_tokens &&
     left.decision === right.decision &&
+    left.v1_decision === right.v1_decision &&
     left.retrieval_hit === right.retrieval_hit &&
     left.search_retrieval_hit === right.search_retrieval_hit &&
     left.legacy_retrieval_hit === right.legacy_retrieval_hit &&
+    left.v1_retrieval_hit === right.v1_retrieval_hit &&
     left.acp_answer_supported === right.acp_answer_supported &&
     left.search_answer_supported === right.search_answer_supported &&
     left.baseline_answer_supported === right.baseline_answer_supported &&
     left.legacy_answer_supported === right.legacy_answer_supported &&
+    left.v1_answer_supported === right.v1_answer_supported &&
     sameList(left.candidate_slugs, right.candidate_slugs) &&
     sameList(left.opened_slugs, right.opened_slugs) &&
     sameList(left.legacy_opened_slugs, right.legacy_opened_slugs) &&
+    sameList(left.v1_opened_slugs, right.v1_opened_slugs) &&
     sameList(left.search_opened_slugs, right.search_opened_slugs)
   );
 }
@@ -276,6 +309,8 @@ interface PromptParts {
   bodyMaterial: string;
   similarWire: string;
   readWires: string[];
+  v1SummaryMaterial: string;
+  v1BodyMaterial: string;
 }
 
 export async function scoreCorpus(options: {
@@ -347,14 +382,27 @@ export async function scoreCorpus(options: {
     const triage = summaryFirst(rankedPages, question.question, policy.stopwords, {
       summaryK: policy.summary_k,
       maxBodies: policy.max_bodies,
-      coverFraction: policy.cover_fraction,
+      closeScoreRatio: policy.close_score_ratio,
+      runnerUpCoverFraction: policy.runner_up_cover_fraction,
     });
     const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+    const followUp =
+      triage.bodyMaterial.length === 0 ? "" : `${prefix}${policy.sections.pages}${triage.bodyMaterial}`;
     const decisionTokens = await countTokens(decisionPrompt);
-    const bodyTokens = triage.bodyMaterial.length === 0 ? 0 : await countTokens(triage.bodyMaterial);
+    const bodyTokens = followUp.length === 0 ? 0 : await countTokens(followUp);
     const summaryTokens = decisionTokens + bodyTokens;
+    const v1 = summaryFirstV1(rankedPages, question.question, policy.stopwords, {
+      summaryK: policy.summary_k,
+      maxBodies: policy.v1_max_bodies,
+      coverFraction: policy.cover_fraction,
+    });
+    const v1DecisionPrompt = `${prefix}${v1.summaryMaterial}`;
+    const v1DecisionTokens = await countTokens(v1DecisionPrompt);
+    const v1BodyTokens = v1.bodyMaterial.length === 0 ? 0 : await countTokens(v1.bodyMaterial);
+    const v1Tokens = v1DecisionTokens + v1BodyTokens;
     const summaryMs = performance.now() - summaryStarted;
     const summaryShown = `${triage.summaryBlock}\n${triage.bodyMaterial}`;
+    const v1Shown = `${v1.summaryBlock}\n${v1.bodyMaterial}`;
 
     const similarResult = await tools.findSimilar({
       text: query,
@@ -399,6 +447,8 @@ export async function scoreCorpus(options: {
       bodyMaterial: triage.bodyMaterial,
       similarWire: wire(similarResult),
       readWires: reads.map(wire),
+      v1SummaryMaterial: v1.summaryMaterial,
+      v1BodyMaterial: v1.bodyMaterial,
     });
 
     perQuestion.push({
@@ -412,19 +462,26 @@ export async function scoreCorpus(options: {
       cover_need: triage.cover_need,
       search_opened_slugs: searchOpened,
       legacy_opened_slugs: openedSlugs,
+      v1_opened_slugs: v1.opened_slugs,
+      v1_decision: v1.decision,
       retrieval_hit: question.gold_slugs.every((slug) => triage.candidate_slugs.includes(slug)),
       search_retrieval_hit: question.gold_slugs.every((slug) => searchOpened.includes(slug)),
       legacy_retrieval_hit: question.gold_slugs.every((slug) => openedSlugs.includes(slug)),
+      v1_retrieval_hit: question.gold_slugs.every((slug) => v1.candidate_slugs.includes(slug)),
       baseline_answer_supported: supports(baselineMaterial, question.expected_answer),
       search_answer_supported: supports(searchBody, question.expected_answer),
       acp_answer_supported: supports(summaryShown, question.expected_answer),
       legacy_answer_supported: supports(`${catalogWire}\n${openedBodies}`, question.expected_answer),
+      v1_answer_supported: supports(v1Shown, question.expected_answer),
       baseline_tokens: baselineTokens,
       search_tokens: searchTokens,
       summary_decision_tokens: decisionTokens,
       summary_body_tokens: bodyTokens,
       acp_tokens: summaryTokens,
       legacy_tokens: legacyTokens,
+      v1_tokens: v1Tokens,
+      v1_decision_tokens: v1DecisionTokens,
+      v1_body_tokens: v1BodyTokens,
       baseline_assembly_ms: Number(baselineMs.toFixed(2)),
       search_assembly_ms: Number(searchMs.toFixed(2)),
       acp_assembly_ms: Number(summaryMs.toFixed(2)),
@@ -441,7 +498,12 @@ export async function scoreCorpus(options: {
       if (arm === "naive") return `${row.prefix}${baselineMaterial}`;
       if (arm === "search") return `${row.prefix}${row.searchBody}`;
       if (arm === "summary-decision") return `${row.prefix}${row.summaryMaterial}`;
-      if (arm === "summary-body") return row.bodyMaterial;
+      if (arm === "summary-body") return row.bodyMaterial.length === 0 ? "" : `${row.prefix}${policy.sections.pages}${row.bodyMaterial}`;
+      if (arm === "summary-v1") {
+        return row.v1BodyMaterial.length === 0
+          ? `${row.prefix}${row.v1SummaryMaterial}`
+          : `${row.prefix}${row.v1SummaryMaterial}${row.v1BodyMaterial}`;
+      }
       return `${row.prefix}${policy.sections.catalog}${catalogWire}\n\n${policy.sections.ranking}${row.similarWire}\n\n${policy.sections.opened}${row.readWires.join("\n\n")}`;
     },
   };

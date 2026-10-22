@@ -23,7 +23,8 @@ const ARMS: Array<{ arm: PromptArm; label: string }> = [
   { arm: "naive", label: "Naive full-read" },
   { arm: "search", label: "Search-then-read" },
   { arm: "summary-decision", label: "Summary-first decision prompt" },
-  { arm: "summary-body", label: "Summary-first opened markdown" },
+  { arm: "summary-body", label: "Summary-first follow-up" },
+  { arm: "summary-v1", label: "Summary-first v1" },
   { arm: "legacy", label: "Legacy ACP" },
 ];
 
@@ -31,6 +32,7 @@ const COLORS = [
   { key: "baseline_tokens" as const, className: "naive", label: "Naive" },
   { key: "search_tokens" as const, className: "search", label: "Search" },
   { key: "acp_tokens" as const, className: "summary", label: "Summary-first" },
+  { key: "v1_tokens" as const, className: "v1", label: "Summary-first v1" },
   { key: "legacy_tokens" as const, className: "legacy", label: "Legacy" },
 ];
 
@@ -122,13 +124,14 @@ function scaleTable(rows: ScaleRow[]): HTMLElement {
       "Naive tokens",
       "Search tokens",
       "Summary-first",
+      "v1",
       "Legacy",
-      "Summary vs naive",
       "Summary vs search",
+      "v1 vs search",
       "Legacy vs search",
-      "Naive $",
       "Search $",
       "Summary $",
+      "v1 $",
       "Legacy $",
     ],
     rows.map((row) => [
@@ -136,13 +139,14 @@ function scaleTable(rows: ScaleRow[]): HTMLElement {
       int(row.baseline_tokens),
       int(row.search_tokens),
       int(row.acp_tokens),
+      int(row.v1_tokens),
       int(row.legacy_tokens),
-      pct(row.percent_saved),
       pct(row.percent_saved_vs_search),
+      pct(row.v1_percent_saved_vs_search),
       pct(row.legacy_percent_saved_vs_search),
-      money(row.baseline_tokens),
       money(row.search_tokens),
       money(row.acp_tokens),
+      money(row.v1_tokens),
       money(row.legacy_tokens),
     ])
   );
@@ -154,20 +158,20 @@ function hitTable(rows: ScaleRow[]): HTMLElement {
       "N",
       "Search hit",
       "Summary hit",
-      "Legacy hit",
-      "Naive answer",
+      "v1 hit",
       "Search answer",
       "Summary answer",
+      "v1 answer",
       "Legacy answer",
     ],
     rows.map((row) => [
       String(row.n),
       rate(row.search_retrieval_hit_rate),
       rate(row.retrieval_hit_rate),
-      rate(row.legacy_retrieval_hit_rate),
-      rate(row.baseline_answer_support_rate),
+      rate(row.v1_retrieval_hit_rate),
       rate(row.search_answer_support_rate),
       rate(row.acp_answer_support_rate),
+      rate(row.v1_answer_support_rate),
       rate(row.legacy_answer_support_rate),
     ])
   );
@@ -211,7 +215,7 @@ function questionDetails(view: BenchView): HTMLElement {
     const summary = document.createElement("summary");
     summary.textContent = `${row.id}: ${row.question}`;
     const meta = el("p");
-    meta.textContent = `Decision: ${row.decision}. Summary candidates: ${row.candidate_slugs.join(", ") || "(none)"}. Opened: ${row.opened_slugs.join(", ") || "(none)"}. Search opened: ${row.search_opened_slugs.join(", ")}. Legacy opened: ${row.legacy_opened_slugs.join(", ")}. Summary hit ${yn(row.retrieval_hit)}, search hit ${yn(row.search_retrieval_hit)}, summary answer ${yn(row.acp_answer_supported)}, search answer ${yn(row.search_answer_supported)}. Tokens: naive ${int(row.baseline_tokens)}, search ${int(row.search_tokens)}, summary-first ${int(row.acp_tokens)} (decision ${int(row.summary_decision_tokens)} + bodies ${int(row.summary_body_tokens)}), legacy ${int(row.legacy_tokens)}.`;
+    meta.textContent = `Decision: ${row.decision}. Summary candidates: ${row.candidate_slugs.join(", ") || "(none)"}. Opened: ${row.opened_slugs.join(", ") || "(none)"}. v1 opened: ${row.v1_opened_slugs.join(", ") || "(none)"}. Search opened: ${row.search_opened_slugs.join(", ")}. Summary hit ${yn(row.retrieval_hit)}, search hit ${yn(row.search_retrieval_hit)}, summary answer ${yn(row.acp_answer_supported)}, v1 answer ${yn(row.v1_answer_supported)}, search answer ${yn(row.search_answer_supported)}. Tokens: naive ${int(row.baseline_tokens)}, search ${int(row.search_tokens)}, summary-first ${int(row.acp_tokens)} (decision ${int(row.summary_decision_tokens)} + follow-up ${int(row.summary_body_tokens)}), v1 ${int(row.v1_tokens)}, legacy ${int(row.legacy_tokens)}.`;
     details.append(summary, meta, promptBlock(view, row));
     section.append(details);
   }

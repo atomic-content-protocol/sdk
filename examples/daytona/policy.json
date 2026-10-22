@@ -4,8 +4,12 @@
   "limit": 3,
   "threshold": 0,
   "summary_k": 3,
-  "max_bodies": 3,
+  "max_bodies": 2,
   "cover_fraction": 0.5,
+  "v1_name": "summary-first-v1",
+  "v1_max_bodies": 3,
+  "close_score_ratio": 0.85,
+  "runner_up_cover_fraction": 0.5,
   "instruction": "Answer the question using only the corpus material below. Quote a short supporting span.\n\n",
   "catalog_limit": 50,
   "sections": {

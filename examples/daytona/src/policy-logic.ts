@@ -11,6 +11,10 @@ export interface Policy {
   summary_k: number;
   max_bodies: number;
   cover_fraction: number;
+  v1_name: string;
+  v1_max_bodies: number;
+  close_score_ratio: number;
+  runner_up_cover_fraction: number;
   catalog_limit: number;
   instruction: string;
   sections: {

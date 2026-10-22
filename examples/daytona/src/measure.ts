@@ -9,11 +9,13 @@
  * Headline policy `summary-first` (see policy.json and the README):
  * 1. Okapi BM25 over title, summary, and tags only (not the body, not entities).
  *    The model is shown those few compact summaries, not the full catalog.
- * 2. A fixed coverage rule either answers from the summaries or opens up to
- *    3 full markdown bodies. The decision line is part of the counted prompt.
- * Token total is cl100k(decision prompt) + cl100k(opened markdown), two
- * encodings added together. No model is called. The decision line is the
- * policy string, not a Haiku completion.
+ * 2. Offline cannot call the model. A conservative proxy opens the top body
+ *    unless the top candidate's title, summary, and tags contain every
+ *    query term and the next score is not close. It opens the top 2 when
+ *    scores are close, and never more than 2. Variant `summary-first-v1`
+ *    keeps the old term-coverage rule.
+ * Token total is cl100k(decision prompt) plus, when a body opens,
+ * cl100k(follow-up prompt). No model is called.
  *
  * Variant `mcp-find-similar-top3` is still measured:
  * 1. `list_acos` returns every object's frontmatter. That JSON is the catalog.
@@ -72,7 +74,15 @@ export interface Measurement {
   output_usd_per_million: number;
   policy: string;
   legacy_policy: string;
-  summary_first: { k: number; max_bodies: number; cover_fraction: number; rank: string };
+  summary_first: {
+    k: number;
+    max_bodies: number;
+    close_score_ratio: number;
+    runner_up_cover_fraction: number;
+    rank: string;
+    proxy: string;
+  };
+  summary_first_v1: { name: string; k: number; max_bodies: number; cover_fraction: number };
   pages: number;
   questions: number;
   per_question: QuestionMeasurement[];
@@ -90,6 +100,7 @@ export interface Measurement {
     modeled_usd_break_even_vs_search_forks: number | null;
     legacy_measured_token_break_even_forks: number | null;
     legacy_measured_token_break_even_vs_search_forks: number | null;
+    v1_measured_token_break_even_vs_search_forks: number | null;
   };
 }
 
@@ -114,9 +125,10 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
   const policy = loadPolicy(root);
   if (policy.name !== "summary-first") throw new Error(`headline policy must be summary-first, got ${policy.name}`);
   if (!policy.legacy_name) throw new Error("policy.legacy_name is required");
-  if (!(policy.summary_k > 0) || !(policy.max_bodies > 0) || !(policy.cover_fraction > 0)) {
-    throw new Error("summary_k, max_bodies, and cover_fraction must be positive");
+  if (!(policy.summary_k > 0) || !(policy.max_bodies > 0) || !(policy.v1_max_bodies > 0) || !(policy.cover_fraction > 0)) {
+    throw new Error("summary_k, max_bodies, v1_max_bodies, and cover_fraction must be positive");
   }
+  if (policy.v1_name !== "summary-first-v1") throw new Error(`v1 policy must be summary-first-v1, got ${policy.v1_name}`);
   const pricing = pricingFor(READ_MODEL);
   if (!pricing) throw new Error(`No price for ${READ_MODEL} in MODEL_PRICING`);
 
@@ -156,6 +168,7 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
   const savedUsdVsSearch = savedVsSearch.map((tokens) => usd(tokens, pricing.input));
   const legacySavedTokens = perQuestion.map((row) => row.baseline_tokens - row.legacy_tokens);
   const legacySavedVsSearch = perQuestion.map((row) => row.search_tokens - row.legacy_tokens);
+  const v1SavedVsSearch = perQuestion.map((row) => row.search_tokens - row.v1_tokens);
 
   const scale = policy.fork_sizes.map((n) => scaleRow(perQuestion, n, pricing.input));
 
@@ -171,8 +184,17 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
     summary_first: {
       k: policy.summary_k,
       max_bodies: policy.max_bodies,
-      cover_fraction: policy.cover_fraction,
+      close_score_ratio: policy.close_score_ratio,
+      runner_up_cover_fraction: policy.runner_up_cover_fraction,
       rank: "bm25-title-summary-tags",
+      proxy:
+        "open the top body unless every query term is in the top candidate's title, summary, and tags, the runner-up covers a smaller share than runner_up_cover_fraction, and the score ratio is below close_score_ratio; open the top 2 when the scores are that close; never more than max_bodies. The proxy does not read the expected answer.",
+    },
+    summary_first_v1: {
+      name: policy.v1_name,
+      k: policy.summary_k,
+      max_bodies: policy.v1_max_bodies,
+      cover_fraction: policy.cover_fraction,
     },
     pages: pages.length,
     questions: questions.length,
@@ -191,6 +213,7 @@ export async function measureCorpus(root = EXAMPLE_ROOT, metadataNote = WIKI_NOT
       modeled_usd_break_even_vs_search_forks: breakEven(savedUsdVsSearch, modeledUsd),
       legacy_measured_token_break_even_forks: breakEven(legacySavedTokens, measuredInput),
       legacy_measured_token_break_even_vs_search_forks: breakEven(legacySavedVsSearch, measuredInput),
+      v1_measured_token_break_even_vs_search_forks: breakEven(v1SavedVsSearch, measuredInput),
     },
   };
 }
@@ -218,25 +241,25 @@ function slugList(slugs: string[]): string {
 export function renderMarkdown(result: Measurement): string {
   const tokenRows = result.per_question
     .map((row) => {
-      return `| ${row.id} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.summary_decision_tokens)} | ${int(row.summary_body_tokens)} | ${int(row.acp_tokens)} | ${int(row.legacy_tokens)} |`;
+      return `| ${row.id} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.summary_decision_tokens)} | ${int(row.summary_body_tokens)} | ${int(row.acp_tokens)} | ${int(row.v1_tokens)} | ${int(row.legacy_tokens)} |`;
     })
     .join("\n");
 
   const retrievalRows = result.per_question
     .map((row) => {
-      return `| ${row.id} | ${slugList(row.search_opened_slugs)} | ${slugList(row.candidate_slugs)} | ${row.decision} | ${slugList(row.opened_slugs)} | ${slugList(row.legacy_opened_slugs)} | ${yn(row.search_retrieval_hit)} | ${yn(row.retrieval_hit)} | ${yn(row.legacy_retrieval_hit)} | ${yn(row.search_answer_supported)} | ${yn(row.acp_answer_supported)} | ${yn(row.legacy_answer_supported)} |`;
+      return `| ${row.id} | ${slugList(row.search_opened_slugs)} | ${slugList(row.candidate_slugs)} | ${row.decision} | ${slugList(row.opened_slugs)} | ${row.v1_decision} | ${slugList(row.v1_opened_slugs)} | ${yn(row.search_retrieval_hit)} | ${yn(row.retrieval_hit)} | ${yn(row.v1_retrieval_hit)} | ${yn(row.search_answer_supported)} | ${yn(row.acp_answer_supported)} | ${yn(row.v1_answer_supported)} |`;
     })
     .join("\n");
 
   const scaleRows = result.scale
     .map((row) => {
-      return `| ${row.n} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.acp_tokens)} | ${int(row.legacy_tokens)} | ${pct(row.percent_saved)} | ${pct(row.percent_saved_vs_search)} | ${pct(row.legacy_percent_saved_vs_search)} | ${money(row.baseline_input_usd)} | ${money(row.search_input_usd)} | ${money(row.acp_input_usd)} | ${money(row.legacy_input_usd)} |`;
+      return `| ${row.n} | ${int(row.baseline_tokens)} | ${int(row.search_tokens)} | ${int(row.acp_tokens)} | ${int(row.v1_tokens)} | ${int(row.legacy_tokens)} | ${pct(row.percent_saved_vs_search)} | ${pct(row.v1_percent_saved_vs_search)} | ${pct(row.legacy_percent_saved_vs_search)} | ${money(row.search_input_usd)} | ${money(row.acp_input_usd)} | ${money(row.v1_input_usd)} | ${money(row.legacy_input_usd)} |`;
     })
     .join("\n");
 
   const rateRows = result.scale
     .map((row) => {
-      return `| ${row.n} | ${pct(row.search_retrieval_hit_rate * 100)} | ${pct(row.retrieval_hit_rate * 100)} | ${pct(row.legacy_retrieval_hit_rate * 100)} | ${pct(row.baseline_answer_support_rate * 100)} | ${pct(row.search_answer_support_rate * 100)} | ${pct(row.acp_answer_support_rate * 100)} | ${pct(row.legacy_answer_support_rate * 100)} |`;
+      return `| ${row.n} | ${pct(row.search_retrieval_hit_rate * 100)} | ${pct(row.retrieval_hit_rate * 100)} | ${pct(row.v1_retrieval_hit_rate * 100)} | ${pct(row.search_answer_support_rate * 100)} | ${pct(row.acp_answer_support_rate * 100)} | ${pct(row.v1_answer_support_rate * 100)} | ${pct(row.legacy_answer_support_rate * 100)} |`;
     })
     .join("\n");
 
@@ -246,13 +269,16 @@ export function renderMarkdown(result: Measurement): string {
     return count === 1 ? "1 fork" : `${count} forks`;
   };
   const rule = result.summary_first;
+  const v1 = result.summary_first_v1;
   const fromSummaries = result.per_question.filter((row) => row.decision === "answer").length;
 
   return `# Daytona ACP offline benchmark
 
 Tokenizer: \`${result.tokenizer}\` (tiktoken ${result.tiktoken_version}), counted with \`computeTokenCounts\` from \`@atomic-content-protocol/core\`.
 
-Headline policy: \`${result.policy}\`. BM25 (k1=${result.bm25.k1}, b=${result.bm25.b}) ranks title, summary, and tags only, and keeps the top ${rule.k}. The prompt contains those compact summaries (slug, title, summary) and a decision line. A candidate covers the question when at least max(1, ceil(unique query terms * ${rule.cover_fraction})) of those terms appear in its title, summary, or tags. If any candidate covers, no body is opened. Otherwise up to ${rule.max_bodies} full markdown bodies are opened. On this question bank, ${fromSummaries} of ${result.questions} questions were answered from summaries and opened no body. Summary-first tokens are the sum of two separate cl100k encodings: the decision prompt (instruction, question, summaries, and the decision line) plus the opened markdown. They are not one concatenated encoding, and the decision line is the policy string, not a model completion.
+Headline policy: \`${result.policy}\`. BM25 (k1=${result.bm25.k1}, b=${result.bm25.b}) ranks title, summary, and tags only, and keeps the top ${rule.k}. The decision prompt shows those compact summaries and asks for an answer or \`OPEN slug\`. Offline cannot call the model, so a conservative proxy decides. It opens the top body unless every query term is in the top candidate's title, summary, and tags, the runner-up covers less than ${rule.runner_up_cover_fraction} of those terms, and the second score is below ${rule.close_score_ratio} of the first. When the top two scores are that close it opens both. It never opens more than ${rule.max_bodies} bodies. The proxy does not read the expected answer. On this question bank, ${fromSummaries} of ${result.questions} questions stayed on summaries. Summary-first tokens are two cl100k encodings added together: the decision prompt, plus a second prompt (instruction, question, and opened markdown) when a body is opened.
+
+Variant \`${v1.name}\` is the previous term-coverage rule, kept for comparison and not retuned: a candidate covers when at least max(1, ceil(unique query terms * ${v1.cover_fraction})) of those terms appear in its title, summary, or tags. If any of the top ${v1.k} covers, no body is opened. Otherwise up to ${v1.max_bodies} bodies are opened. Its token total is the decision prompt (including the decision line) plus the opened markdown, the same two encodings as before.
 
 Variant \`${result.legacy_policy}\` still puts \`list_acos\` frontmatter for all ${result.pages} objects in the prompt, plus \`find_similar\` content-overlap and \`read_aco\` JSON for the top 3. That variant is reported so the catalog cost stays visible.
 
@@ -260,39 +286,39 @@ Search-then-read runs the same BM25 settings over the raw title plus body, then 
 
 Prices used for the dollar columns are \`MODEL_PRICING["${result.read_model}"]\` input at $${result.input_usd_per_million} per million tokens, applied to the measured cl100k totals. Output tokens are not included, because this run does not call a model. The decision line is priced as input, because it is text in the decision prompt. These are not invoices.
 
-A positive "summary-first vs search" percent means summary-first used fewer input tokens than search-then-read. A negative percent means it used more. The same reading applies to the legacy column. Savings against the naive full-read are an upper bound.
+A positive "summary-first vs search" percent means summary-first used fewer input tokens than search-then-read. A negative percent means it used more. The same reading applies to the v1 and legacy columns. Savings against the naive full-read are an upper bound.
 
 The repository README's 86% illustration (250,000 tokens down to 35,000 on 50 documents) is a different hypothetical. It is not this measurement.
 
 ## Per question tokens
 
-| Question | Naive | Search | Summary decision | Summary bodies | Summary-first | Legacy ACP |
-|---|---:|---:|---:|---:|---:|---:|
+| Question | Naive | Search | Summary decision | Summary bodies | Summary-first | v1 | Legacy ACP |
+|---|---:|---:|---:|---:|---:|---:|---:|
 ${tokenRows}
 
 ## Per question retrieval
 
-Summary-first hit means every gold slug is in the top-${rule.k} summary candidates. It does not mean the body was opened. Search hit and legacy hit mean every gold slug was opened. Answer support means the expected string is in that arm's shown context: search material, summary-first summaries plus opened markdown (not the question), or the legacy catalog plus opened JSON bodies. None of these is a model grade.
+Summary-first hit and v1 hit mean every gold slug is in the top-${rule.k} summary candidates. They do not mean the body was opened. Search hit and legacy hit mean every gold slug was opened. Answer support means the expected string is in that arm's shown context: search material, summary-first summaries plus opened markdown (not the question), the v1 summaries plus the bodies that rule opened, or the legacy catalog plus opened JSON bodies. None of these is a model grade.
 
-| Question | Search opened | Summary candidates | Decision | Summary bodies | Legacy opened | Search hit | Summary hit | Legacy hit | Search answer | Summary answer | Legacy answer |
-|---|---|---|---|---|---|---|---|---|---|---|---|
+| Question | Search opened | Summary candidates | Decision | Summary bodies | v1 decision | v1 bodies | Search hit | Summary hit | v1 hit | Search answer | Summary answer | v1 answer |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ${retrievalRows}
 
 ## Fork scaling
 
 Assembly time in the JSON is local tokenization time, summed across the N assignments. It is not sandbox boot time and not model latency.
 
-| N | Naive tokens | Search tokens | Summary-first tokens | Legacy tokens | Summary vs naive | Summary vs search | Legacy vs search | Naive $ | Search $ | Summary $ | Legacy $ |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| N | Naive tokens | Search tokens | Summary-first tokens | v1 tokens | Legacy tokens | Summary vs search | v1 vs search | Legacy vs search | Search $ | Summary $ | v1 $ | Legacy $ |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 ${scaleRows}
 
-| N | Search hit | Summary hit | Legacy hit | Naive answer | Search answer | Summary answer | Legacy answer |
+| N | Search hit | Summary hit | v1 hit | Search answer | Summary answer | v1 answer | Legacy answer |
 |---:|---:|---:|---:|---:|---:|---:|---:|
 ${rateRows}
 
 ![Context tokens by fork count](scaling.svg)
 
-![Summary-first, legacy ACP, and search-then-read](scaling-search.svg)
+![Summary-first, v1, legacy ACP, and search-then-read](scaling-search.svg)
 
 The first chart uses the naive upper bound as its scale, so the other lines sit near the bottom. The second chart is search-then-read, summary-first, and the legacy catalog policy.
 
@@ -313,19 +339,20 @@ ${enrich.note}
 | Summary-first break-even vs search-then-read, modeled USD | ${forks(enrich.modeled_usd_break_even_vs_search_forks)} |
 | Legacy catalog break-even vs naive full-read, measured tokens | ${forks(enrich.legacy_measured_token_break_even_forks)} |
 | Legacy catalog break-even vs search-then-read, measured tokens | ${forks(enrich.legacy_measured_token_break_even_vs_search_forks)} |
+| Summary-first v1 break-even vs search-then-read, measured tokens | ${forks(enrich.v1_measured_token_break_even_vs_search_forks)} |
 | Model spend that produced the committed metadata | $0 |
 
 A break-even of 0 forks means the measured per-fork token saving already exceeds the one-time prompt, or the cost being compared is zero. "Not reached" means that arm never saves tokens against the comparison, so enrichment is not paid back by the read path.
 
 ## Accuracy
 
-Summary-first retrieval hit means every gold page was one of the summary candidates. Answer support means the expected answer string occurs in the compact summaries or in a markdown body that the coverage rule opened. Legacy retrieval hit means every gold page was opened by \`find_similar\`. This is not a model grade. A live model can still answer wrongly from a context that contains the string.
+Summary-first retrieval hit means every gold page was one of the summary candidates. Answer support means the expected answer string occurs in the compact summaries or in a markdown body the proxy opened. The v1 column uses the old coverage rule for which bodies open. Legacy retrieval hit means every gold page was opened by \`find_similar\`. This is not a model grade. A live model can still answer wrongly from a context that contains the string. The recorded live docs run used v1, and its model answers were less accurate than search-then-read.
 
 ## Caveats
 
 - Naive full-read is an upper bound. Search-then-read is the realistic baseline: BM25 over raw text, top 3.
 - Summary-first does not put the full metadata catalog in the prompt. The MCP server's \`find_similar\` returns only id, title, and similarity_score. \`list_acos\` returns every object's full frontmatter and cannot return compact summaries for a filtered id set. \`read_aco\` returns pretty JSON, not markdown. A small SDK addition that would match this policy is \`read_summaries({ ids })\` returning \`{ id, title, summary }[]\`, plus a markdown format on \`read_aco\`. This demo ranks frontmatter with the local helper and opens markdown from the page cache. It does not change SDK packages.
-- The offline decision is the coverage rule above, not a Haiku completion. A live run sends that same context in one model call. Provider usage on the concatenated prompt can differ slightly from the sum of the two offline encodings.
+- The offline headline decision is the proxy above, not a Haiku completion. A live run sends the summaries and lets the model answer or reply OPEN. When that reply is missing or uncertain, the harness opens the same bodies the proxy would. v1 still sends one concatenated call with the coverage decision already written in. Provider usage can differ from these cl100k sums.
 - Page bodies for the Wikipedia corpus are MediaWiki plaintext extracts, capped at 100,000 characters. \`fetchPageForUrl\` on those HTML pages returns chrome and wikitext, which is recorded on the manifest and is not the body. The docs demo uses markdown fetched from the docs index. That raw text is not committed. \`src/build-docs.ts\` regenerates it locally.
 - Metadata was not produced by \`UnifiedPipeline\`. A model summary could be shorter or longer, and could rank differently.
 - Cycling the question bank out to N=100 repeats the same work. It shows the fork curve, not that many distinct questions.
@@ -334,7 +361,7 @@ Summary-first retrieval hit means every gold page was one of the summary candida
 `;
 }
 
-export type SeriesKey = "baseline_tokens" | "search_tokens" | "acp_tokens" | "legacy_tokens";
+export type SeriesKey = "baseline_tokens" | "search_tokens" | "acp_tokens" | "legacy_tokens" | "v1_tokens";
 
 export function renderSvg(
   rows: ScaleRow[],
@@ -402,6 +429,7 @@ export const NAIVE_SERIES: Array<{ key: SeriesKey; color: string; label: string 
 export const COMPARISON_SERIES: Array<{ key: SeriesKey; color: string; label: string }> = [
   { key: "search_tokens", color: "#1d4ed8", label: "Search-then-read" },
   { key: "acp_tokens", color: "#0f766e", label: "Summary-first ACP" },
+  { key: "v1_tokens", color: "#c2410c", label: "Summary-first v1" },
   { key: "legacy_tokens", color: "#7c3aed", label: "Legacy catalog ACP" },
 ];
 
@@ -416,7 +444,7 @@ export function writeMeasurement(root: string, result: Measurement): void {
   );
   writeFileSync(
     path.join(resultsDir, "scaling-search.svg"),
-    renderSvg(result.scale, "Summary-first, legacy ACP, and search", COMPARISON_SERIES)
+    renderSvg(result.scale, "Summary-first, v1, legacy ACP, and search", COMPARISON_SERIES)
   );
 }
 

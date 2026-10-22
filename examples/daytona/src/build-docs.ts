@@ -10,7 +10,8 @@
  * That mints new ACO ids.
  */
 
-import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createACO, FilesystemAdapter, validateACO } from "@atomic-content-protocol/core";
@@ -21,7 +22,17 @@ const CORPUS = path.join(DEMO, "corpus");
 const PAGES = path.join(CORPUS, "pages");
 const VAULT = path.join(CORPUS, "vault");
 
+const FIXED_STAMP = "2026-10-22T18:06:52.939Z";
 const USER_AGENT = "ACP-Daytona-Benchmark/0.3 (https://github.com/atomic-content-protocol/sdk; docs cache)";
+
+function docId(slug: string): string {
+  const hash = createHash("sha256").update(`acp-daytona-docs:${slug}`).digest();
+  const bytes = Buffer.from(hash.subarray(0, 16));
+  bytes[6] = (bytes[6]! & 0x0f) | 0x50;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = bytes.toString("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 const MAX_CHARS = 100_000;
 const AUTHOR = { id: "daytona-benchmark", name: "ACP Daytona Benchmark" };
 const TOOL = "@atomic-content-protocol/example-daytona@0.0.0";
@@ -206,10 +217,13 @@ export async function buildDocs(): Promise<void> {
     ...parent,
     catalog_limit: PATHS.length,
   };
-  await writeFile(path.join(DEMO, "policy.json"), `${JSON.stringify(policy, null, 2)}\n`, "utf8");
+  const policyPath = path.join(DEMO, "policy.json");
+  const policyText = `${JSON.stringify(policy, null, 2)}\n`;
+  const currentPolicy = await readFile(policyPath, "utf8").catch(() => "");
+  if (currentPolicy !== policyText) await writeFile(policyPath, policyText, "utf8");
 
   const storage = new FilesystemAdapter(VAULT);
-  const stamped = new Date().toISOString();
+  const stamped = FIXED_STAMP;
   const manifest: Array<Record<string, unknown>> = [];
   const leads: Array<Record<string, string>> = [];
   const sources: Array<Record<string, string>> = [];
@@ -252,6 +266,8 @@ export async function buildDocs(): Promise<void> {
         provenance,
       },
     });
+    aco.frontmatter["id"] = docId(slug);
+    aco.frontmatter["created"] = FIXED_STAMP;
     const validation = validateACO(aco.frontmatter);
     if (!validation.valid) throw new Error(`${slug} invalid: ${JSON.stringify(validation.errors)}`);
     await storage.putACO(aco);
@@ -281,6 +297,10 @@ export async function buildDocs(): Promise<void> {
   await writeFile(path.join(CORPUS, "sources.json"), `${JSON.stringify(sources, null, 2)}\n`, "utf8");
   await writeFile(path.join(CORPUS, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   await writeFile(path.join(CORPUS, "leads.json"), `${JSON.stringify(leads, null, 2)}\n`, "utf8");
+  const indexPath = path.join(VAULT, ".acp", "index.json");
+  const index = JSON.parse(await readFile(indexPath, "utf8")) as { updated_at?: string };
+  index.updated_at = FIXED_STAMP;
+  await writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, "utf8");
   process.stderr.write(`wrote ${manifest.length} docs\n`);
 }
 

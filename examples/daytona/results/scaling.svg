@@ -25,11 +25,11 @@
   <circle cx="139.8" cy="364.5" r="4" fill="#1d4ed8" />
   <circle cx="387.0" cy="357.2" r="4" fill="#1d4ed8" />
   <circle cx="696.0" cy="347.9" r="4" fill="#1d4ed8" />
-  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,366.0 139.8,366.0 387.0,365.9 696.0,365.9"/>
+  <polyline fill="none" stroke="#0f766e" stroke-width="2" points="84.2,366.0 139.8,365.8 387.0,364.6 696.0,363.1"/>
   <circle cx="84.2" cy="366.0" r="4" fill="#0f766e" />
-  <circle cx="139.8" cy="366.0" r="4" fill="#0f766e" />
-  <circle cx="387.0" cy="365.9" r="4" fill="#0f766e" />
-  <circle cx="696.0" cy="365.9" r="4" fill="#0f766e" />
+  <circle cx="139.8" cy="365.8" r="4" fill="#0f766e" />
+  <circle cx="387.0" cy="364.6" r="4" fill="#0f766e" />
+  <circle cx="696.0" cy="363.1" r="4" fill="#0f766e" />
   <text x="84.2" y="402" text-anchor="middle" font-size="12" fill="#374151">1</text>
   <text x="139.8" y="402" text-anchor="middle" font-size="12" fill="#374151">10</text>
   <text x="387.0" y="402" text-anchor="middle" font-size="12" fill="#374151">50</text>

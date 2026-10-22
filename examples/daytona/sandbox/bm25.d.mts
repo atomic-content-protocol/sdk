@@ -33,10 +33,17 @@ export function searchMaterial(
   sections: { search_index: string; search_ranking: string; search_pages: string }
 ): string;
 
-export interface SummaryFirstOptions {
+export interface SummaryFirstV1Options {
   summaryK: number;
   maxBodies: number;
   coverFraction: number;
+}
+
+export interface SummaryFirstOptions {
+  summaryK: number;
+  maxBodies: number;
+  closeScoreRatio: number;
+  runnerUpCoverFraction: number;
 }
 
 export interface SummaryFirstResult {
@@ -48,6 +55,13 @@ export interface SummaryFirstResult {
   summaryMaterial: string;
   bodyMaterial: string;
 }
+
+export function summaryFirstV1(
+  pages: SearchPage[],
+  queryText: string,
+  stopwords: readonly string[],
+  options: SummaryFirstV1Options
+): SummaryFirstResult;
 
 export function summaryFirst(
   pages: SearchPage[],

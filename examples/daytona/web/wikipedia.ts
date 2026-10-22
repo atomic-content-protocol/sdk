@@ -107,7 +107,7 @@ export async function runWikipedia(onProgress: (message: string) => void): Promi
   }
   const modeledUsd = roundUsd(usd(measuredInput, pricing.input) + usd(estimatedOutput, pricing.output));
 
-  const committed = wikiBench.per_question as QuestionMeasurement[];
+  const committed = wikiBench.per_question as unknown as QuestionMeasurement[];
   const mismatch = firstMismatch(scored.perQuestion, committed);
   const enrichmentMatches =
     measuredInput === wikiBench.enrichment.measured_prompt_input_tokens &&

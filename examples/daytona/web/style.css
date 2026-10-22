@@ -175,6 +175,10 @@ td:not(:first-child) {
   background: #0f766e;
 }
 
+.bar.v1 {
+  background: #c2410c;
+}
+
 .bar.legacy {
   background: #7c3aed;
 }

@@ -1,10 +1,10 @@
 {
   "version": 1,
   "entries": {
-    "01a164cb-6267-75e7-aaa6-467b4a9c7412": {
+    "08a0b1db-a0dc-5f1b-b9fc-1ed5edd1ac01": {
       "title": "Daytona Documentation",
       "source_type": "link",
-      "created": "2026-10-22T18:06:53.031Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "en",
         "get-started",
@@ -13,10 +13,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-639c-711d-b294-bde5329c61a6": {
+    "e8e12ccc-7dae-5c42-bfcd-884a1a261cbb": {
       "title": "Authentication",
       "source_type": "link",
-      "created": "2026-10-22T18:06:53.340Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "authentication",
         "get-an-api-key",
@@ -28,10 +28,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-646e-772d-8b21-9751e321c4f3": {
+    "72675fac-38c2-5eed-a410-f03232bce03c": {
       "title": "Sandboxes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:53.550Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "sandboxes",
         "create-sandboxes",
@@ -41,10 +41,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6543-7652-a8f8-acffff9604a7": {
+    "edd6f0b8-16b9-558e-b440-2f87649a7697": {
       "title": "Linux Sandboxes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:53.763Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "linux",
         "sandboxes",
@@ -56,10 +56,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-65f0-7347-80f2-b38d121c7f19": {
+    "5da6edf1-4ba0-5820-970c-b5f80873d0e9": {
       "title": "Windows Sandboxes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:53.936Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "windows",
         "sandboxes",
@@ -71,10 +71,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-66a4-76bf-8f9b-87bffd94a3c6": {
+    "5a26cd98-4f69-52a8-8d71-fbfe44c9313a": {
       "title": "macOS Sandboxes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:54.116Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "macos",
         "sandboxes",
@@ -83,10 +83,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6765-71ef-abe6-d463fe1517f2": {
+    "3dda306b-3382-50aa-80bf-31a18c82b455": {
       "title": "GPU Sandboxes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:54.309Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "gpu",
         "sandboxes",
@@ -98,10 +98,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6803-76a8-8ed1-bd0648d1ed51": {
+    "e56b3781-75ed-5d54-8ab4-71c22f4c7f59": {
       "title": "Isolation",
       "source_type": "link",
-      "created": "2026-10-22T18:06:54.467Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "isolation",
         "runtime-isolation",
@@ -110,10 +110,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-689b-71c0-85ec-b108c817f7a9": {
+    "ab575ba0-196b-5b18-9c6a-1f619420a741": {
       "title": "Persistence",
       "source_type": "link",
-      "created": "2026-10-22T18:06:54.619Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "persistence",
         "filesystem-persistence",
@@ -124,10 +124,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6958-7689-96c2-f043b23b3238": {
+    "f6268019-fe7b-545f-8e4d-d4df9358dffe": {
       "title": "Scale",
       "source_type": "link",
-      "created": "2026-10-22T18:06:54.808Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "scale",
         "sandbox-scaling",
@@ -137,10 +137,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6a2c-73eb-a757-0b7fb6e50092": {
+    "542e66cd-b16b-52a9-adaf-5bc5b7ede483": {
       "title": "Snapshots",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.020Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "snapshots",
         "default-snapshots",
@@ -152,10 +152,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6ac7-7781-aed4-bb2e97d259f9": {
+    "3e58ddc0-02bb-515f-9dc4-3cdb2ce6a2aa": {
       "title": "Warm Pools",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.175Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "warm",
         "pools",
@@ -167,10 +167,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6b61-770a-ac00-18132067503c": {
+    "77388be2-a535-5795-88a4-d9f98db2676e": {
       "title": "Declarative Builder",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.329Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "declarative",
         "builder",
@@ -180,10 +180,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6c20-707c-83bc-dafeeab3eaaf": {
+    "311681a3-237e-559b-bb3d-f9343293de54": {
       "title": "Volumes",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.520Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "volumes",
         "create-volumes",
@@ -195,10 +195,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6d0d-74cb-b5c2-d111104b5059": {
+    "ca15f337-1ac7-5aca-8290-2d331ca10e3f": {
       "title": "Mount External Storage",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.757Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "mount",
         "external",
@@ -210,10 +210,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6df2-76ae-8fe9-20e9d89818f7": {
+    "6500d60f-76bf-5ef5-b345-700605198b2a": {
       "title": "Regions",
       "source_type": "link",
-      "created": "2026-10-22T18:06:55.986Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "regions",
         "shared-regions",
@@ -223,10 +223,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6e89-709a-b089-7044391adf93": {
+    "2326e4c7-b17f-536a-b078-e394aa83ca2b": {
       "title": "File System Operations",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.137Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "file",
         "system",
@@ -236,10 +236,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6f24-769c-bdc0-6efb1c6ac9af": {
+    "787d18a9-2542-5aac-b031-272b78aede79": {
       "title": "Git Operations",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.292Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "git",
         "operations",
@@ -251,10 +251,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-6fbe-708f-a05e-a2b8187671c0": {
+    "a8ea062c-487f-5504-b177-4077e90db0fc": {
       "title": "Language Server Protocol",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.446Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "language",
         "server",
@@ -266,10 +266,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-705d-70f6-ae1c-8c7779071a41": {
+    "043bac9b-87c8-53df-84b8-5b3e45b874fc": {
       "title": "Process and Code Execution",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.605Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "process",
         "code",
@@ -281,10 +281,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-70f9-7088-b9ca-31550d864fc1": {
+    "66862eca-64f2-54ed-bb77-497b9b6df9cc": {
       "title": "Pseudo Terminal (PTY)",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.761Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "pty",
         "create-pty-session",
@@ -296,10 +296,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7198-734a-8104-cb2966de8f3f": {
+    "5c05a5a6-b229-51ed-add1-61b1dc9f27b9": {
       "title": "Log Streaming",
       "source_type": "link",
-      "created": "2026-10-22T18:06:56.920Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "log",
         "streaming",
@@ -308,10 +308,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-722e-7458-af9c-983e23af51b1": {
+    "ca92a564-c6f8-591d-a511-bc239450cf04": {
       "title": "Daytona MCP Server",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.070Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "mcp",
         "install-daytona-cli",
@@ -323,10 +323,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-72f4-7402-a6da-34de75147df0": {
+    "9c454544-9038-5078-ab00-5ffdf97eb5c2": {
       "title": "Computer Use",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.268Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "computer",
         "use",
@@ -338,10 +338,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7392-757b-87c2-b1021a5c4d5f": {
+    "92e8db5b-3a00-5997-b016-bea0854f0eac": {
       "title": "Agent Skills",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.426Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "agent",
         "skills",
@@ -351,10 +351,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7429-7539-a081-cbf2720531f1": {
+    "e6b2ccad-9aca-5b36-9540-88b3c0424d63": {
       "title": "Web Terminal",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.577Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "web",
         "terminal",
@@ -365,10 +365,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-74bf-75cb-812c-5ded8784fc02": {
+    "73d36a56-d4e0-58ae-a13f-3801084cce8d": {
       "title": "SSH Access",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.727Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "ssh",
         "access",
@@ -380,10 +380,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7555-75a3-9d91-d0123c102f56": {
+    "1ac57cad-a3c4-5def-89f3-5977a8f219e9": {
       "title": "VNC Access",
       "source_type": "link",
-      "created": "2026-10-22T18:06:57.877Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "vnc",
         "access",
@@ -394,10 +394,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-75ee-72bb-a028-d03ec643143a": {
+    "921eaaa4-788b-564f-9d78-d1fc9956ffe0": {
       "title": "VPN Connections",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.030Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "vpn",
         "connections",
@@ -407,10 +407,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7689-731d-bafb-e4f57b89906b": {
+    "5bcf0305-8df5-5be3-b248-a277babc838c": {
       "title": "Preview",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.185Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "preview",
         "authentication",
@@ -420,10 +420,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-771f-73db-be7a-0c2b25fef6da": {
+    "fbe55573-cfa2-5216-bf71-cf9f40c8788a": {
       "title": "Custom Preview Proxy",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.335Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "custom",
         "preview",
@@ -435,10 +435,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-77b4-71bf-a130-25747286651d": {
+    "ef01ae04-6369-579e-82ad-995561817ff5": {
       "title": "Playground",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.484Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "playground",
         "access-from-dashboard",
@@ -448,10 +448,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7847-711e-9e6f-689e04988d33": {
+    "3815f41c-1cf3-55e3-984e-7b338dfdb060": {
       "title": "Webhooks",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.631Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "webhooks",
         "accessing-webhooks",
@@ -463,10 +463,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-78f9-701a-940b-7cbc4590f56c": {
+    "1463425a-78bb-55bf-b67c-26916110e773": {
       "title": "Network Limits (Firewall)",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.809Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "network",
         "limits",
@@ -478,10 +478,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-799c-77af-a866-977cdbe1fe7b": {
+    "5b64828a-d49f-5173-81d7-bba8b85dbacf": {
       "title": "Secrets",
       "source_type": "link",
-      "created": "2026-10-22T18:06:58.972Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "secrets",
         "how-secrets-work",
@@ -493,10 +493,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7a34-7298-8bd8-8541be40fb47": {
+    "4b37cb0b-d82a-5f44-89b0-5f016f9480d4": {
       "title": "Audit Logs",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.124Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "audit",
         "logs",
@@ -508,10 +508,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7ad3-7677-8e47-b13cfc33c683": {
+    "d77840e1-b226-5ce0-bfea-5caf4e0c98a1": {
       "title": "OpenTelemetry Collection",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.283Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "observability",
         "otel",
@@ -523,10 +523,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7b6c-746e-a683-bdd6297a02c3": {
+    "87d1bfe6-b815-5508-a612-db084c3ac4e7": {
       "title": "Bring Your Own Compute (BYOC)",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.436Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "bring",
         "your",
@@ -537,19 +537,19 @@
       ],
       "status": "final"
     },
-    "01a164cb-7bff-76fa-a445-8dadef6ce6cd": {
+    "b4f5bb1a-ba08-5005-9eb3-48ef24b69fe2": {
       "title": "Architecture",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.583Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "architecture"
       ],
       "status": "final"
     },
-    "01a164cb-7c95-713b-8c88-679d32487206": {
+    "2b94f8da-25c4-50c3-8412-b8d5f9ff0d97": {
       "title": "Organizations",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.733Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "organizations",
         "personal-vs-collaborative",
@@ -561,10 +561,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7d2e-771d-ba18-e7745b494fcf": {
+    "0667a150-af7c-5866-a51a-1532051647aa": {
       "title": "API Keys",
       "source_type": "link",
-      "created": "2026-10-22T18:06:59.886Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "api",
         "keys",
@@ -576,10 +576,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7de0-7197-ae9f-334f6206e365": {
+    "065a9134-8d0d-53a2-b558-2212cf263a42": {
       "title": "Organization SSO",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.064Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "sso",
         "configure-sso",
@@ -590,10 +590,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7e7d-73f8-8aca-eed29b1c4827": {
+    "144020f6-76b3-591d-ab2c-9e4acb22e394": {
       "title": "Limits",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.221Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "limits",
         "resources",
@@ -605,10 +605,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7f16-71fb-bb18-7a54dda3fcf8": {
+    "4a8c7a1a-e985-5af1-a6fd-23249f3e5b64": {
       "title": "Billing",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.374Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "billing",
         "sandbox-billing",
@@ -618,10 +618,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-7f9a-75dc-a03d-886ab1416f85": {
+    "f5579088-5ec0-50cf-842b-695cd6a45b0b": {
       "title": "Acceptable Use Guidelines",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.506Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "acceptable",
         "use",
@@ -633,10 +633,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-8032-70b8-a5d6-447002ded876": {
+    "c69b21be-895a-5f2a-9efe-41cbc7b749d4": {
       "title": "Linked Accounts",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.658Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "linked",
         "accounts",
@@ -645,10 +645,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-80fa-71a8-8e79-55683fc6269b": {
+    "c9423d19-f3cc-5e83-8bbd-a3baee4f3c54": {
       "title": "Troubleshooting",
       "source_type": "link",
-      "created": "2026-10-22T18:07:00.858Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "troubleshooting",
         "sandbox-lifecycle",
@@ -658,10 +658,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-8197-744b-b174-4ecb0a209d72": {
+    "71359ab2-d7ef-5e0f-b522-ccd0e848c4f8": {
       "title": "TypeScript SDK Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.015Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "typescript",
         "sdk",
@@ -673,10 +673,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-8247-761f-b759-b28fdda2e515": {
+    "4c2c936b-c2ea-53eb-ba5e-5af6bf24088a": {
       "title": "Python SDK Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.191Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "python",
         "sdk",
@@ -688,10 +688,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-82e1-71f8-97b8-bcc4f7eb7348": {
+    "76739c23-9785-5d1b-a6eb-ff7b5113a198": {
       "title": "Go SDK Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.345Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "go",
         "sdk",
@@ -703,10 +703,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-8378-7328-9f25-375bf2642308": {
+    "0a5ee850-d180-5110-8290-ca6f4db904a2": {
       "title": "Java SDK Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.496Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "java",
         "sdk",
@@ -718,10 +718,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-8411-735b-a2b9-59efa9641b85": {
+    "8bfdbce9-bc6b-565c-9d9f-c54c9c8b8942": {
       "title": "Ruby SDK Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.649Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "ruby",
         "sdk",
@@ -733,10 +733,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-84b7-764e-a086-5b619ddb1630": {
+    "e576635e-4697-5aca-b8d9-3b3551676722": {
       "title": "CLI",
       "source_type": "link",
-      "created": "2026-10-22T18:07:01.815Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "tools",
         "cli",
@@ -748,10 +748,10 @@
       ],
       "status": "final"
     },
-    "01a164cb-857b-70b6-8184-ea345651f4e7": {
+    "4a7c5c8e-6ecd-5beb-a931-e48336be131d": {
       "title": "Daytona API Reference",
       "source_type": "link",
-      "created": "2026-10-22T18:07:02.011Z",
+      "created": "2026-10-22T18:06:52.939Z",
       "tags": [
         "tools",
         "api",
@@ -762,5 +762,5 @@
       "status": "final"
     }
   },
-  "updated_at": "2026-10-22T18:07:02.017Z"
+  "updated_at": "2026-10-22T18:06:52.939Z"
 }

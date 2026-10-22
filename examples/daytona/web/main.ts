@@ -9,10 +9,10 @@ interface ManifestEntry {
 }
 
 const WIKI_CAVEAT =
-  "Wikipedia answers sit in the article leads, so this set is easy. On the committed run, all 20 questions were answered from summaries and no body was opened. A question whose answer is only deep in the article would open up to three bodies or fail answer support. N cycles these 20 questions. N=1 is the first question only.";
+  "Wikipedia answers sit in the article leads, so this set is easy. Summary-first opens at most two bodies unless the top candidate's title, summary, and tags contain every query term and the next score is not close. summary-first-v1 is the older coverage rule. N cycles these 20 questions. N=1 is the first question only.";
 
 const DOCS_CAVEAT =
-  "The Daytona docs set is 15 questions, cycled when N is larger than 15. This page shows the committed results as read-only. The raw docs text is not bundled. The public docs do not send Access-Control-Allow-Origin, so this page cannot fetch them and measure them in the browser. Counts for a chosen N are scaled from the recorded per-question totals.";
+  "The Daytona docs set is 15 questions, cycled when N is larger than 15. This page shows the committed offline results as read-only. A live v1 run answered correctly less often than search-then-read (60% vs 75% at N=20). The raw docs text is not bundled. The public docs do not send Access-Control-Allow-Origin, so this page cannot fetch them and measure them in the browser.";
 
 let current: BenchView | null = null;
 
@@ -44,7 +44,7 @@ function paint(): void {
 }
 
 function docsView(): BenchView {
-  const rows = docsBench.per_question as QuestionMeasurement[];
+  const rows = docsBench.per_question as unknown as QuestionMeasurement[];
   return {
     sourceLabel: `Recorded Node results for ${docsBench.pages} Daytona docs pages and ${docsBench.questions} questions. Raw docs text is not in this page.`,
     perQuestion: rows,

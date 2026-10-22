@@ -28,17 +28,23 @@
  * text is fetched with build-docs when the gitignored cache is missing. That
  * fetch is not committed.
  *
- * ACP_LIVE_POLICY (default `summary-first`) is `summary-first` or `legacy`.
- * Legacy sends the catalog prompt (list_acos, find_similar, read_aco).
+ * ACP_LIVE_POLICY (default `summary-first`) is `summary-first`,
+ * `summary-first-v1`, or `legacy`. Summary-first lets the model answer from
+ * the top summaries or reply OPEN. v1 is the old term-coverage rule. Legacy
+ * sends the catalog prompt (list_acos, find_similar, read_aco).
+ *
+ * Results are written under results/ with a name that includes the corpus
+ * and the policy. The Wikipedia summary-first files stay `live.md` and
+ * `live.json`. A docs run writes `live-docs.md` and does not replace them.
  *
  * ACP_LIVE_DELETE_VOLUME=1 deletes the shared volume after the sandboxes
  * are gone.
  *
- * The ACP arm is summary-first unless ACP_LIVE_POLICY=legacy: compact
- * summaries, then markdown bodies only when the coverage rule opens them.
- * The model receives that context in one call. The offline benchmark counts
- * the decision prompt and the bodies as two cl100k encodings. Provider usage
- * here is whatever the API returns for the concatenated prompt.
+ * Summary-first shows the top summaries and lets the model answer or reply
+ * OPEN. A second call reads at most 2 markdown bodies. v1 is one call: the
+ * coverage rule writes the decision line and any opened markdown into that
+ * prompt. Legacy is one call with the catalog JSON. Provider usage is whatever
+ * the API returns. The offline benchmark counts the same prompts with cl100k.
  *
  * ACP_LIVE_BASELINE (default `search`) chooses the non-ACP arm:
  * - `search`: BM25 search-then-read, top 3. This fits a normal context window.
@@ -83,7 +89,7 @@ interface QuestionRun {
 }
 
 type CorpusName = "wikipedia" | "docs";
-type PolicyName = "summary-first" | "legacy";
+type PolicyName = "summary-first" | "summary-first-v1" | "legacy";
 type CorpusRead = "snapshot-disk" | "volume-local-copy";
 
 interface LiveReport {
@@ -133,10 +139,19 @@ function corpusName(): CorpusName {
 
 function policyName(): PolicyName {
   const raw = process.env.ACP_LIVE_POLICY ?? "summary-first";
-  if (raw !== "summary-first" && raw !== "legacy") {
-    throw new Error(`ACP_LIVE_POLICY must be summary-first or legacy, got ${raw}`);
+  if (raw !== "summary-first" && raw !== "summary-first-v1" && raw !== "legacy") {
+    throw new Error(`ACP_LIVE_POLICY must be summary-first, summary-first-v1, or legacy, got ${raw}`);
   }
   return raw;
+}
+
+function liveResultBasename(corpus: CorpusName, policy: PolicyName): string {
+  if (corpus === "wikipedia" && policy === "summary-first") return "live";
+  if (corpus === "docs" && policy === "summary-first") return "live-docs";
+  if (corpus === "docs" && policy === "legacy") return "live-docs-legacy";
+  if (corpus === "docs" && policy === "summary-first-v1") return "live-docs-v1";
+  if (policy === "summary-first-v1") return "live-wikipedia-v1";
+  return `live-${corpus}-${policy}`;
 }
 
 function requestedSizes(): number[] {
@@ -296,10 +311,12 @@ function renderLive(report: LiveReport): string {
   }
   if (report.fallback_reason) lines.push("", `Fork fallback reason: ${report.fallback_reason}`);
   if (report.error) lines.push("", `Error: ${report.error}`);
-  const arm =
+    const arm =
     report.policy === "legacy"
       ? "The ACP arm is the legacy catalog policy (list_acos, find_similar, read_aco). Retrieval hit means the gold page was opened. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both."
-      : "The ACP arm is summary-first. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.";
+      : report.policy === "summary-first-v1"
+        ? "The ACP arm is summary-first-v1, the term-coverage rule. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both."
+        : "The ACP arm is summary-first. The model sees the top summaries and either answers or replies OPEN. Retrieval hit means the gold page was a summary candidate. The default comparison arm is search-then-read. Naive full-read is an upper bound and is sent only when ACP_LIVE_BASELINE is naive or both.";
   lines.push(
     "",
     arm,
@@ -642,8 +659,9 @@ async function main(): Promise<void> {
     await deleteVolumeIfRequested(daytona);
     const resultsDir = path.join(EXAMPLE_ROOT, "results");
     mkdirSync(resultsDir, { recursive: true });
-    writeFileSync(path.join(resultsDir, "live.json"), `${JSON.stringify(report, null, 2)}\n`);
-    writeFileSync(path.join(resultsDir, "live.md"), renderLive(report));
+    const basename = liveResultBasename(report.corpus ?? "wikipedia", report.policy ?? "summary-first");
+    writeFileSync(path.join(resultsDir, `${basename}.json`), `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(path.join(resultsDir, `${basename}.md`), renderLive(report));
     console.log(`live status ${report.status} mode ${report.mode ?? "none"} ran ${report.ran}`);
     if (report.status !== "completed") process.exitCode = 1;
   }

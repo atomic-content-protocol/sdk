@@ -77,23 +77,11 @@ export function searchMaterial(pages, hits, sections) {
   return `${sections.search_index}${JSON.stringify(index, null, 2)}\n\n${sections.search_ranking}${JSON.stringify(ranking, null, 2)}\n\n${sections.search_pages}${opened}`;
 }
 
-/**
- * Summary-first triage. Rank title + summary + tags only, show those compact
- * summaries, and open full markdown bodies only when none of the candidates
- * covers enough query terms.
- *
- * A candidate covers the question when the number of unique query terms found
- * in its title, summary, and tags is at least max(1, ceil(terms * coverFraction)).
- * If any of the top `summaryK` covers, open nothing. Otherwise open up to
- * `maxBodies` full bodies, in rank order. This rule is fixed. Do not retune it
- * to chase a score.
- */
-export function summaryFirst(pages, queryText, stopwords, options) {
-  const hits = bm25Search(pages, queryText, stopwords, options.summaryK, (page) =>
+function summaryHits(pages, queryText, stopwords, summaryK) {
+  const hits = bm25Search(pages, queryText, stopwords, summaryK, (page) =>
     `${page.title}\n${page.summary ?? ""}\n${(page.tags ?? []).join(" ")}`
   );
   const terms = [...new Set(tokenize(queryText, stopwords))];
-  const need = Math.max(1, Math.ceil(terms.length * options.coverFraction));
   const judged = hits.map((hit) => {
     const page = pages.find((candidate) => candidate.slug === hit.slug);
     if (!page) throw new Error(`summary-first hit missing page ${hit.slug}`);
@@ -101,20 +89,40 @@ export function summaryFirst(pages, queryText, stopwords, options) {
     const covered = terms.filter((term) => hay.has(term)).length;
     return { hit, page, covered };
   });
-  const anyCover = judged.some((row) => row.covered >= need);
-  const opened = anyCover ? [] : judged.slice(0, options.maxBodies);
-  const decisionLine = anyCover
-    ? "Decision: answer from summaries."
-    : `Decision: open ${opened.map((row) => row.page.slug).join(", ")}.`;
   const summaryBlock = judged
     .map(
       (row, index) =>
         `${index + 1}. slug: ${row.page.slug}\ntitle: ${row.page.title}\nsummary: ${row.page.summary ?? ""}`
     )
     .join("\n\n");
+  return { terms, judged, summaryBlock };
+}
+
+function bodyMaterialOf(opened) {
+  return opened.length === 0 ? "" : opened.map((row) => `# ${row.page.title}\n\n${row.page.body}`).join("\n\n");
+}
+
+/**
+ * Summary-first v1. Rank title + summary + tags only, show those compact
+ * summaries, and open full markdown bodies only when none of the candidates
+ * covers enough query terms.
+ *
+ * A candidate covers the question when the number of unique query terms found
+ * in its title, summary, and tags is at least max(1, ceil(terms * coverFraction)).
+ * If any of the top `summaryK` covers, open nothing. Otherwise open up to
+ * `maxBodies` full bodies, in rank order. This rule is fixed. Do not retune it
+ * to chase a score. The headline policy no longer uses it. Live docs showed it
+ * skips bodies that hold the answer.
+ */
+export function summaryFirstV1(pages, queryText, stopwords, options) {
+  const { terms, judged, summaryBlock } = summaryHits(pages, queryText, stopwords, options.summaryK);
+  const need = Math.max(1, Math.ceil(terms.length * options.coverFraction));
+  const anyCover = judged.some((row) => row.covered >= need);
+  const opened = anyCover ? [] : judged.slice(0, options.maxBodies);
+  const decisionLine = anyCover
+    ? "Decision: answer from summaries."
+    : `Decision: open ${opened.map((row) => row.page.slug).join(", ")}.`;
   const summaryMaterial = `Candidate summaries:\n${summaryBlock}\n\n${decisionLine}\n`;
-  const bodyMaterial =
-    opened.length === 0 ? "" : opened.map((row) => `# ${row.page.title}\n\n${row.page.body}`).join("\n\n");
   return {
     candidate_slugs: judged.map((row) => row.page.slug),
     opened_slugs: opened.map((row) => row.page.slug),
@@ -122,6 +130,58 @@ export function summaryFirst(pages, queryText, stopwords, options) {
     cover_need: need,
     summaryBlock,
     summaryMaterial,
-    bodyMaterial,
+    bodyMaterial: bodyMaterialOf(opened),
+  };
+}
+
+/**
+ * Headline summary-first proxy. A live model sees the top summaries and
+ * either answers or replies `OPEN slug`. Offline cannot call that model.
+ *
+ * The proxy does not look at the expected answer. It opens the top body
+ * unless it is strongly confident the top hit is enough: every query
+ * term appears in that page's title, summary, or tags, the runner-up covers less than
+ * `runnerUpCoverFraction` of the terms, and the second score is below
+ * `closeScoreRatio` of the first. When the top two scores are that close,
+ * it opens both. It never opens more than `maxBodies` (2).
+ */
+export function summaryFirst(pages, queryText, stopwords, options) {
+  const maxBodies = options.maxBodies ?? 2;
+  const closeScoreRatio = options.closeScoreRatio ?? 0.85;
+  const runnerUpCoverFraction = options.runnerUpCoverFraction ?? 0.5;
+  const { terms, judged, summaryBlock } = summaryHits(pages, queryText, stopwords, options.summaryK);
+  const top = judged[0];
+  const second = judged[1];
+  const scoreRatio = top && second && top.hit.score > 0 ? second.hit.score / top.hit.score : 0;
+  const close = Boolean(second) && scoreRatio >= closeScoreRatio;
+  const runnerUpWeak =
+    !second || terms.length === 0 || second.covered / terms.length < runnerUpCoverFraction;
+  const strong = Boolean(top) && terms.length >= 2 && top.covered === terms.length && runnerUpWeak && !close;
+  let opened;
+  let decision;
+  if (!top || strong) {
+    opened = [];
+    decision = strong ? "answer" : "open";
+  } else if (close) {
+    opened = judged.slice(0, Math.min(2, maxBodies));
+    decision = "open";
+  } else {
+    opened = judged.slice(0, Math.min(1, maxBodies));
+    decision = "open";
+  }
+  const openInstruction =
+    "If one of these summaries clearly contains the answer, reply with that answer and a short quote from the summary. If it does not, reply with a single line: OPEN slug or OPEN slug, slug. Use only slugs from the list above, and at most 2.";
+  const summaryMaterial = `Candidate summaries:\n${summaryBlock}\n\n${openInstruction}\n`;
+  return {
+    candidate_slugs: judged.map((row) => row.page.slug),
+    opened_slugs: opened.map((row) => row.page.slug),
+    decision,
+    cover_need: terms.length,
+    summaryBlock,
+    summaryMaterial,
+    bodyMaterial: bodyMaterialOf(opened),
+    strong,
+    close,
+    score_ratio: Number(scoreRatio.toFixed(6)),
   };
 }

@@ -9,18 +9,21 @@
  *
  * The ACP arm defaults to summary-first. `list_acos` is used only to read
  * frontmatter (title, summary, tags). That catalog is not placed in the model
- * prompt. The offline coverage rule decides which markdown bodies to open. A
- * live model call, when a key is set, receives that same context in one prompt.
+ * prompt.
  *
- * ACP_LIVE_POLICY=legacy switches the ACP arm to the catalog prompt: pretty
- * `list_acos` JSON, `find_similar`, and `read_aco` JSON for the top 3. Hit
- * slugs are the pages find_similar opened. The default stays summary-first.
+ * ACP_LIVE_POLICY=summary-first (default) shows the top 3 summaries and lets
+ * the model answer or reply `OPEN slug`. Uncertain replies open the top body,
+ * or the top 2 when the scores are close, and never more than 2. A second
+ * call then answers from those pages.
+ * ACP_LIVE_POLICY=summary-first-v1 keeps the old term-coverage rule in one call.
+ * ACP_LIVE_POLICY=legacy uses the catalog prompt. Hit slugs are the pages
+ * find_similar opened.
  */
 
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { bm25Search, searchMaterial, summaryFirst } from "./bm25.mjs";
+import { bm25Search, searchMaterial, summaryFirst, summaryFirstV1 } from "./bm25.mjs";
 
 const policy = JSON.parse(readFileSync(process.env.ACP_POLICY ?? "/opt/acp/policy.json", "utf8"));
 const vault = process.env.ACP_VAULT ?? "/opt/acp/vault";
@@ -182,12 +185,59 @@ function wire(result) {
   return JSON.stringify(result, null, 2);
 }
 
+function combineUsage(first, second) {
+  const input = (first.usage?.input_tokens ?? 0) + (second.usage?.input_tokens ?? 0);
+  const output = (first.usage?.output_tokens ?? 0) + (second.usage?.output_tokens ?? 0);
+  return {
+    ...second,
+    answer: second.answer ?? first.answer ?? "",
+    error: second.error ?? first.error,
+    latency_ms: (first.latency_ms ?? 0) + (second.latency_ms ?? 0),
+    prompt_chars: (first.prompt_chars ?? 0) + (second.prompt_chars ?? 0),
+    usage: { input_tokens: input, output_tokens: output },
+  };
+}
+
+function parseOpen(answer, candidates) {
+  const lines = String(answer ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const openLine = lines.find((line) => /^OPEN\b/i.test(line));
+  if (!openLine) {
+    if (lines.length === 0) return { kind: "uncertain", slugs: [] };
+    if (/^(i don't know|i do not know|not enough|uncertain|unsure)\b/i.test(lines[0])) {
+      return { kind: "uncertain", slugs: [] };
+    }
+    return { kind: "answer", slugs: [] };
+  }
+  const rest = openLine.replace(/^OPEN\b[:\s]*/i, "");
+  const tokens = rest.split(/[^a-z0-9-]+/i).filter(Boolean);
+  const slugs = [];
+  for (const token of tokens) {
+    const match = candidates.find((slug) => slug.toLowerCase() === token.toLowerCase());
+    if (match && !slugs.includes(match)) slugs.push(match);
+    if (slugs.length === 2) break;
+  }
+  return { kind: "open", slugs };
+}
+
+function markdownBodies(pages, slugs) {
+  return slugs
+    .map((slug) => {
+      const page = pages.find((candidate) => candidate.slug === slug);
+      if (!page) throw new Error(`missing page ${slug}`);
+      return `# ${page.title}\n\n${page.body}`;
+    })
+    .join("\n\n");
+}
+
 async function answerQuestion(client, question, pages) {
   const query = contentQuery(question.question, policy.stopwords);
   const prefix = `${policy.instruction}Question: ${question.question}\n\n`;
   const acpPolicy = process.env.ACP_LIVE_POLICY ?? "summary-first";
-  if (acpPolicy !== "summary-first" && acpPolicy !== "legacy") {
-    throw new Error(`ACP_LIVE_POLICY must be summary-first or legacy, got ${acpPolicy}`);
+  if (acpPolicy !== "summary-first" && acpPolicy !== "summary-first-v1" && acpPolicy !== "legacy") {
+    throw new Error(`ACP_LIVE_POLICY must be summary-first, summary-first-v1, or legacy, got ${acpPolicy}`);
   }
   const list = await callTool(client, "list_acos", {
     limit: policy.catalog_limit,
@@ -198,6 +248,7 @@ async function answerQuestion(client, question, pages) {
   let candidateSlugs;
   let openedSlugs;
   let decision;
+  let acpResult = null;
   if (acpPolicy === "legacy") {
     const slugById = new Map();
     for (const item of list.data.items ?? []) {
@@ -239,16 +290,47 @@ async function answerQuestion(client, question, pages) {
       if (!meta) throw new Error(`missing frontmatter for ${page.slug}`);
       return { ...page, summary: meta.summary, tags: meta.tags };
     });
-    const triage = summaryFirst(enriched, question.question, policy.stopwords, {
-      summaryK: policy.summary_k,
-      maxBodies: policy.max_bodies,
-      coverFraction: policy.cover_fraction,
-    });
-    const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
-    acpPrompt = triage.bodyMaterial.length === 0 ? decisionPrompt : `${decisionPrompt}${triage.bodyMaterial}`;
-    candidateSlugs = triage.candidate_slugs;
-    openedSlugs = triage.opened_slugs;
-    decision = triage.decision;
+    if (acpPolicy === "summary-first-v1") {
+      const triage = summaryFirstV1(enriched, question.question, policy.stopwords, {
+        summaryK: policy.summary_k,
+        maxBodies: policy.v1_max_bodies,
+        coverFraction: policy.cover_fraction,
+      });
+      const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+      acpPrompt = triage.bodyMaterial.length === 0 ? decisionPrompt : `${decisionPrompt}${triage.bodyMaterial}`;
+      candidateSlugs = triage.candidate_slugs;
+      openedSlugs = triage.opened_slugs;
+      decision = triage.decision;
+    } else {
+      const triage = summaryFirst(enriched, question.question, policy.stopwords, {
+        summaryK: policy.summary_k,
+        maxBodies: policy.max_bodies,
+        closeScoreRatio: policy.close_score_ratio,
+        runnerUpCoverFraction: policy.runner_up_cover_fraction,
+      });
+      const decisionPrompt = `${prefix}${triage.summaryMaterial}`;
+      candidateSlugs = triage.candidate_slugs;
+      const first = await callModel(decisionPrompt);
+      const parsed = first.error ? { kind: "uncertain", slugs: [] } : parseOpen(first.answer, candidateSlugs);
+      if (parsed.kind === "answer") {
+        acpPrompt = decisionPrompt;
+        openedSlugs = [];
+        decision = "answer";
+        acpResult = first;
+      } else {
+        const modelChose = parsed.kind === "open" && parsed.slugs.length > 0;
+        const chosen = modelChose ? parsed.slugs : triage.opened_slugs;
+        openedSlugs = chosen.slice(0, policy.max_bodies);
+        decision = modelChose ? "open" : triage.decision;
+        const followUp =
+          openedSlugs.length === 0
+            ? decisionPrompt
+            : `${prefix}${policy.sections.pages}${markdownBodies(pages, openedSlugs)}`;
+        acpPrompt = followUp;
+        if (first.error || openedSlugs.length === 0) acpResult = first;
+        else acpResult = combineUsage(first, await callModel(followUp));
+      }
+    }
   }
   const hits = bm25Search(pages, question.question, policy.stopwords, policy.limit);
   const searchPrompt = `${prefix}${searchMaterial(pages, hits, policy.sections)}`;
@@ -256,7 +338,7 @@ async function answerQuestion(client, question, pages) {
   if (!["search", "naive", "both"].includes(mode)) {
     throw new Error(`ACP_LIVE_BASELINE must be search, naive, or both, got ${mode}`);
   }
-  const acp = await callModel(acpPrompt);
+  const acp = acpResult ?? (await callModel(acpPrompt));
   const search = mode === "naive" ? null : await callModel(searchPrompt);
   const naive =
     mode === "naive" || mode === "both"

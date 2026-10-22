@@ -12,7 +12,7 @@ import { toolsFromStorage } from "./aco-tools.js";
 import { countCl100kJs } from "./cl100k-js.js";
 import { memoryVault } from "./memory-vault.js";
 import { EXAMPLE_ROOT, loadPolicy, type Question } from "./policy.js";
-import { breakEven, type QuestionMeasurement, sameMeasurement, scaleRow, scoreCorpus, usd } from "./score.js";
+import { breakEven, type QuestionMeasurement, sameMeasurement, scaleRow, scoreCorpus } from "./score.js";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -113,10 +113,16 @@ async function main(): Promise<void> {
 
   const saved = scored.perQuestion.map((row) => row.search_tokens - row.acp_tokens);
   const even = breakEven(saved, committed.enrichment.measured_prompt_input_tokens);
-  if (even !== 2) fail(`wikipedia break-even vs search was ${String(even)}, expected 2`);
+  const committedBreakEven = (
+    committed as { enrichment: { measured_token_break_even_vs_search_forks?: number | null } }
+  ).enrichment.measured_token_break_even_vs_search_forks;
+  if (even !== committedBreakEven) {
+    fail(`wikipedia break-even vs search was ${String(even)}, committed ${String(committedBreakEven)}`);
+  }
   const n100 = scaleRow(scored.perQuestion, 100, pricing.input);
-  if (usd(n100.acp_tokens, pricing.input).toFixed(4) !== "0.0280") {
-    fail(`N=100 summary dollars ${usd(n100.acp_tokens, pricing.input)}`);
+  const committedN100 = committed.scale.find((row) => row.n === 100);
+  if (!committedN100 || n100.acp_tokens !== committedN100.acp_tokens) {
+    fail(`N=100 summary tokens ${n100.acp_tokens}`);
   }
   console.log(
     `browser path matches Node bench (N=100 summary-first ${n100.acp_tokens} tokens, js-tiktoken cl100k_base)`

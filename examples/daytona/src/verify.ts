@@ -85,9 +85,18 @@ async function main(): Promise<void> {
   if (policy.name !== "summary-first" || policy.legacy_name !== "mcp-find-similar-top3") {
     fail(`policy changed: ${policy.name} legacy ${policy.legacy_name}`);
   }
-  if (policy.limit !== 3 || policy.summary_k !== 3 || policy.max_bodies !== 3 || policy.cover_fraction !== 0.5) {
+  if (policy.v1_name !== "summary-first-v1") fail(`v1 name changed: ${policy.v1_name}`);
+  if (
+    policy.limit !== 3 ||
+    policy.summary_k !== 3 ||
+    policy.max_bodies !== 2 ||
+    policy.v1_max_bodies !== 3 ||
+    policy.cover_fraction !== 0.5 ||
+    policy.close_score_ratio !== 0.85 ||
+    policy.runner_up_cover_fraction !== 0.5
+  ) {
     fail(
-      `summary-first settings changed: limit ${policy.limit} k ${policy.summary_k} bodies ${policy.max_bodies} cover ${policy.cover_fraction}`
+      `summary-first settings changed: limit ${policy.limit} k ${policy.summary_k} bodies ${policy.max_bodies} v1 bodies ${policy.v1_max_bodies} cover ${policy.cover_fraction} close ${policy.close_score_ratio}`
     );
   }
   const questions = JSON.parse(readFileSync(path.join(EXAMPLE_ROOT, "corpus", "questions.json"), "utf8")) as Question[];
@@ -125,7 +134,7 @@ async function main(): Promise<void> {
 
   const docsRoot = path.join(EXAMPLE_ROOT, "docs-demo");
   const docsPolicy = loadPolicy(docsRoot);
-  if (docsPolicy.name !== "summary-first" || docsPolicy.cover_fraction !== 0.5) {
+  if (docsPolicy.name !== "summary-first" || docsPolicy.cover_fraction !== 0.5 || docsPolicy.max_bodies !== 2) {
     fail(`docs policy changed: ${docsPolicy.name}`);
   }
   const docsQuestions = JSON.parse(readFileSync(path.join(docsRoot, "corpus", "questions.json"), "utf8")) as Question[];
@@ -241,8 +250,10 @@ function assertFresh(root: string, fresh: Measurement): void {
       search_tokens: number;
       acp_tokens: number;
       legacy_tokens: number;
+      v1_tokens: number;
       candidate_slugs: string[];
       opened_slugs: string[];
+      v1_opened_slugs: string[];
       legacy_opened_slugs: string[];
       search_opened_slugs: string[];
       decision: string;
@@ -257,6 +268,7 @@ function assertFresh(root: string, fresh: Measurement): void {
       search_tokens: number;
       acp_tokens: number;
       legacy_tokens: number;
+      v1_tokens: number;
     }>;
   };
   if (fresh.per_question.length !== committed.per_question.length) fail(`${root} question count drift`);
@@ -270,12 +282,14 @@ function assertFresh(root: string, fresh: Measurement): void {
       next.search_tokens !== prev.search_tokens ||
       next.acp_tokens !== prev.acp_tokens ||
       next.legacy_tokens !== prev.legacy_tokens ||
+      next.v1_tokens !== prev.v1_tokens ||
       next.decision !== prev.decision ||
       next.retrieval_hit !== prev.retrieval_hit ||
       next.search_retrieval_hit !== prev.search_retrieval_hit ||
       next.legacy_retrieval_hit !== prev.legacy_retrieval_hit ||
       next.candidate_slugs.join(",") !== prev.candidate_slugs.join(",") ||
       next.opened_slugs.join(",") !== prev.opened_slugs.join(",") ||
+      next.v1_opened_slugs.join(",") !== prev.v1_opened_slugs.join(",") ||
       next.legacy_opened_slugs.join(",") !== prev.legacy_opened_slugs.join(",") ||
       next.search_opened_slugs.join(",") !== prev.search_opened_slugs.join(",")
     ) {
@@ -295,7 +309,8 @@ function assertFresh(root: string, fresh: Measurement): void {
       next.baseline_tokens !== prev.baseline_tokens ||
       next.search_tokens !== prev.search_tokens ||
       next.acp_tokens !== prev.acp_tokens ||
-      next.legacy_tokens !== prev.legacy_tokens
+      next.legacy_tokens !== prev.legacy_tokens ||
+      next.v1_tokens !== prev.v1_tokens
     ) {
       fail(`${root} scale table drifted`);
     }
