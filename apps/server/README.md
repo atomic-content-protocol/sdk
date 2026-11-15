@@ -54,7 +54,7 @@ Tune it from the `enrichment_completed` events in PostHog, which carry the per-c
 
 ## Deploy (Railway)
 
-[`railway.json`](railway.json) pins the build:
+The Railway service's own settings pin the build (builder Nixpacks, set in the dashboard: Railway stopped reading `railway.json` on 2026-12-01). Its build command:
 
 ```json
 "buildCommand": "npm install --include=dev --no-audit --no-fund && npx turbo build --filter=acp-server"
